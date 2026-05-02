@@ -1,0 +1,259 @@
+{
+	"info": {
+		"name": "DonorConnect Complete API Collection",
+		"description": "Full mappings encompassing both Flutter App and Web Dashboard API logic.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api"
+		},
+		{
+			"key": "access_token",
+			"value": "YOUR_BEARER_TOKEN_HERE"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"}
+						],
+						"url": "{{base_url}}/auth/register",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Donor\",\n    \"email\": \"donor@example.com\",\n    \"password\": \"password\",\n    \"phone\": \"081211223344\",\n    \"blood_type\": \"O\",\n    \"rhesus\": \"+\",\n    \"birth_date\": \"1995-10-10\",\n    \"weight\": 65,\n    \"latitude\": -6.200000,\n    \"longitude\": 106.816666\n}",
+							"options": {"raw": {"language": "json"}}
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"}
+						],
+						"url": "{{base_url}}/auth/login",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"donor@example.com\",\n    \"password\": \"password\"\n}",
+							"options": {"raw": {"language": "json"}}
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/auth/logout"
+					}
+				}
+			]
+		},
+		{
+			"name": "User Profile Layer",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/profile"
+					}
+				},
+				{
+					"name": "Update Profile Stats",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/profile/update",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"weight\": 70,\n    \"is_available\": true\n}",
+							"options": {"raw": {"language": "json"}}
+						}
+					}
+				},
+				{
+					"name": "Update Location Anchor",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/location/update",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": -6.175392,\n    \"longitude\": 106.827153\n}",
+							"options": {"raw": {"language": "json"}}
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Mobile Donor Interactions",
+			"item": [
+				{
+					"name": "Answer Blood Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/donor/confirm",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"donor_candidate_id\": 1,\n    \"status\": \"confirmed\"\n}",
+							"options": {"raw": {"language": "json"}}
+						}
+					}
+				},
+				{
+					"name": "Retrieve Personal History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/donor/history"
+					}
+				},
+				{
+					"name": "Fetch Display QR",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/donor-candidates/1/qr-code"
+					}
+				}
+			]
+		},
+		{
+			"name": "Administrative API (Requires App.Admin Scope)",
+			"item": [
+				{
+					"name": "Scan & Verify QR Code Endpoint",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/verify/qr",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"A_LONG_SECURE_HMAC_STRING_HERE\"\n}",
+							"options": {"raw": {"language": "json"}}
+						}
+					}
+				},
+				{
+					"name": "List All Blood Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/blood-requests"
+					}
+				},
+				{
+					"name": "Create Fresh Blood Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/blood-requests",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"blood_type\": \"O\",\n    \"rhesus\": \"+\",\n    \"urgency_level\": \"urgent\",\n    \"hospital_name\": \"RS Pertamina\",\n    \"hospital_address\": \"Jakarta Selatan\",\n    \"latitude\": -6.230,\n    \"longitude\": 106.816,\n    \"required_bags\": 2\n}",
+							"options": {"raw": {"language": "json"}}
+						}
+					}
+				},
+				{
+					"name": "Request Detail Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/blood-requests/1"
+					}
+				},
+				{
+					"name": "Algorithmic Preview (Haversine Sandbox)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/blood-requests/1/preview-donors"
+					}
+				},
+				{
+					"name": "Dispatch Mass WhatsApp Notice",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/blood-requests/1/notify"
+					}
+				},
+				{
+					"name": "Manual Administrator Verification Fallback",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/donor-candidates/1/verify"
+					}
+				},
+				{
+					"name": "Global Statistics Overview",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Accept", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{access_token}}"}
+						],
+						"url": "{{base_url}}/dashboard/stats"
+					}
+				}
+			]
+		}
+	]
+}

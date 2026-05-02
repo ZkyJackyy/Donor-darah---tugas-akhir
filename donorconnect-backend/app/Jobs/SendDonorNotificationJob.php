@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Http;
+use App\Models\User;
+use App\Models\WaLog;
+use Exception;
+
+class SendDonorNotificationJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public $tries = 3;
+    public $backoff = 300; // 5 minutes
+
+    protected User $user;
+    protected string $message;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(User $user, string $message)
+    {
+        $this->user = $user;
+        $this->message = $message;
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
+    {
+        // 1. Initial State
+        $log = WaLog::create([
+            'user_id' => $this->user->id,
+            'phone' => $this->user->phone,
+            'message' => $this->message,
+            'status' => 'pending'
+        ]);
+
+        try {
+            $token = config('services.fonnte.token');
+
+            if (!$token || $token === 'mock-token') {
+                $log->update(['status' => 'failed', 'error_message' => 'Fonnte API Key (FONNTE_API_KEY) not set in .env']);
+                return;
+            }
+
+            // 2. Fonnte HTTP POST payload 
+            $response = Http::withHeaders([
+                'Authorization' => $token,
+            ])->post('https://api.fonnte.com/send', [
+                'target' => $this->user->phone,
+                'message' => $this->message,
+                'countryCode' => '62',
+            ]);
+
+            // 3. Status validation
+            if ($response->successful()) {
+                $responseData = $response->json();
+                if (isset($responseData['status']) && $responseData['status'] === true) {
+                    $log->update(['status' => 'success']);
+                    return;
+                }
+            }
+
+            // 4. Force fail on bad response
+            $errorMessage = $response->body();
+            $log->update(['status' => 'failed', 'error_message' => substr($errorMessage, 0, 500)]);
+            
+            throw new Exception("Fonnte WA failed: " . $errorMessage);
+            
+        } catch (Exception $e) {
+            $log->update([
+                'status' => 'failed', 
+                'error_message' => substr($e->getMessage(), 0, 500)
+            ]);
+            
+            // Re-throw so Queue Worker detects failure and applies backoff
+            throw $e;
+        }
+    }
+}

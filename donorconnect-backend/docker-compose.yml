@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: dc_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - dc_network
+
+  webserver:
+    image: nginx:alpine
+    container_name: dc_webserver
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - dc_network
+
+  mysql:
+    image: mysql:8.0
+    container_name: dc_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-donorconnect}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_USER: ${DB_USERNAME:-dc_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "3306:3306"
+    volumes:
+      - dc_dbdata:/var/lib/mysql
+    networks:
+      - dc_network
+
+  redis:
+    image: redis:alpine
+    container_name: dc_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - dc_network
+      
+  queue_worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: dc_queue_worker
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--tries=3", "--sleep=3"]
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - dc_network
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: dc_scheduler
+    restart: unless-stopped
+    command: ["sh", "-c", "while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"]
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - dc_network
+
+networks:
+  dc_network:
+    driver: bridge
+
+volumes:
+  dc_dbdata:
