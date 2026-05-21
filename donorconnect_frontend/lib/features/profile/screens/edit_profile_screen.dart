@@ -95,18 +95,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Profil Saya', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Edit Profil', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.primary,
-        automaticallyImplyLeading: false, // Menghilangkan tombol back karena sudah jadi tab utama
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async {
-              await context.read<AuthProvider>().logout();
-              if (context.mounted) context.go('/login');
-            },
-          )
-        ],
+        automaticallyImplyLeading: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -179,39 +170,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 onPressed: _submit,
                 isLoading: isLoading,
               ),
-              const SizedBox(height: 100), // Extra space for bottom nav
+              const SizedBox(height: 32),
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 3,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
-        onTap: (index) {
-          if (index == 0) context.go('/home');
-          if (index == 1) context.push('/permintaan-all');
-          if (index == 2) context.push('/riwayat');
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'Permintaan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Riwayat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
       ),
     );
   }

@@ -1,80 +1,147 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DonorConnect Admin Login</title>
+    <title>Login Admin - DonorConnect</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            900: '#7f1d1d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        
+        /* Floating Label CSS */
+        .floating-input {
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .floating-input:focus-within {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
+        .floating-label {
+            transition: all 0.2s;
+            pointer-events: none;
+        }
+        .floating-input input:focus ~ .floating-label,
+        .floating-input input:not(:placeholder-shown) ~ .floating-label {
+            transform: translateY(-130%) scale(0.85);
+            color: #ef4444;
+            font-weight: 600;
+        }
     </style>
 </head>
-<body class="bg-gray-50 flex h-screen items-center justify-center relative overflow-hidden">
-    <!-- Background Decoration -->
-    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-red-400 opacity-20 blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-red-600 opacity-20 blur-3xl pointer-events-none"></div>
+<body class="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-50">
+    
+    <!-- Abstract Medical Background Objects -->
+    <div class="absolute -top-[20%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-brand-50 blur-3xl opacity-60 mix-blend-multiply"></div>
+    <div class="absolute top-[20%] -right-[10%] w-[40vw] h-[40vw] rounded-full bg-blue-50 blur-3xl opacity-60 mix-blend-multiply"></div>
+    <div class="absolute -bottom-[20%] left-[20%] w-[60vw] h-[60vw] rounded-full bg-red-50/50 blur-3xl opacity-60 mix-blend-multiply"></div>
 
-    <div class="w-full max-w-md p-8 relative z-10">
-        <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/40">
-            <div class="p-8">
-                <div class="flex justify-center mb-6">
-                    <div class="bg-red-50 p-4 rounded-2xl shadow-sm border border-red-100">
-                        <svg class="w-10 h-10 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
-                </div>
+    <div class="w-full max-w-5xl mx-auto p-6 relative z-10 flex items-center justify-center">
+        <!-- Main Card -->
+        <div class="w-full max-w-4xl bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-brand-500/10 border border-white/50 overflow-hidden flex flex-col md:flex-row">
+            
+            <!-- Left Side: Branding / Illustration -->
+            <div class="w-full md:w-5/12 bg-gradient-to-br from-brand-600 to-brand-900 p-10 flex flex-col justify-between text-white relative overflow-hidden hidden md:flex">
+                <div class="absolute top-0 right-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIi8+PC9zdmc+')] opacity-20"></div>
+                <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-white opacity-10 rounded-full blur-2xl"></div>
                 
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Welcome Back</h2>
-                    <p class="text-sm text-gray-500 mt-2">Sign in to manage DonorConnect</p>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-600 mb-6 shadow-lg">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Donor<span class="text-brand-200">Connect</span></h1>
+                    <p class="text-brand-100 font-medium text-sm leading-relaxed">Sistem Manajemen & Permintaan Darah Terpadu PMI.</p>
+                </div>
+
+                <div class="relative z-10 bg-black/10 backdrop-blur-md border border-white/10 rounded-2xl p-5">
+                    <p class="text-xs text-brand-100 italic leading-relaxed">
+                        "Setetes darah Anda berarti nyawa bagi mereka. Kelola data pendonor dan permintaan secara real-time dengan efisien."
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Side: Login Form -->
+            <div class="w-full md:w-7/12 p-8 md:p-14">
+                <div class="mb-10 text-center md:text-left">
+                    <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Masuk ke Sistem</h2>
+                    <p class="text-sm text-gray-500 mt-2">Gunakan kredensial admin Anda untuk melanjutkan.</p>
                 </div>
 
                 @if ($errors->any())
-                    <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg mb-6 text-sm flex items-start shadow-sm">
-                        <svg class="w-5 h-5 mr-2 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
-                        <span>{{ $errors->first() }}</span>
+                    <div class="mb-8 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-start gap-3 animate-pulse">
+                        <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        <span class="text-sm font-medium">{{ $errors->first() }}</span>
                     </div>
                 @endif
 
-                <form action="{{ route('admin.login.attempt') }}" method="POST" class="space-y-5">
+                <form action="{{ route('admin.login.attempt') }}" method="POST" class="space-y-6">
                     @csrf
-                    <div>
-                        <label for="email" class="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
-                            </div>
-                            <input type="email" id="email" name="email" value="{{ old('email') }}" required
-                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all" placeholder="admin@donorconnect.com">
-                        </div>
+                    
+                    <!-- Floating Email -->
+                    <div class="relative floating-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
+                        <input type="email" id="email" name="email" value="{{ old('email') }}" required placeholder=" " 
+                            class="w-full bg-transparent text-sm text-gray-900 focus:outline-none placeholder-transparent peer">
+                        <label for="email" class="floating-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm origin-left peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400">
+                            Alamat Email
+                        </label>
                     </div>
                     
-                    <div>
-                        <label for="password" class="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    <!-- Floating Password -->
+                    <div class="relative floating-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
+                        <input type="password" id="password" name="password" required placeholder=" " 
+                            class="w-full bg-transparent text-sm text-gray-900 focus:outline-none placeholder-transparent peer">
+                        <label for="password" class="floating-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm origin-left peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400">
+                            Kata Sandi
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-4">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <div class="relative flex items-center justify-center">
+                                <input type="checkbox" name="remember" class="peer sr-only">
+                                <div class="w-5 h-5 bg-gray-100 border border-gray-300 rounded group-hover:border-brand-500 peer-checked:bg-brand-500 peer-checked:border-brand-500 transition-colors"></div>
+                                <svg class="w-3.5 h-3.5 text-white absolute pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                             </div>
-                            <input type="password" id="password" name="password" required
-                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all" placeholder="••••••••">
-                        </div>
+                            <span class="text-sm font-medium text-gray-600 group-hover:text-gray-900">Ingat Saya</span>
+                        </label>
+                        <a href="#" class="text-sm font-bold text-brand-600 hover:text-brand-800 transition-colors">Lupa sandi?</a>
                     </div>
                     
-                    <div class="pt-2">
-                        <button type="submit"
-                            class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all duration-200 transform hover:-translate-y-0.5">
-                            Sign In to Admin Panel
-                        </button>
-                    </div>
+                    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all transform hover:-translate-y-0.5 mt-4">
+                        Masuk Dashboard
+                    </button>
                 </form>
-            </div>
-            
-            <div class="px-8 py-4 bg-gray-50/50 border-t border-gray-100 text-center">
-                <p class="text-xs text-gray-500">Secure UDD PMI Access Only</p>
+
+                <div class="mt-8 pt-8 border-t border-gray-100 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    <p class="text-[11px] text-gray-400 font-medium uppercase tracking-widest">Sistem Akses Tertutup Palang Merah Indonesia</p>
+                </div>
             </div>
         </div>
     </div>

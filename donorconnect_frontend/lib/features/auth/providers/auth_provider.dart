@@ -144,6 +144,27 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> tryAutoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    
+    if (token == null || token.isEmpty) {
+      return false;
+    }
+
+    // Jika token ada, panggil getProfile() untuk memverifikasi apakah token masih valid
+    final success = await getProfile();
+    if (success) {
+      // Jika valid, update lokasi di background
+      updateLocation();
+      return true;
+    } else {
+      // Jika tidak valid/kadaluarsa, hapus token
+      await prefs.remove('auth_token');
+      return false;
+    }
+  }
+
   Future<bool> getProfile() async {
     try {
       final response = await _apiService.get('/profile');

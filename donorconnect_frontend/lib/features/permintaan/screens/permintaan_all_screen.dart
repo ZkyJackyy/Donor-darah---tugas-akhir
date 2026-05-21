@@ -111,7 +111,7 @@ class PermintaanAllScreen extends StatelessWidget {
         onTap: (index) {
           if (index == 0) context.go('/home');
           if (index == 2) context.push('/riwayat');
-          if (index == 3) context.push('/profile/edit');
+          if (index == 3) context.push('/profile');
         },
         items: const [
           BottomNavigationBarItem(

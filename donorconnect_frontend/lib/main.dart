@@ -17,11 +17,13 @@ import 'features/riwayat/providers/riwayat_provider.dart';
 // Screens
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/register_screen.dart';
+import 'features/auth/screens/splash_screen.dart';
 import 'features/permintaan/screens/permintaan_list_screen.dart';
 import 'features/permintaan/screens/permintaan_detail_screen.dart';
 import 'features/permintaan/screens/permintaan_all_screen.dart';
 import 'features/konfirmasi/screens/tiket_digital_screen.dart';
 import 'features/riwayat/screens/riwayat_screen.dart';
+import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/edit_profile_screen.dart';
 
 void main() {
@@ -58,8 +60,12 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
 
   // GoRouter configuration
   final _router = GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/splash',
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
@@ -89,6 +95,10 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
       GoRoute(
         path: '/riwayat',
         builder: (context, state) => const RiwayatScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/profile/edit',

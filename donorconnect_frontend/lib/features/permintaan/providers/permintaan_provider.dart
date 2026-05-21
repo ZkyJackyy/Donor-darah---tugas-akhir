@@ -84,12 +84,19 @@ class PermintaanProvider with ChangeNotifier {
       return Future.error('Location permissions are permanently denied.');
     } 
 
-    return await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        timeLimit: Duration(seconds: 5),
-      ),
-    );
+    try {
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+    } catch (e) {
+      // Fallback ke lokasi terakhir yang diketahui jika GPS gagal/timeout
+      final lastPosition = await Geolocator.getLastKnownPosition();
+      if (lastPosition != null) return lastPosition;
+      rethrow;
+    }
   }
 
   Future<void> fetchPermintaanDetail(int id) async {

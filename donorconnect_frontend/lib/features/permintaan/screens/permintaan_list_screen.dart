@@ -337,7 +337,7 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
         onTap: (index) {
           if (index == 1) context.push('/permintaan-all');
           if (index == 2) context.push('/riwayat');
-          if (index == 3) context.push('/profile/edit');
+          if (index == 3) context.push('/profile');
         },
         items: const [
           BottomNavigationBarItem(
