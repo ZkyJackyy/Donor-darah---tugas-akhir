@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../providers/permintaan_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../shared/models/blood_request_model.dart';
 
 class PermintaanListScreen extends StatefulWidget {
   const PermintaanListScreen({super.key});
@@ -46,6 +47,32 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
       int daysPassed = now.difference(lastDate).inDays;
       progress = (daysPassed / 56).clamp(0.0, 1.0);
     }
+
+    int getPriority(BloodRequestModel item) {
+      if (item.userCandidateStatus == 'verified' || item.userCandidateStatus == 'completed') {
+        return 2;
+      }
+      bool isEligibleForUser = false;
+      if (user != null && item.golonganDarah == user.golonganDarah && daysRemaining <= 0) {
+         isEligibleForUser = true;
+      }
+      if (item.userCandidateStatus == 'notified' || isEligibleForUser) {
+        return 0;
+      }
+      return 1;
+    }
+
+    List<BloodRequestModel> sortedList = List<BloodRequestModel>.from(provider.permintaanList);
+    sortedList.sort((a, b) {
+       int priorityA = getPriority(a);
+       int priorityB = getPriority(b);
+       if (priorityA != priorityB) {
+          return priorityA.compareTo(priorityB);
+       }
+       return (a.distance ?? 9999).compareTo(b.distance ?? 9999);
+    });
+
+    final displayList = sortedList.take(5).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -244,12 +271,27 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
-                              final item = provider.permintaanList[index];
+                              final item = displayList[index];
+                              final priority = getPriority(item);
                               return Card(
+                                clipBehavior: Clip.antiAlias,
                                 margin: const EdgeInsets.only(bottom: 12),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                 elevation: 2,
-                                child: ListTile(
+                                child: Column(
+                                  children: [
+                                    if (priority == 0)
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(vertical: 6),
+                                        color: Colors.red.shade50,
+                                        child: const Text(
+                                          '🌟 Cocok Untuk Anda!',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12),
+                                        ),
+                                      ),
+                                    ListTile(
                                   contentPadding: const EdgeInsets.all(12),
                                   leading: Container(
                                     width: 50,
@@ -315,12 +357,25 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                                       ),
                                     ],
                                   ),
-                                  trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-                                  onTap: () => context.push('/permintaan/${item.id}'),
+                                    trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                                    onTap: () => context.push('/permintaan/${item.id}'),
+                                  ),
+                                  if (priority == 2)
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(vertical: 6),
+                                      color: Colors.green.shade50,
+                                      child: const Text(
+                                        '✅ Selesai Melakukan Donor',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               );
                             },
-                            childCount: provider.permintaanList.length > 5 ? 5 : provider.permintaanList.length,
+                            childCount: displayList.length,
                           ),
                         ),
                       ),
@@ -335,9 +390,9 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSecondary,
         onTap: (index) {
-          if (index == 1) context.push('/permintaan-all');
-          if (index == 2) context.push('/riwayat');
-          if (index == 3) context.push('/profile');
+          if (index == 1) context.go('/permintaan-all');
+          if (index == 2) context.go('/riwayat');
+          if (index == 3) context.go('/profile');
         },
         items: const [
           BottomNavigationBarItem(

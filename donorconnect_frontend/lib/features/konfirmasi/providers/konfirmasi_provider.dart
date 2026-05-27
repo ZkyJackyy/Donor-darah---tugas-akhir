@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/utils/api_error_handler.dart';
 
 class KonfirmasiProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -42,7 +43,7 @@ class KonfirmasiProvider with ChangeNotifier {
         return false;
       }
     } on DioException catch (e) {
-      _error = e.response?.data['message'] ?? e.message;
+      _error = ApiErrorHandler.getMessage(e);
       _isLoading = false;
       notifyListeners();
       return false;

@@ -15,7 +15,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'birth_date' => $this->birth_date?->format('Y-m-d'),
-            'weight' => (float) $this->weight,
+            'weight' => $this->weight ? (float) $this->weight : null,
             'blood_type' => $this->blood_type,
             'rhesus' => $this->rhesus,
             'last_donor_date' => $this->last_donor_date?->format('Y-m-d'),

@@ -48,7 +48,7 @@ class AdminDashboardController extends Controller
 
         // Additional stats for cards
         $totalDonationsCount = DonorHistory::count();
-        $totalCompletedRequests = BloodRequest::where('status', 'completed')->count();
+        $totalCompletedRequests = BloodRequest::where('status', 'fulfilled')->count();
 
         return view('admin.dashboard', compact(
             'totalDonors', 

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/utils/api_error_handler.dart';
 
 class SkriningProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -48,10 +49,10 @@ class SkriningProvider with ChangeNotifier {
         if (errors != null && errors.isNotEmpty) {
           _error = errors.values.first[0].toString();
         } else {
-          _error = e.response?.data['message'] ?? 'Validation Error';
+          _error = ApiErrorHandler.getMessage(e);
         }
       } else {
-        _error = e.response?.data['message'] ?? e.message;
+        _error = ApiErrorHandler.getMessage(e);
       }
       _isLoading = false;
       notifyListeners();

@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/services/api_service.dart';
 import '../../../shared/models/blood_request_model.dart';
+import '../../../core/utils/api_error_handler.dart';
 
 class PermintaanProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -60,7 +61,7 @@ class PermintaanProvider with ChangeNotifier {
         _error = response.data['message'];
       }
     } on DioException catch (e) {
-      _error = e.response?.data['message'] ?? e.message;
+      _error = ApiErrorHandler.getMessage(e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -116,7 +117,7 @@ class PermintaanProvider with ChangeNotifier {
         _error = response.data['message'];
       }
     } on DioException catch (e) {
-      _error = e.response?.data['message'] ?? e.message;
+      _error = ApiErrorHandler.getMessage(e);
     } finally {
       _isLoading = false;
       notifyListeners();

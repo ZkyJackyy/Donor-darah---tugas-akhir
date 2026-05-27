@@ -16,11 +16,33 @@ class UserBloodRequestController extends Controller
      */
     public function index(Request $request)
     {
-        $requests = BloodRequest::where('status', 'open')
+        $userId = $request->user()->id;
+
+        $requests = BloodRequest::with(['donorCandidates' => function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        }])->where('status', 'open')
             ->orderBy('id', 'desc')
             ->get();
 
-        return $this->success($requests, 'List of open blood requests fetched successfully');
+        $formattedRequests = $requests->map(function ($bloodRequest) {
+            $candidateStatus = null;
+            if ($bloodRequest->donorCandidates->isNotEmpty()) {
+                $candidate = $bloodRequest->donorCandidates->first();
+                $candidateStatus = $candidate->status;
+            }
+
+            $data = $bloodRequest->toArray();
+            unset($data['donor_candidates']);
+            
+            $data['user_candidate_info'] = [
+                'is_candidate' => $candidateStatus !== null,
+                'status' => $candidateStatus,
+            ];
+
+            return $data;
+        });
+
+        return $this->success($formattedRequests, 'List of open blood requests fetched successfully');
     }
 
     /**

@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class DonorHistoryModel {
   final int id;
   final String donorDate;
@@ -11,10 +13,20 @@ class DonorHistoryModel {
     this.verifierName,
   });
 
+  static String _formatDate(String? raw) {
+    if (raw == null || raw.isEmpty) return '-';
+    try {
+      final dt = DateTime.parse(raw);
+      return DateFormat('dd MMMM yyyy', 'id_ID').format(dt);
+    } catch (e) {
+      return raw;
+    }
+  }
+
   factory DonorHistoryModel.fromJson(Map<String, dynamic> json) {
     return DonorHistoryModel(
       id: json['id'],
-      donorDate: json['donor_date'] ?? '',
+      donorDate: _formatDate(json['donor_date']),
       locationName: json['location_name'] ?? '',
       verifierName: json['verified_by']?['name'],
     );

@@ -22,3 +22,4 @@ yarn-error.log
 /.vscode
 /.zed
 AUDIT_REPORT.md
+generate_class_diagram.php

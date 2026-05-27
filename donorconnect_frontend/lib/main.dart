@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Constants & Services
 import 'core/constants/app_colors.dart';
 import 'core/services/deep_link_service.dart';
+import 'core/services/api_service.dart';
 
 // Providers
 import 'features/auth/providers/auth_provider.dart';
@@ -26,7 +29,10 @@ import 'features/riwayat/screens/riwayat_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/edit_profile_screen.dart';
 
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   runApp(const DonorConnectApp());
 }
 
@@ -43,11 +49,32 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
   @override
   void initState() {
     super.initState();
+
+    ApiService.onUnauthorized = () {
+      _router.go('/login');
+    };
+
     _deepLinkService = DeepLinkService(
-      onDeepLinkReceived: (uri) {
-        // Handle deep links like donorpmi://permintaan/1
-        // router.go(uri.path); // depending on setup
+      onDeepLinkReceived: (uri) async {
         debugPrint("Received DeepLink: $uri");
+        
+        String path = '';
+        if (uri.host == 'permintaan' && uri.pathSegments.isNotEmpty) {
+           path = '/permintaan/${uri.pathSegments.first}';
+        }
+
+        if (path.isEmpty) return;
+
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('auth_token');
+        
+        if (token != null && token.isNotEmpty) {
+           // Sudah login, langsung navigasi
+           _router.push(path);
+        } else {
+           // Belum login, simpan untuk dibuka nanti setelah login
+           await prefs.setString('pending_deep_link', path);
+        }
       },
     );
   }

@@ -12,6 +12,7 @@ use App\Models\DonorCandidate;
 use App\Models\DonorHistory;
 use App\Services\DonorFilterService;
 use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Log;
 
@@ -130,7 +131,7 @@ class AdminBloodRequestController extends Controller
         return $this->success(null, 'Candidate manually verified and history updated.');
     }
 
-    public function verifyQr(Illuminate\Http\Request $request)
+    public function verifyQr(Request $request)
     {
         $request->validate(['token' => 'required|string']);
 

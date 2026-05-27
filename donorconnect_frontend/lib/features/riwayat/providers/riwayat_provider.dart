@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/services/api_service.dart';
 import '../../../shared/models/donor_history_model.dart';
+import '../../../core/utils/api_error_handler.dart';
 
 class RiwayatProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -29,7 +30,7 @@ class RiwayatProvider with ChangeNotifier {
         _error = response.data['message'];
       }
     } on DioException catch (e) {
-      _error = e.response?.data['message'] ?? e.message;
+      _error = ApiErrorHandler.getMessage(e);
     } finally {
       _isLoading = false;
       notifyListeners();

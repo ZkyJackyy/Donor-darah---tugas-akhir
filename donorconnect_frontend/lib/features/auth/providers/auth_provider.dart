@@ -5,6 +5,7 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/services/api_service.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/utils/api_error_handler.dart';
 
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -45,7 +46,7 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
     } on DioException catch (e) {
-      _error = e.response?.data['message'] ?? e.message;
+      _error = ApiErrorHandler.getMessage(e);
       _setLoading(false);
       return false;
     }
@@ -99,10 +100,10 @@ class AuthProvider with ChangeNotifier {
          if (errors != null && errors.isNotEmpty) {
            _error = errors.values.first[0].toString();
          } else {
-           _error = e.response?.data['message'] ?? 'Validation Error';
+           _error = ApiErrorHandler.getMessage(e);
          }
       } else {
-        _error = e.response?.data['message'] ?? e.message;
+        _error = ApiErrorHandler.getMessage(e);
       }
       _setLoading(false);
       return false;
@@ -207,7 +208,7 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
     } on DioException catch (e) {
-      _error = e.response?.data['message'] ?? e.message;
+      _error = ApiErrorHandler.getMessage(e);
       _setLoading(false);
       return false;
     }

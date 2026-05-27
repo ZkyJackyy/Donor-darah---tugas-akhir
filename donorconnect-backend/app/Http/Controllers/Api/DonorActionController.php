@@ -103,6 +103,9 @@ class DonorActionController extends Controller
             ]
         );
 
+        // Update candidate status to screening_passed agar frontend bisa lanjut ke konfirmasi
+        $candidate->update(['status' => 'screening_passed']);
+
         return $this->success([
             'screening_id' => $screening->id,
             'completed' => true,

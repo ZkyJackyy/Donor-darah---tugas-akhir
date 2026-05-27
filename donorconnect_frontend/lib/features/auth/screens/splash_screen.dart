@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_colors.dart';
 import '../providers/auth_provider.dart';
 
@@ -28,7 +29,15 @@ class _SplashScreenState extends State<SplashScreen> {
     
     if (mounted) {
       if (isLoggedIn) {
-        context.go('/home'); // Langsung ke beranda jika token valid
+        final prefs = await SharedPreferences.getInstance();
+        final pendingLink = prefs.getString('pending_deep_link');
+        
+        if (pendingLink != null) {
+          await prefs.remove('pending_deep_link');
+          context.go(pendingLink);
+        } else {
+          context.go('/home'); // Langsung ke beranda jika token valid
+        }
       } else {
         context.go('/login'); // Ke halaman login jika token tidak ada/kadaluarsa
       }

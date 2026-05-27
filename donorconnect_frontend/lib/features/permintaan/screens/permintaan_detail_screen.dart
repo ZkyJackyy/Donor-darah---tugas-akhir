@@ -11,15 +11,9 @@ import '../../skrining/screens/skrining_screen.dart';
 
 class PermintaanDetailScreen extends StatefulWidget {
   final int requestId;
-  // Using candidate id mock for now unless fetched from backend. 
-  // Normally the backend would return a donor_candidate_id for the logged-in user 
-  // for this specific blood request if they are eligible.
-  final int donorCandidateId; 
-
   const PermintaanDetailScreen({
     super.key, 
     required this.requestId,
-    this.donorCandidateId = 1, // Placeholder
   });
 
   @override
@@ -37,8 +31,8 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     });
   }
 
+  // Dipanggil saat status 'notified' → buka skrining dulu
   void _handleKonfirmasi(int donorCandidateId) async {
-    // 1. Skrining Mandiri
     final isScreeningPassed = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -48,28 +42,84 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
 
     if (isScreeningPassed == true) {
       if (!mounted) return;
-      
-      // 2. Call Confirm API
+      // Setelah skrining berhasil, status sudah jadi 'screening_passed' di backend.
+      // Refresh data agar tombol berubah ke 'Konfirmasi Kesediaan'
+      context.read<PermintaanProvider>().fetchPermintaanDetail(widget.requestId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Skrining selesai! Tekan "Konfirmasi Kesediaan" untuk lanjut.'),
+          backgroundColor: AppColors.success,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // Dipanggil saat status 'screening_passed' → langsung konfirmasi ke API
+  void _handleKonfirmasiLangsung(int donorCandidateId) async {
+    final success = await context.read<KonfirmasiProvider>().confirmDonor(
+      donorCandidateId: donorCandidateId,
+      status: 'confirmed',
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      final qrToken = context.read<KonfirmasiProvider>().qrToken;
+      if (qrToken != null) {
+        context.push('/tiket', extra: qrToken);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal mendapatkan tiket digital'), backgroundColor: AppColors.error),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.read<KonfirmasiProvider>().error ?? 'Gagal konfirmasi'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  void _handleTolak(int donorCandidateId) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tolak Permintaan?'),
+        content: const Text('Yakin ingin membatalkan keikutsertaan Anda untuk mendonor pada permintaan ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Kembali'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Ya, Tolak'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      if (!mounted) return;
       final success = await context.read<KonfirmasiProvider>().confirmDonor(
         donorCandidateId: donorCandidateId,
-        status: 'confirmed',
+        status: 'declined',
       );
 
       if (!mounted) return;
-
       if (success) {
-        final qrToken = context.read<KonfirmasiProvider>().qrToken;
-        if (qrToken != null) {
-          context.push('/tiket', extra: qrToken);
-        } else {
-           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Gagal mendapatkan tiket digital'), backgroundColor: AppColors.error),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Penolakan berhasil dicatat'), backgroundColor: AppColors.success),
+        );
+        context.pop(); // Kembali ke halaman sebelumnya
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.read<KonfirmasiProvider>().error ?? 'Gagal konfirmasi'),
+            content: Text(context.read<KonfirmasiProvider>().error ?? 'Gagal menolak'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -82,6 +132,94 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     }
+  }
+
+  Widget _buildActionSection(Map<String, dynamic>? userInfo, bool isLoading) {
+    if (userInfo == null || userInfo['is_candidate'] != true) {
+      return Card(
+        color: Colors.amber.shade100,
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Maaf, Anda belum terdaftar sebagai kandidat pendonor untuk permintaan ini. Silakan tunggu notifikasi dari admin.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+      );
+    }
+
+    final String status = userInfo['status'] ?? 'pending';
+    final int candidateId = userInfo['candidate_id'];
+
+    if (status == 'declined') {
+      return Card(
+        color: Colors.amber.shade100,
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Anda telah menolak permintaan ini.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+          ),
+        ),
+      );
+    }
+
+    if (status == 'verified') {
+      return Card(
+        color: AppColors.success.withOpacity(0.1),
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            '✓ Donor Selesai & Terverifikasi',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.success),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (status == 'notified')
+          CustomButton(
+            text: 'Ikuti Donor',
+            onPressed: () => _handleKonfirmasi(candidateId),
+            isLoading: isLoading,
+          )
+        else if (status == 'screening_passed')
+          CustomButton(
+            text: 'Konfirmasi Kesediaan',
+            onPressed: () => _handleKonfirmasiLangsung(candidateId),
+            isLoading: isLoading,
+          )
+        else if (status == 'confirmed') ...[
+          CustomButton(
+            text: 'Lihat Tiket Digital',
+            onPressed: () => context.push('/tiket', extra: userInfo['qr_token']),
+            isLoading: isLoading,
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: isLoading ? null : () => _handleTolak(candidateId),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.error,
+              side: const BorderSide(color: AppColors.error),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Tidak Bisa Hadir', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ] else // Default
+          CustomButton(
+            text: 'Konfirmasi Kesediaan Donor',
+            onPressed: () => _handleKonfirmasi(candidateId),
+            isLoading: isLoading,
+          ),
+      ],
+    );
   }
 
   @override
@@ -214,32 +352,7 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
                       ],
                       
                       const SizedBox(height: 48),
-                      if (userInfo?['is_candidate'] == true)
-                        CustomButton(
-                          text: userInfo?['status'] == 'confirmed' 
-                              ? 'Lihat Tiket Digital' 
-                              : 'Konfirmasi Kesediaan Donor',
-                          onPressed: () {
-                            if (userInfo?['status'] == 'confirmed') {
-                              context.push('/tiket', extra: userInfo?['qr_token']);
-                            } else {
-                              _handleKonfirmasi(userInfo?['candidate_id']);
-                            }
-                          },
-                          isLoading: isLoading,
-                        )
-                      else
-                        Card(
-                          color: Colors.amber.shade100,
-                          child: const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: Text(
-                              'Maaf, Anda belum terdaftar sebagai kandidat pendonor untuk permintaan ini. Silakan tunggu notifikasi dari admin.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
+                      _buildActionSection(userInfo, isLoading),
                     ],
                   ),
                 ),

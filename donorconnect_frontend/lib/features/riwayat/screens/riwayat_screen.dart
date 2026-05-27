@@ -126,8 +126,8 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         unselectedItemColor: AppColors.textSecondary,
         onTap: (index) {
           if (index == 0) context.go('/home');
-          if (index == 1) context.push('/permintaan-all');
-          if (index == 3) context.push('/profile');
+          if (index == 1) context.go('/permintaan-all');
+          if (index == 3) context.go('/profile');
         },
         items: const [
           BottomNavigationBarItem(

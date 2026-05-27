@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
 
 class ApiService {
+  static void Function()? onUnauthorized;
   late Dio _dio;
 
   ApiService() {
@@ -26,7 +27,11 @@ class ApiService {
         return handler.next(options);
       },
       onError: (DioException e, handler) {
-        // Here you could handle 401 Unauthorized to log the user out
+        if (e.response?.statusCode == 401) {
+          if (onUnauthorized != null) {
+            onUnauthorized!();
+          }
+        }
         return handler.next(e);
       },
     ));

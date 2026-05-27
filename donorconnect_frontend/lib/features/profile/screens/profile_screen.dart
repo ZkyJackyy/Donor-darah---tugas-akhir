@@ -5,8 +5,36 @@ import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../auth/providers/auth_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isUpdating = false;
+
+  void _toggleAvailability(bool newValue) async {
+    setState(() => _isUpdating = true);
+    final success = await context.read<AuthProvider>().updateProfile(isAvailable: newValue);
+    setState(() => _isUpdating = false);
+    
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Status ketersediaan diperbarui'), backgroundColor: AppColors.success),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.read<AuthProvider>().error ?? 'Gagal memperbarui status'), 
+            backgroundColor: AppColors.error
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,25 +91,30 @@ class ProfileScreen extends StatelessWidget {
                   _buildInfoCard(
                     title: 'Status Ketersediaan',
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            user.isAvailable ? Icons.check_circle_outline : Icons.cancel_outlined,
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          user.isAvailable ? 'Tersedia untuk donor' : 'Sedang tidak tersedia',
+                          style: TextStyle(
+                            fontSize: 16,
                             color: user.isAvailable ? AppColors.success : AppColors.error,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              user.isAvailable ? 'Tersedia untuk donor' : 'Sedang tidak tersedia',
-                              style: TextStyle(
-                                fontSize: 16,
+                        ),
+                        subtitle: const Text(
+                          'Jika dinonaktifkan, Anda tidak akan muncul dalam daftar pencarian pendonor.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        value: user.isAvailable,
+                        activeColor: AppColors.success,
+                        onChanged: _isUpdating ? null : _toggleAvailability,
+                        secondary: _isUpdating 
+                            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                            : Icon(
+                                user.isAvailable ? Icons.check_circle_outline : Icons.cancel_outlined,
                                 color: user.isAvailable ? AppColors.success : AppColors.error,
-                                fontWeight: FontWeight.bold,
                               ),
-                            ),
-                          ),
-                        ],
-                      )
+                      ),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -100,8 +133,8 @@ class ProfileScreen extends StatelessWidget {
         unselectedItemColor: AppColors.textSecondary,
         onTap: (index) {
           if (index == 0) context.go('/home');
-          if (index == 1) context.push('/permintaan-all');
-          if (index == 2) context.push('/riwayat');
+          if (index == 1) context.go('/permintaan-all');
+          if (index == 2) context.go('/riwayat');
         },
         items: const [
           BottomNavigationBarItem(
