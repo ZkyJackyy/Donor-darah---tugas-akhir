@@ -87,6 +87,7 @@ class AdminWebTest extends TestCase
             'hospital_address' => 'Jakarta',
             'latitude' => -6.12345,
             'longitude' => 106.12345,
+            'deadline' => now()->addDays(3)->format('Y-m-d H:i:s'),
             'notes' => 'Emergency surgery'
         ]);
 

@@ -35,7 +35,7 @@ class AdminReportController extends Controller
             ->sum('required_bags');
 
         // Total completed requests
-        $completedRequests = BloodRequest::where('status', 'completed')
+        $completedRequests = BloodRequest::where('status', 'fulfilled')
             ->whereMonth('created_at', $month)
             ->whereYear('created_at', $year)
             ->count();

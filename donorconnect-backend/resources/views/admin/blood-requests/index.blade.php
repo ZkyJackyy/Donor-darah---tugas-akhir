@@ -99,7 +99,7 @@
                                   <div class="bg-green-500 h-1.5 rounded-full" style="width: 45%"></div>
                                 </div>
                                 <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1 text-right">Proses Pencarian</div>
-                            @elseif($req->status === 'completed')
+                            @elseif($req->status === 'fulfilled')
                                 <div class="flex items-center gap-2">
                                     <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
                                     <span class="text-xs font-bold text-gray-700 uppercase tracking-wide">Selesai</span>

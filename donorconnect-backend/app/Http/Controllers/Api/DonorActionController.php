@@ -9,8 +9,10 @@ use App\Http\Resources\DonorHistoryResource;
 use App\Models\DonorCandidate;
 use App\Models\DonorHistory;
 use App\Models\DonorScreening;
+use App\Models\BloodRequest;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class DonorActionController extends Controller
 {
@@ -22,13 +24,26 @@ class DonorActionController extends Controller
             ->with('bloodRequest')
             ->firstOrFail();
 
-        // Real-time kuota check
+        // Atomic quota check inside transaction to prevent race condition
         if ($request->status === 'confirmed') {
-            $confirmedCount = DonorCandidate::where('blood_request_id', $candidate->blood_request_id)
-                ->where('status', 'confirmed')
-                ->count();
+            $result = DB::transaction(function () use ($candidate) {
+                // Lock the blood request row for update
+                $bloodRequest = BloodRequest::where('id', $candidate->blood_request_id)
+                    ->lockForUpdate()
+                    ->first();
 
-            if ($confirmedCount >= $candidate->bloodRequest->required_bags) {
+                $confirmedCount = DonorCandidate::where('blood_request_id', $candidate->blood_request_id)
+                    ->where('status', 'confirmed')
+                    ->count();
+
+                if ($confirmedCount >= $bloodRequest->required_bags) {
+                    return null; // Quota full
+                }
+
+                return $bloodRequest;
+            });
+
+            if ($result === null) {
                 return $this->error('Kuota pendonor sudah penuh untuk permintaan ini', 400);
             }
         }
@@ -60,6 +75,9 @@ class DonorActionController extends Controller
                 app(\App\Services\WhatsAppService::class)->notifyAdminAllDeclined($candidate->bloodRequest);
             }
         }
+
+        // Auto-transition to fulfilled if quota met
+        $this->checkAndFulfillRequest($candidate->blood_request_id);
 
         return $this->success([
             'status' => $candidate->status,
@@ -94,6 +112,11 @@ class DonorActionController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
+        // Only allow screening for candidates in notified or pending status
+        if (!in_array($candidate->status, ['notified', 'pending'])) {
+            return $this->error('Kandidat tidak dapat melakukan skrining dengan status saat ini', 400);
+        }
+
         // Create or update screening record
         $screening = DonorScreening::updateOrCreate(
             ['donor_candidate_id' => $candidate->id],
@@ -110,5 +133,17 @@ class DonorActionController extends Controller
             'screening_id' => $screening->id,
             'completed' => true,
         ], 'Self-assessment screening completed successfully');
+    }
+
+    private function checkAndFulfillRequest(int $bloodRequestId): void
+    {
+        $bloodRequest = BloodRequest::findOrFail($bloodRequestId);
+        $confirmedCount = DonorCandidate::where('blood_request_id', $bloodRequestId)
+            ->where('status', 'confirmed')
+            ->count();
+
+        if ($confirmedCount >= $bloodRequest->required_bags && $bloodRequest->status === 'open') {
+            $bloodRequest->update(['status' => 'fulfilled']);
+        }
     }
 }

@@ -45,10 +45,10 @@ class BloodRequestFlowTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $response->assertJsonStructure(['qr_token']);
+        $response->assertJsonStructure(['data' => ['qr_token']]);
 
         // 5. Admin scans and verifies QR manually tracking QR bounds
-        $qrToken = $response->json('qr_token');
+        $qrToken = $response->json('data.qr_token');
         
         $verifyResponse = $this->actingAs($admin)->postJson('/api/verify/qr', [
             'token' => $qrToken
@@ -62,6 +62,6 @@ class BloodRequestFlowTest extends TestCase
 
         $donor->refresh();
         $this->assertFalse((bool) $donor->is_available);
-        $this->assertEquals(now()->toDateString(), $donor->last_donor_date);
+        $this->assertEquals(now()->toDateString(), $donor->last_donor_date->format('Y-m-d'));
     }
 }

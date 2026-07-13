@@ -18,12 +18,20 @@ class AdminDashboardController extends Controller
         $donorsTodayCount = DonorHistory::whereDate('donor_date', Carbon::today())->count();
 
         // Data for Charts
-        // 1. Monthly Trends (last 6 months) - Fixed sorting
-        $trends = BloodRequest::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month_key, DATE_FORMAT(created_at, "%b") as month, count(*) as count')
+        // 1. Monthly Trends (last 6 months)
+        $trends = BloodRequest::selectRaw('created_at as raw_date, count(*) as count')
             ->where('created_at', '>=', Carbon::now()->subMonths(6))
-            ->groupBy('month_key', 'month')
-            ->orderBy('month_key', 'asc')
-            ->get();
+            ->groupBy('raw_date')
+            ->get()
+            ->groupBy(fn ($item) => Carbon::parse($item->raw_date)->format('Y-m'))
+            ->map(fn ($items, $key) => [
+                'month_key' => $key,
+                'month' => Carbon::parse($key . '-01')->format('M'),
+                'count' => $items->sum('count'),
+            ])
+            ->values()
+            ->sortBy('month_key')
+            ->values();
 
         // 2. Blood Type Distribution - Ensure all types exist
         $bloodTypes = ['A', 'B', 'AB', 'O'];

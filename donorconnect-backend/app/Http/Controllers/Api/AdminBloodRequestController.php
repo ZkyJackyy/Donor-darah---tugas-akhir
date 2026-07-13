@@ -14,6 +14,7 @@ use App\Services\DonorFilterService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AdminBloodRequestController extends Controller
@@ -128,6 +129,9 @@ class AdminBloodRequestController extends Controller
             'is_available' => false // Lock user from filter
         ]);
 
+        // Auto-transition to fulfilled if quota met
+        $this->checkAndFulfillRequest($candidate->blood_request_id);
+
         return $this->success(null, 'Candidate manually verified and history updated.');
     }
 
@@ -183,6 +187,73 @@ class AdminBloodRequestController extends Controller
             'is_available' => false
         ]);
 
+        // Auto-transition to fulfilled if quota met
+        $this->checkAndFulfillRequest($candidate->blood_request_id);
+
         return $this->success(null, 'QR Verification successful. User locked for 56 days.');
+    }
+
+    private function checkAndFulfillRequest(int $bloodRequestId): void
+    {
+        $bloodRequest = BloodRequest::findOrFail($bloodRequestId);
+        $confirmedCount = DonorCandidate::where('blood_request_id', $bloodRequestId)
+            ->where('status', 'confirmed')
+            ->count();
+
+        if ($confirmedCount >= $bloodRequest->required_bags && $bloodRequest->status === 'open') {
+            $bloodRequest->update(['status' => 'fulfilled']);
+        }
+    }
+
+    public function verifyByCode(Request $request)
+    {
+        $request->validate([
+            'kode_verifikasi' => 'required|string|exists:donor_candidates,kode_verifikasi',
+        ]);
+
+        $candidate = DonorCandidate::with('user', 'bloodRequest')
+            ->where('kode_verifikasi', $request->kode_verifikasi)
+            ->first();
+
+        if (!$candidate) {
+            return $this->error('Kode verifikasi tidak valid', 404);
+        }
+
+        if ($candidate->status === 'verified') {
+            return $this->error('Kandidat sudah terverifikasi', 400);
+        }
+
+        if ($candidate->status !== 'confirmed') {
+            return $this->error("Status kandidat '{$candidate->status}' — belum bisa diverifikasi", 400);
+        }
+
+        $candidate->update([
+            'status' => 'verified',
+            'verified_at' => now(),
+            'verification_method' => 'code'
+        ]);
+
+        DonorHistory::create([
+            'user_id' => $candidate->user_id,
+            'blood_request_id' => $candidate->blood_request_id,
+            'donor_date' => now()->toDateString(),
+            'location_name' => $candidate->bloodRequest->hospital_name,
+            'verified_by' => auth()->id()
+        ]);
+
+        $candidate->user->update([
+            'last_donor_date' => now()->toDateString(),
+            'is_available' => false
+        ]);
+
+        $this->checkAndFulfillRequest($candidate->blood_request_id);
+
+        return $this->success([
+            'candidate' => [
+                'id' => $candidate->id,
+                'name' => $candidate->user->name,
+                'blood_type' => $candidate->user->blood_type,
+            ]
+        ], "Pendonor {$candidate->user->name} berhasil diverifikasi via kode.");
     }
 }

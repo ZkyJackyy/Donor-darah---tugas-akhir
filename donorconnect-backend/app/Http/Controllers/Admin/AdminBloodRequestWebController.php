@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BloodRequest;
 use App\Models\DonorCandidate;
 use App\Models\DonorHistory;
+use App\Jobs\WaveChainJob;
 use App\Services\DonorFilterService;
 use App\Services\WhatsAppService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -17,10 +18,16 @@ class AdminBloodRequestWebController extends Controller
     {
         $query = BloodRequest::query();
 
-        if ($request->has('search') && $request->search != '') {
-            $query->where('hospital_name', 'like', '%' . $request->search . '%')
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('hospital_name', 'like', '%' . $request->search . '%')
                   ->orWhere('blood_type', 'like', '%' . $request->search . '%')
                   ->orWhere('status', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         $bloodRequests = $query->orderBy('id', 'desc')->paginate(10);
@@ -114,7 +121,17 @@ class AdminBloodRequestWebController extends Controller
 
         $waService->notifyAllCandidates($candidates, $bloodRequest);
 
-        return back()->with('success', "WhatsApp notifications queued for {$candidates->count()} eligible donors.");
+        // Chain wave 2/3 otomatis: jika kuota belum terpenuhi, wave berikutnya jalan 30 menit kemudian
+        $confirmedCount = DonorCandidate::where('blood_request_id', $bloodRequest->id)
+            ->where('status', 'confirmed')
+            ->count();
+
+        if ($confirmedCount < $bloodRequest->required_bags) {
+            WaveChainJob::dispatch($bloodRequest->id, 2)
+                ->delay(now()->addMinutes(30));
+        }
+
+        return back()->with('success', "WhatsApp notifications queued for {$candidates->count()} eligible donors. Wave 2 akan otomatis berjalan dalam 30 menit jika kuota belum terpenuhi.");
     }
 
     public function verifyWeb($id, Request $request)
@@ -122,6 +139,9 @@ class AdminBloodRequestWebController extends Controller
         $candidate = DonorCandidate::with('user', 'bloodRequest')->findOrFail($id);
         
         if ($candidate->status === 'verified') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => 'Candidate is already verified.'], 400);
+            }
             return back()->with('error', 'Candidate is already verified.');
         }
 
@@ -144,7 +164,32 @@ class AdminBloodRequestWebController extends Controller
             'is_available' => false
         ]);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['message' => 'Candidate manually verified successfully.', 'status' => 'verified']);
+        }
+
         return back()->with('success', 'Candidate manually verified successfully.');
+    }
+
+    public function updateStatus($id, Request $request)
+    {
+        $bloodRequest = BloodRequest::findOrFail($id);
+
+        $validated = $request->validate([
+            'status' => 'required|in:fulfilled,cancelled',
+        ]);
+
+        $oldStatus = $bloodRequest->status;
+        $bloodRequest->update(['status' => $validated['status']]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'message' => "Status berhasil diubah dari '{$oldStatus}' menjadi '{$validated['status']}'",
+                'status' => $validated['status'],
+            ]);
+        }
+
+        return back()->with('success', "Status berhasil diubah dari '{$oldStatus}' menjadi '{$validated['status']}'");
     }
 
     public function exportPdf($id)
@@ -152,5 +197,76 @@ class AdminBloodRequestWebController extends Controller
         $bloodRequest = BloodRequest::with('donorCandidates.user')->findOrFail($id);
         $pdf = Pdf::loadView('admin.blood-requests.pdf', compact('bloodRequest'));
         return $pdf->download("blood-request-{$bloodRequest->id}-candidates.pdf");
+    }
+
+    public function verifyQrWeb(Request $request)
+    {
+        $validated = $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        $token = $validated['token'];
+        $parts = explode('|', $token);
+        if (count($parts) !== 2) {
+            return response()->json(['success' => false, 'message' => 'Format QR token tidak valid.'], 400);
+        }
+
+        [$signature, $base64Payload] = $parts;
+
+        $expectedSignature = hash_hmac('sha256', base64_decode($base64Payload), config('app.key'));
+        if (!hash_equals($expectedSignature, $signature)) {
+            return response()->json(['success' => false, 'message' => 'QR token tidak valid atau sudah dirusak.'], 400);
+        }
+
+        $payload = json_decode(base64_decode($base64Payload), true);
+        if (!$payload || !isset($payload['candidate_id'], $payload['expires_at'])) {
+            return response()->json(['success' => false, 'message' => 'Payload QR tidak valid.'], 400);
+        }
+
+        if (now()->timestamp > $payload['expires_at']) {
+            return response()->json(['success' => false, 'message' => 'QR token sudah kadaluarsa. Pendonor harus scan ulang.'], 400);
+        }
+
+        $candidate = DonorCandidate::with('user', 'bloodRequest')->find($payload['candidate_id']);
+        if (!$candidate) {
+            return response()->json(['success' => false, 'message' => 'Kandidat tidak ditemukan.'], 404);
+        }
+
+        if ($candidate->status === 'verified') {
+            return response()->json(['success' => false, 'message' => "Pendonor {$candidate->user->name} sudah terverifikasi sebelumnya."], 400);
+        }
+
+        if ($candidate->status !== 'confirmed') {
+            return response()->json(['success' => false, 'message' => "Status kandidat '{$candidate->status}' — belum bisa diverifikasi."], 400);
+        }
+
+        $candidate->update([
+            'status' => 'verified',
+            'verified_at' => now(),
+            'verification_method' => 'qr'
+        ]);
+
+        DonorHistory::create([
+            'user_id' => $candidate->user_id,
+            'blood_request_id' => $candidate->blood_request_id,
+            'donor_date' => now()->toDateString(),
+            'location_name' => $candidate->bloodRequest->hospital_name,
+            'verified_by' => auth()->id()
+        ]);
+
+        $candidate->user->update([
+            'last_donor_date' => now()->toDateString(),
+            'is_available' => false
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Pendonor {$candidate->user->name} berhasil diverifikasi via QR.",
+            'candidate' => [
+                'id' => $candidate->id,
+                'name' => $candidate->user->name,
+                'blood_type' => $candidate->user->blood_type,
+            ]
+        ]);
     }
 }

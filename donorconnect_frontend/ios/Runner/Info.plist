@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Donorconnect Frontend</string>
+	<string>DonorConnect</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>donorconnect_frontend</string>
+	<string>DonorConnect</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -45,5 +45,20 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Location permission description -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>DonorConnect membutuhkan akses lokasi untuk menunjukkan lokasi PMI terdekat</string>
+	<!-- Deep link: donorpmi://permintaan/{id} -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>donorpmi</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>donorpmi</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

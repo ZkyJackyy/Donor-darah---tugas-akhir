@@ -78,4 +78,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(DonorHistory::class);
     }
+
+    public function waLogs()
+    {
+        return $this->hasMany(WaLog::class, 'phone', 'phone');
+    }
 }

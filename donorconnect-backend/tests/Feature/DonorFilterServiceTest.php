@@ -173,6 +173,7 @@ class DonorFilterServiceTest extends TestCase
             'blood_type' => 'O',
             'rhesus' => '+',
             'is_available' => true,
+            'last_donor_date' => null,
             'latitude' => $this->baseLat + 0.01,
             'longitude' => $this->baseLon + 0.01,
         ]);
@@ -185,6 +186,7 @@ class DonorFilterServiceTest extends TestCase
             'blood_type' => 'O',
             'rhesus' => '+',
             'is_available' => true,
+            'last_donor_date' => null,
             'latitude' => $this->baseLat + 0.005,
             'longitude' => $this->baseLon + 0.005,
         ]);

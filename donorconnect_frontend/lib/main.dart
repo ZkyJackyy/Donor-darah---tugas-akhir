@@ -16,16 +16,20 @@ import 'features/permintaan/providers/permintaan_provider.dart';
 import 'features/skrining/providers/skrining_provider.dart';
 import 'features/konfirmasi/providers/konfirmasi_provider.dart';
 import 'features/riwayat/providers/riwayat_provider.dart';
+import 'features/notifikasi/providers/notifikasi_provider.dart';
 
 // Screens
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/register_screen.dart';
 import 'features/auth/screens/splash_screen.dart';
+import 'features/auth/screens/forgot_password_screen.dart';
 import 'features/permintaan/screens/permintaan_list_screen.dart';
 import 'features/permintaan/screens/permintaan_detail_screen.dart';
 import 'features/permintaan/screens/permintaan_all_screen.dart';
 import 'features/konfirmasi/screens/tiket_digital_screen.dart';
 import 'features/riwayat/screens/riwayat_screen.dart';
+import 'features/notifikasi/screens/notifikasi_screen.dart';
+import 'features/scan/screens/scan_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/edit_profile_screen.dart';
 
@@ -102,6 +106,10 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
         path: '/home',
         builder: (context, state) => const PermintaanListScreen(),
       ),
@@ -135,6 +143,14 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         path: '/permintaan-all',
         builder: (context, state) => const PermintaanAllScreen(),
       ),
+      GoRoute(
+        path: '/notifikasi',
+        builder: (context, state) => const NotifikasiScreen(),
+      ),
+      GoRoute(
+        path: '/scan',
+        builder: (context, state) => const ScanScreen(),
+      ),
     ],
   );
 
@@ -147,6 +163,7 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         ChangeNotifierProvider(create: (_) => SkriningProvider()),
         ChangeNotifierProvider(create: (_) => KonfirmasiProvider()),
         ChangeNotifierProvider(create: (_) => RiwayatProvider()),
+        ChangeNotifierProvider(create: (_) => NotifikasiProvider()),
       ],
       child: MaterialApp.router(
         title: 'DonorConnect',
