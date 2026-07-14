@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -46,12 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
           context.go('/home');
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.read<AuthProvider>().error ?? 'Login failed'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackbar.showError(context, context.read<AuthProvider>().error ?? 'Login failed');
       }
     }
   }

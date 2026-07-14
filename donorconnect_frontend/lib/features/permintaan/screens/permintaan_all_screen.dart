@@ -31,7 +31,7 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
     final user = context.watch<AuthProvider>().user;
 
     int getPriority(BloodRequestModel item) {
-      if (item.userCandidateStatus == 'verified' || item.userCandidateStatus == 'completed') {
+      if (item.userCandidateStatus == 'verified') {
         return 2;
       }
       bool isEligibleForUser = false;

@@ -11,6 +11,7 @@ use App\Models\DonorHistory;
 use App\Models\DonorScreening;
 use App\Models\BloodRequest;
 use App\Traits\ApiResponse;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
@@ -49,6 +50,7 @@ class DonorActionController extends Controller
         }
 
         $qrToken = null;
+        $kodeVerifikasi = null;
         if ($request->status === 'confirmed') {
             $payload = json_encode([
                 'candidate_id' => $candidate->id,
@@ -57,20 +59,50 @@ class DonorActionController extends Controller
                 'expires_at' => now()->addHours(2)->timestamp
             ]);
             $qrToken = hash_hmac('sha256', $payload, config('app.key')) . '|' . base64_encode($payload);
+            $kodeVerifikasi = $this->generateUniqueVerificationCode();
         }
 
-        $candidate->update([
+        $updateData = [
             'status' => $request->status,
             'confirmed_at' => $request->status === 'confirmed' ? now() : null,
-            'qr_token' => $qrToken
-        ]);
+            'qr_token' => $qrToken,
+            'kode_verifikasi' => $kodeVerifikasi,
+        ];
+
+        // The DB has a unique index on kode_verifikasi, but generation and
+        // this update aren't atomic, so two concurrent confirmations could
+        // race onto the same code between the exists() check and here.
+        // Retry with a freshly generated code on that specific collision
+        // instead of surfacing a 500 to the donor.
+        $maxAttempts = 5;
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            try {
+                $candidate->update($updateData);
+                break;
+            } catch (QueryException $e) {
+                $isDuplicateCode = $request->status === 'confirmed'
+                    && str_contains($e->getMessage(), 'kode_verifikasi');
+                if (!$isDuplicateCode || $attempt === $maxAttempts) {
+                    throw $e;
+                }
+                $updateData['kode_verifikasi'] = $this->generateUniqueVerificationCode();
+            }
+        }
 
         if ($request->status === 'declined') {
-            $totalCandidates = DonorCandidate::where('blood_request_id', $candidate->blood_request_id)->count();
+            // Alert admin once no candidate is still awaiting a response and
+            // nobody has confirmed yet — this catches candidates stuck in
+            // 'notified'/'screening_passed'/'no_response' too, not just the
+            // case where literally every candidate explicitly declined.
+            $pendingCount = DonorCandidate::where('blood_request_id', $candidate->blood_request_id)
+                ->whereIn('status', ['notified', 'screening_passed'])
+                ->count();
+            $confirmedCount = DonorCandidate::where('blood_request_id', $candidate->blood_request_id)
+                ->where('status', 'confirmed')->count();
             $declinedCount = DonorCandidate::where('blood_request_id', $candidate->blood_request_id)
                 ->where('status', 'declined')->count();
 
-            if ($totalCandidates > 0 && $totalCandidates === $declinedCount) {
+            if ($pendingCount === 0 && $confirmedCount === 0 && $declinedCount > 0) {
                 $candidate->load('bloodRequest');
                 app(\App\Services\WhatsAppService::class)->notifyAdminAllDeclined($candidate->bloodRequest);
             }
@@ -81,8 +113,18 @@ class DonorActionController extends Controller
 
         return $this->success([
             'status' => $candidate->status,
-            'qr_token' => $qrToken
+            'qr_token' => $qrToken,
+            'kode_verifikasi' => $updateData['kode_verifikasi']
         ], 'Donor status updated successfully');
+    }
+
+    private function generateUniqueVerificationCode(): string
+    {
+        do {
+            $code = strtoupper(substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 6));
+        } while (DonorCandidate::where('kode_verifikasi', $code)->exists());
+
+        return $code;
     }
 
     public function qrCode(DonorCandidate $candidate)

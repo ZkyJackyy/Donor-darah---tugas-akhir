@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../providers/permintaan_provider.dart';
 import '../../konfirmasi/providers/konfirmasi_provider.dart';
@@ -45,13 +46,7 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
       // Setelah skrining berhasil, status sudah jadi 'screening_passed' di backend.
       // Refresh data agar tombol berubah ke 'Konfirmasi Kesediaan'
       context.read<PermintaanProvider>().fetchPermintaanDetail(widget.requestId);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Skrining selesai! Tekan "Konfirmasi Kesediaan" untuk lanjut.'),
-          backgroundColor: AppColors.success,
-          duration: Duration(seconds: 3),
-        ),
-      );
+      AppSnackbar.showSuccess(context, 'Skrining selesai! Tekan "Konfirmasi Kesediaan" untuk lanjut.');
     }
   }
 
@@ -69,17 +64,10 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
       if (qrToken != null) {
         context.push('/tiket', extra: qrToken);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal mendapatkan tiket digital'), backgroundColor: AppColors.error),
-        );
+        AppSnackbar.showError(context, 'Gagal mendapatkan tiket digital');
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.read<KonfirmasiProvider>().error ?? 'Gagal konfirmasi'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackbar.showError(context, context.read<KonfirmasiProvider>().error ?? 'Gagal konfirmasi');
     }
   }
 
@@ -112,17 +100,10 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
 
       if (!mounted) return;
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Penolakan berhasil dicatat'), backgroundColor: AppColors.success),
-        );
+        AppSnackbar.showSuccess(context, 'Penolakan berhasil dicatat');
         context.pop(); // Kembali ke halaman sebelumnya
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.read<KonfirmasiProvider>().error ?? 'Gagal menolak'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackbar.showError(context, context.read<KonfirmasiProvider>().error ?? 'Gagal menolak');
       }
     }
   }

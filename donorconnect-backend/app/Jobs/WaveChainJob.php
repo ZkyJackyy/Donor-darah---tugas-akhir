@@ -78,12 +78,22 @@ class WaveChainJob implements ShouldQueue
                     'notified_at' => now(),
                 ]);
 
+                // Skip donors already notified by a previous attempt of this job
+                // (e.g. a retry after failure) to avoid duplicate WA broadcasts.
+                if (!$candidate->wasRecentlyCreated) {
+                    continue;
+                }
+
                 $candidate->setRelation('user', User::find($donor->id));
                 $candidates->push($candidate);
             }
 
-            $waService->notifyAllCandidates($candidates, $request, $this->currentWave);
-            Log::info("WaveChain: Gelombang {$this->currentWave} → {$candidates->count()} notifikasi dikirim untuk request #{$this->bloodRequestId}");
+            if ($candidates->isNotEmpty()) {
+                $waService->notifyAllCandidates($candidates, $request, $this->currentWave);
+                Log::info("WaveChain: Gelombang {$this->currentWave} → {$candidates->count()} notifikasi dikirim untuk request #{$this->bloodRequestId}");
+            } else {
+                Log::info("WaveChain: Gelombang {$this->currentWave} untuk request #{$this->bloodRequestId} — semua kandidat sudah pernah dinotifikasi, skip.");
+            }
         }
 
         // Chain ke gelombang berikutnya (max 3)

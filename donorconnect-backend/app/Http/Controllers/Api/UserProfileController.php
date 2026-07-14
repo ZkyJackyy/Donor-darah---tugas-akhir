@@ -26,6 +26,8 @@ class UserProfileController extends Controller
             'weight' => 'sometimes|numeric',
             'birth_date' => 'sometimes|date',
             'is_available' => 'sometimes|boolean',
+            'blood_type' => 'sometimes|in:A,B,AB,O',
+            'rhesus' => 'sometimes|in:+,-',
         ]);
 
         $user = $request->user();

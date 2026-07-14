@@ -9,6 +9,7 @@ class UserModel {
   final String? golonganDarah;
   final String? rhesus;
   final String? tanggalDonorTerakhir;
+  final String? role;
 
   UserModel({
     required this.id,
@@ -21,7 +22,10 @@ class UserModel {
     this.golonganDarah,
     this.rhesus,
     this.tanggalDonorTerakhir,
+    this.role,
   });
+
+  bool get isAdmin => role == 'admin';
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
@@ -35,6 +39,7 @@ class UserModel {
       golonganDarah: json['blood_type'],
       rhesus: json['rhesus'],
       tanggalDonorTerakhir: json['last_donor_date'],
+      role: json['role'],
     );
   }
 
@@ -50,6 +55,7 @@ class UserModel {
       'blood_type': golonganDarah,
       'rhesus': rhesus,
       'last_donor_date': tanggalDonorTerakhir,
+      'role': role,
     };
   }
 }

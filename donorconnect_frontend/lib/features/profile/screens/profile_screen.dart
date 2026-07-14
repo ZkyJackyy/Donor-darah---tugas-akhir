@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../scan/providers/scan_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,6 +17,21 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isUpdating = false;
 
+  Future<void> _openScanVerification() async {
+    final result = await context.push<String>('/scan');
+    if (result == null || !mounted) return;
+
+    final scanProvider = context.read<ScanProvider>();
+    final success = await scanProvider.verify(result);
+    if (!mounted) return;
+
+    if (success) {
+      AppSnackbar.showSuccess(context, scanProvider.resultMessage ?? 'Verifikasi berhasil');
+    } else {
+      AppSnackbar.showError(context, scanProvider.error ?? 'Verifikasi gagal');
+    }
+  }
+
   void _toggleAvailability(bool newValue) async {
     setState(() => _isUpdating = true);
     final success = await context.read<AuthProvider>().updateProfile(isAvailable: newValue);
@@ -22,16 +39,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Status ketersediaan diperbarui'), backgroundColor: AppColors.success),
-        );
+        AppSnackbar.showSuccess(context, 'Status ketersediaan diperbarui');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.read<AuthProvider>().error ?? 'Gagal memperbarui status'), 
-            backgroundColor: AppColors.error
-          ),
-        );
+        AppSnackbar.showError(context, context.read<AuthProvider>().error ?? 'Gagal memperbarui status');
       }
     }
   }
@@ -117,6 +127,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   ),
+                  if (user.isAdmin) ...[
+                    const SizedBox(height: 16),
+                    _buildInfoCard(
+                      title: 'Menu Admin',
+                      children: [
+                        CustomButton(
+                          text: 'Verifikasi Donor (Scan/Kode)',
+                          onPressed: _openScanVerification,
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 32),
                   CustomButton(
                     text: 'Edit Profil',

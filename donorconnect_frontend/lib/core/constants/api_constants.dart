@@ -1,10 +1,12 @@
 class ApiConstants {
-  // Use --dart-define=API_BASE_URL=http://YOUR_IP:8000/api when running
-  // Defaults to Android emulator loopback (10.0.2.2) for dev convenience
+  // Always pass your machine's backend URL explicitly:
+  //   flutter run --dart-define=API_BASE_URL=http://YOUR_IP:8000/api
+  // Default below is the Android emulator loopback to the host machine's
+  // localhost — it will NOT work on a physical device or from a different
+  // machine without overriding it via --dart-define.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://172.21.212.246:8000/api',
-    // defaultValue: 'http://10.0.2.2:8000/api',
+    defaultValue: 'http://10.0.2.2:8000/api',
   );
 
   // Auth Endpoints
@@ -33,6 +35,7 @@ class ApiConstants {
   static const String notificationsUnreadCount =
       '/user/notifications/unread-count';
 
-  // Verification
+  // Verification (admin only)
   static const String verifyKode = '/verify/code';
+  static const String verifyQr = '/verify/qr';
 }

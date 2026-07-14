@@ -20,6 +20,7 @@ class DonorCandidate extends Model
         'verified_at',
         'verification_method',
         'qr_token',
+        'kode_verifikasi',
     ];
 
     protected function casts(): array

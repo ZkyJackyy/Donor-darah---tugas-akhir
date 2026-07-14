@@ -17,6 +17,7 @@ import 'features/skrining/providers/skrining_provider.dart';
 import 'features/konfirmasi/providers/konfirmasi_provider.dart';
 import 'features/riwayat/providers/riwayat_provider.dart';
 import 'features/notifikasi/providers/notifikasi_provider.dart';
+import 'features/scan/providers/scan_provider.dart';
 
 // Screens
 import 'features/auth/screens/login_screen.dart';
@@ -38,6 +39,54 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
   runApp(const DonorConnectApp());
+}
+
+const _publicPaths = ['/splash', '/login', '/register', '/forgot-password'];
+
+// Centralized auth guard: protects every route not in _publicPaths from
+// being reached without a stored token, regardless of navigation path
+// (splash/deep-link already check this too, but this is the safety net
+// for any future direct context.go(...) call that skips those).
+Future<String?> _authGuard(BuildContext context, GoRouterState state) async {
+  if (_publicPaths.contains(state.matchedLocation)) return null;
+
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+  if (token == null || token.isEmpty) {
+    return '/login';
+  }
+  return null;
+}
+
+class _InvalidRouteScreen extends StatelessWidget {
+  final String message;
+
+  const _InvalidRouteScreen({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Tautan Tidak Valid')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.link_off, size: 64, color: AppColors.textSecondary),
+              const SizedBox(height: 16),
+              Text(message, textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.go('/home'),
+                child: const Text('Kembali ke Beranda'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class DonorConnectApp extends StatefulWidget {
@@ -92,6 +141,7 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
   // GoRouter configuration
   final _router = GoRouter(
     initialLocation: '/splash',
+    redirect: _authGuard,
     routes: [
       GoRoute(
         path: '/splash',
@@ -116,7 +166,12 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
       GoRoute(
         path: '/permintaan/:id',
         builder: (context, state) {
-          final id = int.tryParse(state.pathParameters['id'] ?? '1') ?? 1;
+          final id = int.tryParse(state.pathParameters['id'] ?? '');
+          if (id == null) {
+            return const _InvalidRouteScreen(
+              message: 'Tautan permintaan donor tidak valid.',
+            );
+          }
           return PermintaanDetailScreen(requestId: id);
         },
       ),
@@ -164,6 +219,7 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         ChangeNotifierProvider(create: (_) => KonfirmasiProvider()),
         ChangeNotifierProvider(create: (_) => RiwayatProvider()),
         ChangeNotifierProvider(create: (_) => NotifikasiProvider()),
+        ChangeNotifierProvider(create: (_) => ScanProvider()),
       ],
       child: MaterialApp.router(
         title: 'DonorConnect',

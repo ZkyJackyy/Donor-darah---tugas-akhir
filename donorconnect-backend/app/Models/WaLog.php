@@ -8,6 +8,7 @@ class WaLog extends Model
 {
     protected $fillable = [
         'user_id',
+        'blood_request_id',
         'phone',
         'message',
         'status',
@@ -17,5 +18,10 @@ class WaLog extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function bloodRequest()
+    {
+        return $this->belongsTo(BloodRequest::class);
     }
 }

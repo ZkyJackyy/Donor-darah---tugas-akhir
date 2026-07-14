@@ -34,13 +34,9 @@ class SkriningProvider with ChangeNotifier {
       });
 
       if (response.data['status'] == true) {
-        _isLoading = false;
-        notifyListeners();
         return true;
       } else {
         _error = response.data['message'];
-        _isLoading = false;
-        notifyListeners();
         return false;
       }
     } on DioException catch (e) {
@@ -54,9 +50,13 @@ class SkriningProvider with ChangeNotifier {
       } else {
         _error = ApiErrorHandler.getMessage(e);
       }
+      return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+      return false;
+    } finally {
       _isLoading = false;
       notifyListeners();
-      return false;
     }
   }
 }

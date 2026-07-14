@@ -31,7 +31,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/blood-requests', [AdminBloodRequestWebController::class, 'store'])->name('blood-requests.store');
     Route::get('/blood-requests/{id}', [AdminBloodRequestWebController::class, 'show'])->name('blood-requests.show');
     
-    Route::post('/blood-requests/{id}/notify', [AdminBloodRequestWebController::class, 'notifyWeb'])->name('blood-requests.notify');
+    Route::post('/blood-requests/{id}/notify', [AdminBloodRequestWebController::class, 'notifyWeb'])->middleware('throttle:5,1')->name('blood-requests.notify');
     Route::post('/blood-requests/verify/{id}', [AdminBloodRequestWebController::class, 'verifyWeb'])->name('blood-requests.verify');
     Route::post('/blood-requests/verify-qr', [AdminBloodRequestWebController::class, 'verifyQrWeb'])->name('blood-requests.verify-qr');
     Route::patch('/blood-requests/{id}/status', [AdminBloodRequestWebController::class, 'updateStatus'])->name('blood-requests.update-status');

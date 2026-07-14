@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/blood-requests/{bloodRequest}', [AdminBloodRequestController::class, 'show']);
 
         Route::get('/blood-requests/{bloodRequest}/preview-donors', [AdminBloodRequestController::class, 'previewDonors']);
-        Route::post('/blood-requests/{bloodRequest}/notify', [AdminBloodRequestController::class, 'notify']);
+        Route::post('/blood-requests/{bloodRequest}/notify', [AdminBloodRequestController::class, 'notify'])->middleware('throttle:5,1');
 
         Route::post('/donor-candidates/{candidate}/verify', [AdminBloodRequestController::class, 'verify']);
         Route::post('/verify/code', [AdminBloodRequestController::class, 'verifyByCode']);

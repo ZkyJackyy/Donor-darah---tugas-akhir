@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../auth/providers/auth_provider.dart';
 
@@ -75,16 +76,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profil berhasil diperbarui!'), backgroundColor: AppColors.success),
-      );
+      AppSnackbar.showSuccess(context, 'Profil berhasil diperbarui!');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.read<AuthProvider>().error ?? 'Gagal memperbarui profil'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackbar.showError(context, context.read<AuthProvider>().error ?? 'Gagal memperbarui profil');
     }
   }
 

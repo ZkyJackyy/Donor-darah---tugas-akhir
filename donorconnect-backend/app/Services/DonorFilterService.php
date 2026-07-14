@@ -34,8 +34,12 @@ class DonorFilterService
         $bloodType = $request->blood_type;
         $rhesus = $request->rhesus;
 
-        // Determine distance range based on wave
-        $distanceRange = $wave ? (self::WAVE_RANGES[$wave] ?? self::WAVE_RANGES[1]) : null;
+        // Determine distance range based on wave. If no wave given, cover the
+        // full range across all waves instead of leaving this null (a null
+        // range would blow up the HAVING clause below).
+        $distanceRange = $wave
+            ? (self::WAVE_RANGES[$wave] ?? self::WAVE_RANGES[1])
+            : ['min' => self::WAVE_RANGES[1]['min'], 'max' => self::WAVE_RANGES[3]['max']];
 
         // Using parameterized PDO raw query for protection against SQL Injection
         // Calculating age via TIMESTAMPDIFF
@@ -67,6 +71,9 @@ class DonorFilterService
               AND (last_donor_date IS NULL OR DATEDIFF(CURRENT_DATE, last_donor_date) >= 56)
               AND blood_type = :blood_type
               AND rhesus = :rhesus
+              AND id NOT IN (
+                  SELECT user_id FROM donor_candidates WHERE blood_request_id = :existing_request_id
+              )
             HAVING distance_km >= :min_distance AND distance_km <= :max_distance
             ORDER BY distance_km ASC
         ";
@@ -77,6 +84,7 @@ class DonorFilterService
             'lat2' => $lat,
             'blood_type' => $bloodType,
             'rhesus' => $rhesus,
+            'existing_request_id' => $request->id,
             'min_distance' => $distanceRange['min'],
             'max_distance' => $distanceRange['max'],
         ]);

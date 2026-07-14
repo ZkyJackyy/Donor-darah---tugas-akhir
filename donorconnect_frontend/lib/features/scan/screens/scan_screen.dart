@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -61,9 +62,7 @@ class _ScanScreenState extends State<ScanScreen> {
   void _submitKodeManual() {
     final kode = _kodeController.text.trim();
     if (kode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Masukkan kode verifikasi')),
-      );
+      AppSnackbar.showWarning(context, 'Masukkan kode verifikasi');
       return;
     }
     Navigator.of(context).pop(kode);

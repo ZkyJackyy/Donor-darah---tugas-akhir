@@ -108,6 +108,10 @@ class AdminBloodRequestController extends Controller
 
     public function verify(VerifyCandidateRequest $request, DonorCandidate $candidate)
     {
+        if ($candidate->status === 'verified') {
+            return $this->error('Candidate already verified', 400);
+        }
+
         $candidate->update([
             'status' => 'verified',
             'verified_at' => now(),

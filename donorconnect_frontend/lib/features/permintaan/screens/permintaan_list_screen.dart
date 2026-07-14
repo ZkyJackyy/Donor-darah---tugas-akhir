@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 import '../providers/permintaan_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../shared/models/blood_request_model.dart';
@@ -20,7 +21,18 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PermintaanProvider>().fetchPermintaanList();
       context.read<AuthProvider>().getProfile();
+      _showLocationWarningIfAny();
     });
+  }
+
+  void _showLocationWarningIfAny() {
+    final authProvider = context.read<AuthProvider>();
+    final warning = authProvider.locationWarning;
+    if (warning == null) return;
+
+    authProvider.clearLocationWarning();
+    if (!mounted) return;
+    AppSnackbar.showError(context, warning);
   }
 
   @override
@@ -49,7 +61,7 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
     }
 
     int getPriority(BloodRequestModel item) {
-      if (item.userCandidateStatus == 'verified' || item.userCandidateStatus == 'completed') {
+      if (item.userCandidateStatus == 'verified') {
         return 2;
       }
       bool isEligibleForUser = false;
@@ -141,12 +153,7 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                                               await context.read<PermintaanProvider>().fetchPermintaanList();
                                               await context.read<AuthProvider>().getProfile();
                                               if (mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text('Data diperbarui...'),
-                                                    duration: Duration(seconds: 1),
-                                                  ),
-                                                );
+                                                AppSnackbar.showSuccess(context, 'Data diperbarui...');
                                               }
                                             },
                                             tooltip: 'Refresh Lokasi & Status',

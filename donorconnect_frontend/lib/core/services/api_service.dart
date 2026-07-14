@@ -28,6 +28,7 @@ class ApiService {
       },
       onError: (DioException e, handler) {
         if (e.response?.statusCode == 401) {
+          SharedPreferences.getInstance().then((prefs) => prefs.remove('auth_token'));
           if (onUnauthorized != null) {
             onUnauthorized!();
           }

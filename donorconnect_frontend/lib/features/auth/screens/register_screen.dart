@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -67,9 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select your birth date')),
-        );
+        AppSnackbar.showWarning(context, 'Please select your birth date');
         return;
       }
 
@@ -90,12 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (success) {
         context.go('/home');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.read<AuthProvider>().error ?? 'Registration failed'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackbar.showError(context, context.read<AuthProvider>().error ?? 'Registration failed');
       }
     }
   }

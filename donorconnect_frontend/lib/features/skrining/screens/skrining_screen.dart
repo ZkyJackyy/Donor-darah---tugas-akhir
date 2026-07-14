@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../providers/skrining_provider.dart';
 
@@ -21,12 +22,7 @@ class _SkriningScreenState extends State<SkriningScreen> {
 
   void _submit() async {
     if (!_healthStatus || !_minWeight || !_noMedicine || !_notPregnant) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Anda harus mencentang semua pernyataan skrining mandiri.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackbar.showError(context, 'Anda harus mencentang semua pernyataan skrining mandiri.');
       return;
     }
 
@@ -42,20 +38,10 @@ class _SkriningScreenState extends State<SkriningScreen> {
 
     if (success) {
       // Proceed to Konfirmasi / Detail Request
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Skrining berhasil. Lanjutkan konfirmasi kesediaan donor.'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      AppSnackbar.showSuccess(context, 'Skrining berhasil. Lanjutkan konfirmasi kesediaan donor.');
       context.pop(true); // Return true to indicate screening passed
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.read<SkriningProvider>().error ?? 'Gagal memproses skrining.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackbar.showError(context, context.read<SkriningProvider>().error ?? 'Gagal memproses skrining.');
     }
   }
 

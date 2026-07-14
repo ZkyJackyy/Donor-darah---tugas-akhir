@@ -14,11 +14,17 @@ class AuthProvider with ChangeNotifier {
   UserModel? _user;
   bool _isLoading = false;
   String? _error;
+  String? _locationWarning;
 
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _user != null;
+  String? get locationWarning => _locationWarning;
+
+  void clearLocationWarning() {
+    _locationWarning = null;
+  }
 
   Future<bool> login(String email, String password) async {
     _setLoading(true);
@@ -31,24 +37,26 @@ class AuthProvider with ChangeNotifier {
       if (response.data['status'] == true) {
         final token = response.data['data']['access_token'];
         _user = UserModel.fromJson(response.data['data']['user']);
-        
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token);
-        
+
         // Update location after successful login
         updateLocation();
-        
-        _setLoading(false);
+
         return true;
       } else {
         _error = response.data['message'];
-        _setLoading(false);
         return false;
       }
     } on DioException catch (e) {
       _error = ApiErrorHandler.getMessage(e);
-      _setLoading(false);
       return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+      return false;
+    } finally {
+      _setLoading(false);
     }
   }
 
@@ -80,18 +88,16 @@ class AuthProvider with ChangeNotifier {
       if (response.data['status'] == true) {
         final token = response.data['data']['access_token'];
         _user = UserModel.fromJson(response.data['data']['user']);
-        
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token);
-        
+
         // Update location after successful registration
         updateLocation();
-        
-        _setLoading(false);
+
         return true;
       } else {
         _error = response.data['message'];
-        _setLoading(false);
         return false;
       }
     } on DioException catch (e) {
@@ -105,8 +111,12 @@ class AuthProvider with ChangeNotifier {
       } else {
         _error = ApiErrorHandler.getMessage(e);
       }
-      _setLoading(false);
       return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+      return false;
+    } finally {
+      _setLoading(false);
     }
   }
 
@@ -121,14 +131,19 @@ class AuthProvider with ChangeNotifier {
 
       if (response.data['status'] == true) {
         _user = UserModel.fromJson(response.data['data']);
+        _locationWarning = null;
         notifyListeners();
         return null; // Success
       } else {
-        return response.data['message'] ?? 'Gagal memperbarui lokasi';
+        _locationWarning = response.data['message'] ?? 'Gagal memperbarui lokasi';
+        notifyListeners();
+        return _locationWarning;
       }
     } catch (e) {
       debugPrint("Update location error: $e");
-      return e.toString();
+      _locationWarning = 'Gagal memperbarui lokasi. Anda mungkin tidak muncul di pencarian pendonor.';
+      notifyListeners();
+      return _locationWarning;
     }
   }
 
@@ -200,17 +215,19 @@ class AuthProvider with ChangeNotifier {
 
       if (response.data['status'] == true) {
         _user = UserModel.fromJson(response.data['data']);
-        _setLoading(false);
         return true;
       } else {
         _error = response.data['message'];
-        _setLoading(false);
         return false;
       }
     } on DioException catch (e) {
       _error = ApiErrorHandler.getMessage(e);
-      _setLoading(false);
       return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+      return false;
+    } finally {
+      _setLoading(false);
     }
   }
 

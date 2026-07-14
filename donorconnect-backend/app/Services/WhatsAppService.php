@@ -30,7 +30,7 @@ class WhatsAppService
                  . "👉 donorpmi://permintaan/{$request->id}\n\n"
                  . "Balas pesan ini atau buka aplikasi.";
 
-        SendDonorNotificationJob::dispatch($user, $message);
+        SendDonorNotificationJob::dispatch($user, $message, $request->id);
     }
 
     /**
@@ -65,7 +65,7 @@ class WhatsAppService
              . "Semua kandidat pendonor untuk request #{$request->id} di {$request->hospital_name} telah MENOLAK.\n"
              . "Mohon lakukan tindakan verifikasi manual segera.";
 
-            SendDonorNotificationJob::dispatch($admin, $message);
+            SendDonorNotificationJob::dispatch($admin, $message, $request->id);
         }
     }
 }

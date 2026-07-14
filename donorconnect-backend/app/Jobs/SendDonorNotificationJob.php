@@ -21,14 +21,16 @@ class SendDonorNotificationJob implements ShouldQueue
 
     protected User $user;
     protected string $message;
+    protected ?int $bloodRequestId;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(User $user, string $message)
+    public function __construct(User $user, string $message, ?int $bloodRequestId = null)
     {
         $this->user = $user;
         $this->message = $message;
+        $this->bloodRequestId = $bloodRequestId;
     }
 
     /**
@@ -36,13 +38,21 @@ class SendDonorNotificationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        // 1. Initial State
-        $log = WaLog::create([
-            'user_id' => $this->user->id,
-            'phone' => $this->user->phone,
-            'message' => $this->message,
-            'status' => 'pending'
-        ]);
+        // 1. Initial State — dedupe on (user, blood_request, phone, message)
+        // so a queue retry of this same job updates the existing log row
+        // instead of inserting a new one each attempt, while still keeping
+        // separate log rows for different blood requests even if their
+        // rendered message text happens to be identical.
+        $log = WaLog::firstOrCreate(
+            [
+                'user_id' => $this->user->id,
+                'blood_request_id' => $this->bloodRequestId,
+                'phone' => $this->user->phone,
+                'message' => $this->message,
+            ],
+            ['status' => 'pending']
+        );
+        $log->update(['status' => 'pending', 'error_message' => null]);
 
         try {
             $token = config('services.fonnte.token');
@@ -52,8 +62,8 @@ class SendDonorNotificationJob implements ShouldQueue
                 return;
             }
 
-            // 2. Fonnte HTTP POST payload 
-            $response = Http::withHeaders([
+            // 2. Fonnte HTTP POST payload
+            $response = Http::timeout(10)->withHeaders([
                 'Authorization' => $token,
             ])->post('https://api.fonnte.com/send', [
                 'target' => $this->user->phone,

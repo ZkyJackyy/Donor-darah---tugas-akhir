@@ -31,6 +31,8 @@ class RiwayatProvider with ChangeNotifier {
       }
     } on DioException catch (e) {
       _error = ApiErrorHandler.getMessage(e);
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
     } finally {
       _isLoading = false;
       notifyListeners();

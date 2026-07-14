@@ -23,3 +23,4 @@ yarn-error.log
 /.zed
 AUDIT_REPORT.md
 generate_class_diagram.php
+.env.testing

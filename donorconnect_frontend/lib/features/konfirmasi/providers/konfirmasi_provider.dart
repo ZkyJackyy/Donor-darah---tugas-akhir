@@ -33,20 +33,20 @@ class KonfirmasiProvider with ChangeNotifier {
         if (status == 'confirmed') {
           _qrToken = response.data['data']['qr_token'];
         }
-        _isLoading = false;
-        notifyListeners();
         return true;
       } else {
         _error = response.data['message'];
-        _isLoading = false;
-        notifyListeners();
         return false;
       }
     } on DioException catch (e) {
       _error = ApiErrorHandler.getMessage(e);
+      return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+      return false;
+    } finally {
       _isLoading = false;
       notifyListeners();
-      return false;
     }
   }
 
