@@ -32,7 +32,7 @@ class BloodRequestModel {
   static String _formatDate(String? raw) {
     if (raw == null) return '-';
     try {
-      final dt = DateTime.parse(raw);
+      final dt = DateTime.parse(raw).toLocal();
       // Format seperti "25 Mei 2025"
       return DateFormat('dd MMMM yyyy', 'id_ID').format(dt);
     } catch (e) {

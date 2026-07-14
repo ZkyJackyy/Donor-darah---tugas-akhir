@@ -20,11 +20,11 @@ class BloodRequestResource extends JsonResource
             'latitude' => (float) $this->latitude,
             'longitude' => (float) $this->longitude,
             'required_bags' => $this->required_bags,
-            'deadline' => $this->deadline,
+            'deadline' => $this->deadline?->toIso8601String(),
             'status' => $this->status,
             'notes' => $this->notes,
             'candidates' => DonorCandidateResource::collection($this->whenLoaded('donorCandidates')),
-            'created_at' => $this->created_at->toDateTimeString(),
+            'created_at' => $this->created_at->toIso8601String(),
         ];
     }
 }

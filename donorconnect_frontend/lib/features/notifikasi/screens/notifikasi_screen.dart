@@ -96,7 +96,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(item.createdAt),
+                                        DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(item.createdAt.toLocal()),
                                         style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                                       ),
                                     ],

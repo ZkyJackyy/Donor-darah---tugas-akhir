@@ -24,7 +24,7 @@ class WhatsAppService
                  . "📍 RS/Lokasi : {$request->hospital_name}\n"
                  . "🏥 Alamat    : {$request->hospital_address}\n"
                  . "🩸 Kebutuhan : {$request->required_bags} kantong\n"
-                 . "⏳ Batas Waktu: {$request->deadline}\n\n"
+                 . "⏳ Batas Waktu: {$request->deadline->format('d M Y, H:i')} WIB\n\n"
                  . "Apakah Anda bersedia membantu?\n"
                  . "Buka aplikasi untuk konfirmasi:\n"
                  . "👉 donorpmi://permintaan/{$request->id}\n\n"

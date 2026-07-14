@@ -15,9 +15,9 @@ class DonorCandidateResource extends JsonResource
             'user' => new UserResource($this->whenLoaded('user')),
             'distance_km' => (float) $this->distance_km,
             'status' => $this->status,
-            'notified_at' => $this->notified_at?->toDateTimeString(),
-            'confirmed_at' => $this->confirmed_at?->toDateTimeString(),
-            'verified_at' => $this->verified_at?->toDateTimeString(),
+            'notified_at' => $this->notified_at?->toIso8601String(),
+            'confirmed_at' => $this->confirmed_at?->toIso8601String(),
+            'verified_at' => $this->verified_at?->toIso8601String(),
             'verification_method' => $this->verification_method,
         ];
     }

@@ -52,6 +52,7 @@ class AdminBloodRequestWebController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'required_bags' => 'required|integer|min:1',
+            'deadline' => 'required|date|after:now',
             'notes' => 'nullable|string',
         ]);
 
@@ -98,6 +99,20 @@ class AdminBloodRequestWebController extends Controller
             ->get();
             
         return response()->json($candidates);
+    }
+
+    // Polling status of a single request for the 30s Polling Loop
+    public function pollStatus($id)
+    {
+        return response()->json(['status' => BloodRequest::findOrFail($id)->status]);
+    }
+
+    // Polling statuses of the requests currently listed on the index page
+    public function pollStatuses(Request $request)
+    {
+        $ids = array_filter(explode(',', $request->query('ids', '')));
+
+        return response()->json(BloodRequest::whereIn('id', $ids)->pluck('status', 'id'));
     }
 
     public function notifyWeb($id, DonorFilterService $filterService, WhatsAppService $waService)

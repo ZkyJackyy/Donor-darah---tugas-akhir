@@ -3,7 +3,7 @@
 @section('page_title', 'Permintaan Darah')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6" x-data='statusWatcher(@json($bloodRequests->pluck("status", "id")))'>
     <!-- Header & Actions -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -145,4 +145,27 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('statusWatcher', (initialStatuses) => ({
+        init() {
+            const ids = Object.keys(initialStatuses);
+            if (ids.length === 0) return;
+
+            setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/admin-poll/blood-requests/statuses?ids=${ids.join(',')}`);
+                    if (!res.ok) return;
+                    const current = await res.json();
+                    const changed = ids.some(id => current[id] !== initialStatuses[id]);
+                    if (changed) window.location.reload();
+                } catch (e) {}
+            }, 30000);
+        }
+    }));
+});
+</script>
+@endpush
 @endsection
