@@ -51,12 +51,16 @@ class DonorActionController extends Controller
 
         $qrToken = null;
         $kodeVerifikasi = null;
+        $expiresAt = null;
+        $confirmedAt = null;
         if ($request->status === 'confirmed') {
+            $confirmedAt = now();
+            $expiresAt = $confirmedAt->copy()->addMinutes(config('donorconnect.qr.expiry_minutes', 120));
             $payload = json_encode([
                 'candidate_id' => $candidate->id,
                 'user_id' => $candidate->user_id,
                 'request_id' => $candidate->blood_request_id,
-                'expires_at' => now()->addHours(2)->timestamp
+                'expires_at' => $expiresAt->timestamp
             ]);
             $qrToken = hash_hmac('sha256', $payload, config('app.key')) . '|' . base64_encode($payload);
             $kodeVerifikasi = $this->generateUniqueVerificationCode();
@@ -64,7 +68,7 @@ class DonorActionController extends Controller
 
         $updateData = [
             'status' => $request->status,
-            'confirmed_at' => $request->status === 'confirmed' ? now() : null,
+            'confirmed_at' => $confirmedAt,
             'qr_token' => $qrToken,
             'kode_verifikasi' => $kodeVerifikasi,
         ];
@@ -108,13 +112,15 @@ class DonorActionController extends Controller
             }
         }
 
-        // Auto-transition to fulfilled if quota met
-        $this->checkAndFulfillRequest($candidate->blood_request_id);
+        // Auto-transition to fulfilled if quota of verified candidates met
+        $candidate->bloodRequest->checkAndAutoFulfill();
 
         return $this->success([
             'status' => $candidate->status,
             'qr_token' => $qrToken,
-            'kode_verifikasi' => $updateData['kode_verifikasi']
+            'kode_verifikasi' => $updateData['kode_verifikasi'],
+            'hospital_name' => $candidate->bloodRequest->hospital_name,
+            'expires_at' => $expiresAt?->toIso8601String(),
         ], 'Donor status updated successfully');
     }
 
@@ -177,15 +183,4 @@ class DonorActionController extends Controller
         ], 'Self-assessment screening completed successfully');
     }
 
-    private function checkAndFulfillRequest(int $bloodRequestId): void
-    {
-        $bloodRequest = BloodRequest::findOrFail($bloodRequestId);
-        $confirmedCount = DonorCandidate::where('blood_request_id', $bloodRequestId)
-            ->where('status', 'confirmed')
-            ->count();
-
-        if ($confirmedCount >= $bloodRequest->required_bags && $bloodRequest->status === 'open') {
-            $bloodRequest->update(['status' => 'fulfilled']);
-        }
-    }
 }

@@ -24,10 +24,12 @@ import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/register_screen.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'features/auth/screens/forgot_password_screen.dart';
+import 'features/auth/screens/verify_email_screen.dart';
 import 'features/permintaan/screens/permintaan_list_screen.dart';
 import 'features/permintaan/screens/permintaan_detail_screen.dart';
 import 'features/permintaan/screens/permintaan_all_screen.dart';
 import 'features/konfirmasi/screens/tiket_digital_screen.dart';
+import 'shared/models/ticket_data.dart';
 import 'features/riwayat/screens/riwayat_screen.dart';
 import 'features/notifikasi/screens/notifikasi_screen.dart';
 import 'features/scan/screens/scan_screen.dart';
@@ -41,7 +43,7 @@ void main() async {
   runApp(const DonorConnectApp());
 }
 
-const _publicPaths = ['/splash', '/login', '/register', '/forgot-password'];
+const _publicPaths = ['/splash', '/login', '/register', '/forgot-password', '/verify-email'];
 
 // Centralized auth guard: protects every route not in _publicPaths from
 // being reached without a stored token, regardless of navigation path
@@ -54,6 +56,11 @@ Future<String?> _authGuard(BuildContext context, GoRouterState state) async {
   final token = prefs.getString('auth_token');
   if (token == null || token.isEmpty) {
     return '/login';
+  }
+
+  final user = context.read<AuthProvider>().user;
+  if (user != null && !user.emailVerified) {
+    return '/verify-email';
   }
   return null;
 }
@@ -160,6 +167,10 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
+        path: '/verify-email',
+        builder: (context, state) => VerifyEmailScreen(email: state.extra as String?),
+      ),
+      GoRoute(
         path: '/home',
         builder: (context, state) => const PermintaanListScreen(),
       ),
@@ -178,8 +189,11 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
       GoRoute(
         path: '/tiket',
         builder: (context, state) {
-          final qrToken = state.extra as String? ?? 'invalid_token';
-          return TiketDigitalScreen(qrToken: qrToken);
+          final ticket = state.extra as TicketData?;
+          if (ticket == null) {
+            return const Scaffold(body: Center(child: Text('Tiket tidak ditemukan')));
+          }
+          return TiketDigitalScreen(ticket: ticket);
         },
       ),
       GoRoute(
@@ -222,7 +236,7 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         ChangeNotifierProvider(create: (_) => ScanProvider()),
       ],
       child: MaterialApp.router(
-        title: 'DonorConnect',
+        title: 'Sahabat Donor',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
           scaffoldBackgroundColor: AppColors.background,

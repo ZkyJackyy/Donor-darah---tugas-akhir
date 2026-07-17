@@ -11,10 +11,13 @@ return [
     |
     */
 
-    'max_distance_km' => env('DONORCONNECT_MAX_DISTANCE_KM', 25),
+    'max_distance_km' => (int) env('DONORCONNECT_MAX_DISTANCE_KM', 25),
 
     'wave_distance_km' => [
-        0, 5, 10, 20,
+        0,
+        (int) env('DONORCONNECT_WAVE_1_KM', 5),
+        (int) env('DONORCONNECT_WAVE_2_KM', 10),
+        (int) env('DONORCONNECT_WAVE_3_KM', 20),
     ],
 
     /*
@@ -26,7 +29,7 @@ return [
     |
     */
 
-    'donation_cooldown_days' => env('DONORCONNECT_DONATION_COOLDOWN_DAYS', 56),
+    'donation_cooldown_days' => (int) env('DONORCONNECT_DONATION_COOLDOWN_DAYS', 56),
 
     /*
     |--------------------------------------------------------------------------
@@ -53,7 +56,7 @@ return [
     */
 
     'qr' => [
-        'expiry_minutes' => env('DONORCONNECT_QR_EXPIRY_MINUTES', 60),
+        'expiry_minutes' => (int) env('DONORCONNECT_QR_EXPIRY_MINUTES', 120),
         'size' => 300,
     ],
 
@@ -68,5 +71,21 @@ return [
 
     'blood_types' => ['A', 'B', 'AB', 'O'],
     'rhesus_types' => ['+', '-'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Hospital Location
+    |--------------------------------------------------------------------------
+    |
+    | Lokasi default (UDD PMI Kota Padang) yang dipakai saat admin membuat
+    | permintaan darah tanpa mengisi lokasi rumah sakit, serta sebagai pusat
+    | radius pada halaman Peta Donor.
+    |
+    */
+
+    'default_hospital_name' => env('DONORCONNECT_DEFAULT_HOSPITAL_NAME', 'UDD PMI Kota Padang'),
+    'default_hospital_address' => env('DONORCONNECT_DEFAULT_HOSPITAL_ADDRESS', 'Jl. Sawahan Dalam II No.12, Sawahan Tim., Kec. Padang Tim., Kota Padang, Sumatera Barat 25121'),
+    'default_lat' => env('DONORCONNECT_DEFAULT_LAT', -0.944554954176654),
+    'default_lng' => env('DONORCONNECT_DEFAULT_LNG', 100.3679109288369),
 
 ];

@@ -6,7 +6,7 @@
 <div x-data="bloodRequestManager({{ $bloodRequest->id }})" class="space-y-8">
 
     <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div class="flex items-center space-x-4">
             <div class="w-12 h-12 bg-red-100 text-red-600 rounded-lg flex items-center justify-center font-bold text-xl">
                 {{ $bloodRequest->blood_type }}{{ $bloodRequest->rhesus }}
@@ -41,6 +41,26 @@
         </div>
     </div>
 
+    <!-- Info Panel -->
+    <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Batas Waktu</p>
+            <p class="text-sm font-bold text-gray-800">{{ $bloodRequest->deadline ? $bloodRequest->deadline->format('d M Y, H:i') . ' WIB' : '-' }}</p>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Alamat Rumah Sakit</p>
+            <p class="text-sm font-bold text-gray-800">{{ $bloodRequest->hospital_address ?: '-' }}</p>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Dibuat Oleh</p>
+            <p class="text-sm font-bold text-gray-800">{{ $bloodRequest->admin->name ?? '-' }}</p>
+        </div>
+        <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Catatan</p>
+            <p class="text-sm font-bold text-gray-800">{{ $bloodRequest->notes ?: '-' }}</p>
+        </div>
+    </div>
+
     <!-- Modals -->
     <div x-show="openWaModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm" x-cloak x-transition>
         <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full m-4 border border-gray-100" @click.away="openWaModal = false">
@@ -58,11 +78,10 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Main List Section -->
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Kandidat Terverifikasi & Terkonfirmasi</h3>
-                    <div class="flex items-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                        <span class="w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse"></span>
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Kandidat Pendonor</h3>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
                         Auto-Update 30s
                     </div>
                 </div>
@@ -74,6 +93,8 @@
                                 <th class="px-6 py-4">Pendonor</th>
                                 <th class="px-6 py-4 text-center">Jarak</th>
                                 <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4">Waktu</th>
+                                <th class="px-6 py-4 text-center">Skrining</th>
                                 <th class="px-6 py-4 text-right">Opsi</th>
                             </tr>
                         </thead>
@@ -98,6 +119,19 @@
                                             <span x-text="candidate.status"></span>
                                         </span>
                                     </td>
+                                    <td class="px-6 py-4 text-[10px] text-gray-500 font-medium leading-relaxed">
+                                        <div x-show="candidate.notified_at">Notif: <span x-text="candidate.notified_at ? new Date(candidate.notified_at).toLocaleString('id-ID') : ''"></span></div>
+                                        <div x-show="candidate.confirmed_at">Konfirmasi: <span x-text="candidate.confirmed_at ? new Date(candidate.confirmed_at).toLocaleString('id-ID') : ''"></span></div>
+                                        <div x-show="candidate.verified_at">Verifikasi: <span x-text="candidate.verified_at ? new Date(candidate.verified_at).toLocaleString('id-ID') : ''"></span></div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <template x-if="candidate.screening">
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                                  :class="(candidate.screening.health_status && candidate.screening.min_weight && candidate.screening.no_medicine && candidate.screening.not_pregnant) ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-700'"
+                                                  x-text="(candidate.screening.health_status && candidate.screening.min_weight && candidate.screening.no_medicine && candidate.screening.not_pregnant) ? 'Lolos' : 'Tidak Lolos'"></span>
+                                        </template>
+                                        <span x-show="!candidate.screening" class="text-[10px] text-gray-300 font-medium">-</span>
+                                    </td>
                                     <td class="px-6 py-4 text-right">
                                         <template x-if="candidate.status !== 'verified'">
                                             <form :action="`/admin/blood-requests/verify/${candidate.id}`" method="POST">
@@ -120,10 +154,10 @@
 
         <!-- Sidebar Section -->
         <div class="space-y-6">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 bg-red-600 text-white flex justify-between items-center">
-                    <h3 class="text-xs font-bold uppercase tracking-widest">Prediksi Jangkauan</h3>
-                    <button @click="loadPreview()" class="p-1 hover:bg-white/20 rounded transition-colors" :disabled="isLoadingPreview">
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h3 class="text-xs font-bold text-gray-800 uppercase tracking-widest">Prediksi Jangkauan</h3>
+                    <button @click="loadPreview()" class="p-1 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded transition-colors" :disabled="isLoadingPreview">
                         <svg x-show="!isLoadingPreview" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         <svg x-show="isLoadingPreview" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     </button>

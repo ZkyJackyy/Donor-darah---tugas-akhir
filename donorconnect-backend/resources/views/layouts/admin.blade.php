@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('page_title', 'Admin Dashboard') - DonorConnect</title>
+    <title>@yield('page_title', 'Admin Dashboard') - Sahabat Donor</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -53,6 +53,10 @@
     </script>
 
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
         body {
             background-color: #f8fafc; /* medical.soft */
             color: #334155;
@@ -105,7 +109,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold tracking-tight text-gray-900">Donor<span class="text-brand-600">Connect</span></h1>
+                    <h1 class="text-xl font-extrabold tracking-tight text-gray-900">Sahabat<span class="text-brand-600">Donor</span></h1>
                     <p class="text-[10px] text-gray-400 font-medium uppercase tracking-widest">Admin Portal</p>
                 </div>
             </div>
@@ -193,14 +197,6 @@
             </div>
             
             <div class="flex items-center gap-5">
-                <!-- Search -->
-                <div class="hidden md:flex relative">
-                    <input type="text" placeholder="Cari data..." class="w-64 pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-600">
-                    <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-
-                <div class="h-8 w-px bg-gray-200 hidden sm:block"></div>
-
                 <!-- User Profile Dropdown -->
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open" @click.away="open = false" class="flex items-center gap-3 focus:outline-none">
@@ -218,9 +214,8 @@
                     </button>
 
                     <!-- Dropdown Menu -->
-                    <div x-show="open" x-transition.opacity.duration.200ms class="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden py-1 z-50">
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-brand-600 transition-colors">Profil Saya</a>
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-brand-600 transition-colors">Pengaturan</a>
+                    <div x-show="open" x-cloak x-transition.opacity.duration.200ms class="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden py-1 z-50">
+                        <a href="{{ route('admin.settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-brand-600 transition-colors">Pengaturan</a>
                         <div class="border-t border-gray-100 my-1"></div>
                         <form action="{{ route('admin.logout') }}" method="POST">
                             @csrf

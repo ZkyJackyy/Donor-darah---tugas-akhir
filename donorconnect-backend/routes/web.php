@@ -39,6 +39,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Reports
     Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/pdf', [AdminReportController::class, 'exportPdf'])->name('reports.pdf');
 
     // Map
     Route::get('/map', [AdminMapController::class, 'index'])->name('map.index');

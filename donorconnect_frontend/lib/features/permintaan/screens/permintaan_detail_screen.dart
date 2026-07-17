@@ -4,11 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/date_formatter.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../providers/permintaan_provider.dart';
 import '../../konfirmasi/providers/konfirmasi_provider.dart';
 import '../../skrining/screens/skrining_screen.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../../shared/models/blood_request_model.dart';
+import '../../../shared/models/ticket_data.dart';
 
 class PermintaanDetailScreen extends StatefulWidget {
   final int requestId;
@@ -60,15 +64,49 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     if (!mounted) return;
 
     if (success) {
-      final qrToken = context.read<KonfirmasiProvider>().qrToken;
-      if (qrToken != null) {
-        context.push('/tiket', extra: qrToken);
+      final konfirmasi = context.read<KonfirmasiProvider>();
+      final user = context.read<AuthProvider>().user;
+      final item = context.read<PermintaanProvider>().selectedPermintaan;
+
+      if (konfirmasi.qrToken != null) {
+        context.push('/tiket', extra: TicketData.fromConfirmResult(
+          donorName: user?.name,
+          golonganDarah: user?.golonganDarah ?? item?.golonganDarah,
+          rhesus: user?.rhesus ?? item?.rhesus,
+          hospitalName: konfirmasi.hospitalName ?? item?.hospitalName,
+          requestId: widget.requestId,
+          qrToken: konfirmasi.qrToken,
+          kodeVerifikasi: konfirmasi.kodeVerifikasi,
+          expiresAt: konfirmasi.expiresAt,
+        ));
       } else {
         AppSnackbar.showError(context, 'Gagal mendapatkan tiket digital');
       }
     } else {
       AppSnackbar.showError(context, context.read<KonfirmasiProvider>().error ?? 'Gagal konfirmasi');
     }
+  }
+
+  TicketData _buildTicketData({
+    required Map<String, dynamic> userInfo,
+    required BloodRequestModel item,
+    required String dateField,
+    bool includeExpiry = false,
+    bool isUsed = false,
+  }) {
+    final user = context.read<AuthProvider>().user;
+
+    return TicketData.fromCandidateInfo(
+      userInfo: userInfo,
+      donorName: user?.name,
+      golonganDarah: user?.golonganDarah ?? item.golonganDarah,
+      rhesus: user?.rhesus ?? item.rhesus,
+      hospitalName: item.hospitalName,
+      requestId: item.id,
+      dateField: dateField,
+      includeExpiry: includeExpiry,
+      isUsed: isUsed,
+    );
   }
 
   void _handleTolak(int donorCandidateId) async {
@@ -115,7 +153,7 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     }
   }
 
-  Widget _buildActionSection(Map<String, dynamic>? userInfo, bool isLoading) {
+  Widget _buildActionSection(Map<String, dynamic>? userInfo, bool isLoading, BloodRequestModel item) {
     if (userInfo == null || userInfo['is_candidate'] != true) {
       return Card(
         color: Colors.amber.shade100,
@@ -148,14 +186,40 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     }
 
     if (status == 'verified') {
+      final verifiedAtFormatted = formatIndonesianDate(userInfo['verified_at'] as String?);
+
       return Card(
-        color: AppColors.success.withOpacity(0.1),
-        child: const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            '✓ Donor Selesai & Terverifikasi',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.success),
+        color: AppColors.success.withValues(alpha: 0.1),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              const Icon(Icons.check_circle, color: AppColors.success, size: 48),
+              const SizedBox(height: 12),
+              const Text(
+                'Donor Selesai & Terverifikasi',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.success, fontSize: 16),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Terima kasih atas donasi Anda pada $verifiedAtFormatted',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              CustomButton(
+                text: 'Lihat Tiket Digital',
+                onPressed: () => context.push('/tiket', extra: _buildTicketData(
+                  userInfo: userInfo,
+                  item: item,
+                  dateField: 'verified_at',
+                  isUsed: true,
+                )),
+                isLoading: isLoading,
+                color: AppColors.success,
+              ),
+            ],
           ),
         ),
       );
@@ -179,7 +243,12 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
         else if (status == 'confirmed') ...[
           CustomButton(
             text: 'Lihat Tiket Digital',
-            onPressed: () => context.push('/tiket', extra: userInfo['qr_token']),
+            onPressed: () => context.push('/tiket', extra: _buildTicketData(
+              userInfo: userInfo,
+              item: item,
+              dateField: 'confirmed_at',
+              includeExpiry: true,
+            )),
             isLoading: isLoading,
           ),
           const SizedBox(height: 12),
@@ -333,7 +402,7 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
                       ],
                       
                       const SizedBox(height: 48),
-                      _buildActionSection(userInfo, isLoading),
+                      _buildActionSection(userInfo, isLoading, item),
                     ],
                   ),
                 ),

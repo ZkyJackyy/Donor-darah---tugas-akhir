@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\ResendVerificationRequest;
+use App\Http\Requests\VerifyEmailRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Notifications\VerifyEmailCode;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,12 +24,66 @@ class AuthController extends Controller
     {
         $user = User::create($request->validated());
 
+        $this->generateAndSendVerificationCode($user);
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return $this->created([
             'access_token' => $token,
             'user' => new UserResource($user)
         ], 'Registration successful');
+    }
+
+    /**
+     * Verifikasi email dengan kode 6 digit yang dikirim ke email.
+     */
+    public function verifyEmail(VerifyEmailRequest $request)
+    {
+        $user = User::where('email', $request->email)->first();
+
+        if (
+            $user->email_verification_code !== $request->code
+            || !$user->email_verification_code_expires_at
+            || now()->greaterThan($user->email_verification_code_expires_at)
+        ) {
+            return $this->error('Kode tidak valid atau sudah kedaluwarsa', 400);
+        }
+
+        $user->update([
+            'email_verified_at' => now(),
+            'email_verification_code' => null,
+            'email_verification_code_expires_at' => null,
+        ]);
+
+        return $this->success(new UserResource($user), 'Email berhasil diverifikasi');
+    }
+
+    /**
+     * Kirim ulang kode verifikasi email.
+     */
+    public function resendVerificationCode(ResendVerificationRequest $request)
+    {
+        $user = User::where('email', $request->email)->first();
+
+        if ($user->email_verified_at) {
+            return $this->error('Email sudah terverifikasi', 400);
+        }
+
+        $this->generateAndSendVerificationCode($user);
+
+        return $this->success(null, 'Kode verifikasi telah dikirim ulang');
+    }
+
+    private function generateAndSendVerificationCode(User $user): void
+    {
+        $code = (string) random_int(100000, 999999);
+
+        $user->update([
+            'email_verification_code' => $code,
+            'email_verification_code_expires_at' => now()->addMinutes(15),
+        ]);
+
+        $user->notify(new VerifyEmailCode($code));
     }
 
     public function login(LoginRequest $request)

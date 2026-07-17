@@ -10,10 +10,16 @@ class KonfirmasiProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   String? _qrToken;
+  String? _kodeVerifikasi;
+  String? _hospitalName;
+  DateTime? _expiresAt;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get qrToken => _qrToken;
+  String? get kodeVerifikasi => _kodeVerifikasi;
+  String? get hospitalName => _hospitalName;
+  DateTime? get expiresAt => _expiresAt;
 
   Future<bool> confirmDonor({
     required int donorCandidateId,
@@ -31,7 +37,11 @@ class KonfirmasiProvider with ChangeNotifier {
 
       if (response.data['status'] == true) {
         if (status == 'confirmed') {
-          _qrToken = response.data['data']['qr_token'];
+          final data = response.data['data'];
+          _qrToken = data['qr_token'];
+          _kodeVerifikasi = data['kode_verifikasi'];
+          _hospitalName = data['hospital_name'];
+          _expiresAt = data['expires_at'] != null ? DateTime.parse(data['expires_at']).toLocal() : null;
         }
         return true;
       } else {
@@ -52,6 +62,9 @@ class KonfirmasiProvider with ChangeNotifier {
 
   void resetQrToken() {
     _qrToken = null;
+    _kodeVerifikasi = null;
+    _hospitalName = null;
+    _expiresAt = null;
     notifyListeners();
   }
 }

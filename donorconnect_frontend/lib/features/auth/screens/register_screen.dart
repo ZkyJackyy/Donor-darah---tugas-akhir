@@ -87,7 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       
       if (success) {
-        context.go('/home');
+        context.go('/verify-email', extra: _emailController.text);
       } else {
         AppSnackbar.showError(context, context.read<AuthProvider>().error ?? 'Registration failed');
       }

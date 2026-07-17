@@ -29,6 +29,17 @@
     }
 </style>
 
+@if($errors->any())
+<div class="max-w-6xl mx-auto mb-6 bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl shadow-sm">
+    <h4 class="text-sm font-bold text-red-900 mb-2">Permintaan tidak dapat disimpan, periksa kembali isian berikut:</h4>
+    <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+        @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
 <form action="{{ route('admin.blood-requests.store') }}" method="POST" class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
     @csrf
     
@@ -129,19 +140,29 @@
             <div class="space-y-6">
                 <!-- Hospital Name -->
                 <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
-                    <input type="text" name="hospital_name" value="{{ old('hospital_name') }}" required placeholder=" " 
+                    <input type="text" id="hospital_name" name="hospital_name" value="{{ old('hospital_name') }}" required placeholder=" " autocomplete="off"
                         class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer">
                     <label class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
                         Nama Rumah Sakit / Instansi
                     </label>
+                    <div id="hospital-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-30 max-h-60 overflow-y-auto"></div>
                 </div>
 
                 <!-- Address -->
                 <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
-                    <textarea name="hospital_address" rows="3" required placeholder=" " 
+                    <textarea id="hospital_address" name="hospital_address" rows="3" required placeholder=" "
                         class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer resize-none">{{ old('hospital_address') }}</textarea>
                     <label class="float-label absolute left-4 top-6 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
                         Alamat Lengkap
+                    </label>
+                </div>
+
+                <!-- Notes -->
+                <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
+                    <textarea name="notes" rows="3" placeholder=" "
+                        class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer resize-none">{{ old('notes') }}</textarea>
+                    <label class="float-label absolute left-4 top-6 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
+                        Catatan (Opsional)
                     </label>
                 </div>
             </div>
@@ -170,8 +191,8 @@
             </div>
             
             <div class="p-6 bg-gray-50/80 border-t border-gray-100">
-                <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', '-0.9471') }}">
-                <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', '100.4172') }}">
+                <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', config('donorconnect.default_lat')) }}">
+                <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', config('donorconnect.default_lng')) }}">
 
                 <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-extrabold py-3.5 rounded-xl text-sm uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
@@ -188,8 +209,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const latInput = document.getElementById('latitude');
     const lngInput = document.getElementById('longitude');
 
-    const initialLat = parseFloat(latInput.value) || -0.9471; 
-    const initialLng = parseFloat(lngInput.value) || 100.4172;
+    const initialLat = parseFloat(latInput.value) || {{ config('donorconnect.default_lat') }};
+    const initialLng = parseFloat(lngInput.value) || {{ config('donorconnect.default_lng') }};
 
     var map = L.map('map', { zoomControl: false }).setView([initialLat, initialLng], 14);
 
@@ -227,6 +248,77 @@ document.addEventListener("DOMContentLoaded", function () {
         var position = marker.getLatLng();
         latInput.value = position.lat.toFixed(6);
         lngInput.value = position.lng.toFixed(6);
+    });
+
+    // Hospital name autocomplete via OpenStreetMap Nominatim (dibatasi area Kota Padang)
+    const hospitalNameInput = document.getElementById('hospital_name');
+    const hospitalAddressInput = document.getElementById('hospital_address');
+    const suggestionsBox = document.getElementById('hospital-suggestions');
+    let debounceTimer = null;
+
+    function hideSuggestions() {
+        suggestionsBox.classList.add('hidden');
+        suggestionsBox.innerHTML = '';
+    }
+
+    hospitalNameInput.addEventListener('input', function () {
+        const query = hospitalNameInput.value.trim();
+        clearTimeout(debounceTimer);
+
+        if (query.length < 3) {
+            hideSuggestions();
+            return;
+        }
+
+        debounceTimer = setTimeout(async () => {
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&viewbox=100.30,-0.80,100.55,-1.05&bounded=1&addressdetails=1&limit=6`;
+                const res = await fetch(url);
+                if (!res.ok) return;
+                const results = await res.json();
+
+                if (results.length === 0) {
+                    hideSuggestions();
+                    return;
+                }
+
+                suggestionsBox.innerHTML = results.map((item, index) => `
+                    <button type="button" data-index="${index}" class="w-full text-left px-4 py-2.5 hover:bg-gray-50 border-b border-gray-50 last:border-0">
+                        <div class="text-xs font-bold text-gray-800">${(item.name || item.display_name.split(',')[0])}</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5 line-clamp-1">${item.display_name}</div>
+                    </button>
+                `).join('');
+                suggestionsBox.classList.remove('hidden');
+
+                suggestionsBox.querySelectorAll('button[data-index]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const item = results[parseInt(btn.dataset.index)];
+                        const lat = parseFloat(item.lat);
+                        const lng = parseFloat(item.lon);
+
+                        hospitalNameInput.value = item.name || item.display_name.split(',')[0];
+                        hospitalAddressInput.value = item.display_name;
+                        latInput.value = lat.toFixed(6);
+                        lngInput.value = lng.toFixed(6);
+
+                        marker.setLatLng([lat, lng]);
+                        map.setView([lat, lng], 16);
+
+                        hideSuggestions();
+                    });
+                });
+            } catch (e) {}
+        }, 400);
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!suggestionsBox.contains(e.target) && e.target !== hospitalNameInput) {
+            hideSuggestions();
+        }
+    });
+
+    hospitalNameInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') hideSuggestions();
     });
 });
 </script>

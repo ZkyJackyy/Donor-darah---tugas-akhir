@@ -23,6 +23,7 @@ class UserResource extends JsonResource
             'longitude' => (float) $this->longitude,
             'is_available' => (bool) $this->is_available,
             'role' => $this->role,
+            'email_verified' => (bool) $this->email_verified_at,
         ];
     }
 }

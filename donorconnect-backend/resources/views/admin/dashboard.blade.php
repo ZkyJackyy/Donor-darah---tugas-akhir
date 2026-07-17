@@ -5,13 +5,12 @@
 @section('content')
 <div class="space-y-8">
     <!-- Header/Greeting Area -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
-        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-brand-50 rounded-full blur-3xl"></div>
-        <div class="relative z-10">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div>
             <h2 class="text-2xl font-bold text-gray-900">Selamat datang kembali, {{ auth()->user()->name ?? 'Admin' }}! 👋</h2>
             <p class="text-sm text-gray-500 mt-1">Berikut adalah ringkasan aktivitas donor darah dan permintaan rumah sakit hari ini.</p>
         </div>
-        <div class="relative z-10 flex gap-3">
+        <div class="flex gap-3">
             <a href="{{ route('admin.blood-requests.create') }}" class="inline-flex items-center justify-center bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition duration-200 shadow-lg shadow-brand-500/30">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Buat Permintaan
@@ -24,31 +23,22 @@
         <!-- Stat 1 -->
         <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 relative overflow-hidden group hover:shadow-soft transition-shadow">
             <div class="flex items-center justify-between mb-4">
-                <div class="p-3 bg-red-50 rounded-xl text-brand-600 group-hover:scale-110 transition-transform">
+                <div class="p-3 bg-red-50 rounded-xl text-brand-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <span class="flex items-center text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-                    12%
-                </span>
             </div>
             <div>
                 <h3 class="text-3xl font-extrabold text-gray-900">{{ $activeRequestsCount ?? '0' }}</h3>
                 <p class="text-sm font-medium text-gray-500 mt-1">Permintaan Aktif</p>
             </div>
-            <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-brand-300"></div>
         </div>
 
         <!-- Stat 2 -->
         <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 relative overflow-hidden group hover:shadow-soft transition-shadow">
             <div class="flex items-center justify-between mb-4">
-                <div class="p-3 bg-blue-50 rounded-xl text-blue-600 group-hover:scale-110 transition-transform">
+                <div class="p-3 bg-blue-50 rounded-xl text-blue-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 </div>
-                <span class="flex items-center text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-                    4.5%
-                </span>
             </div>
             <div>
                 <h3 class="text-3xl font-extrabold text-gray-900">{{ $totalDonors ?? '0' }}</h3>
@@ -59,28 +49,25 @@
         <!-- Stat 3 -->
         <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 relative overflow-hidden group hover:shadow-soft transition-shadow">
             <div class="flex items-center justify-between mb-4">
-                <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600 group-hover:scale-110 transition-transform">
+                <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                 </div>
-                <span class="flex items-center text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
-                    --
-                </span>
             </div>
             <div>
                 <h3 class="text-3xl font-extrabold text-gray-900">{{ $totalDonationsCount ?? '0' }}</h3>
-                <p class="text-sm font-medium text-gray-500 mt-1">Stok Kantong Darah</p>
+                <p class="text-sm font-medium text-gray-500 mt-1">Total Donasi Selesai</p>
             </div>
         </div>
 
         <!-- Stat 4 -->
         <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 relative overflow-hidden group hover:shadow-soft transition-shadow">
             <div class="flex items-center justify-between mb-4">
-                <div class="p-3 bg-purple-50 rounded-xl text-purple-600 group-hover:scale-110 transition-transform">
+                <div class="p-3 bg-purple-50 rounded-xl text-purple-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 </div>
             </div>
             <div>
-                <h3 class="text-3xl font-extrabold text-gray-900">{{ $totalCompletedRequests ?? '0' }}</h3>
+                <h3 class="text-3xl font-extrabold text-gray-900">{{ $totalHospitals ?? '0' }}</h3>
                 <p class="text-sm font-medium text-gray-500 mt-1">Rumah Sakit Rekanan</p>
             </div>
         </div>
@@ -93,11 +80,7 @@
             <div class="flex items-center justify-between mb-8">
                 <div>
                     <h3 class="font-bold text-gray-900 text-lg">Tren Aktivitas Donor & Permintaan</h3>
-                    <p class="text-xs text-gray-500 mt-1">Data 7 hari terakhir diperbarui secara real-time</p>
-                </div>
-                <div class="flex items-center gap-2 bg-gray-50 p-1 rounded-lg border border-gray-100">
-                    <button class="px-3 py-1.5 text-xs font-bold bg-white text-gray-800 rounded-md shadow-sm border border-gray-200">7 Hari</button>
-                    <button class="px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-gray-800 rounded-md">30 Hari</button>
+                    <p class="text-xs text-gray-500 mt-1">Tren permintaan darah 6 bulan terakhir</p>
                 </div>
             </div>
             <div class="h-[300px] w-full relative">
@@ -109,10 +92,6 @@
         <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 flex flex-col h-[400px]">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="font-bold text-gray-900 text-lg">Aktivitas Terbaru</h3>
-                <span class="relative flex h-3 w-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
-                </span>
             </div>
             
             <div class="flex-1 overflow-y-auto pr-2 relative space-y-6">
@@ -159,9 +138,8 @@
         gradient.addColorStop(0, 'rgba(239, 68, 68, 0.15)'); // brand-500 with opacity
         gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
         
-        // Dummy data fallback if $trends is missing
-        const labels = {!! isset($trends) ? json_encode($trends->pluck('date')) : "['Sen','Sel','Rab','Kam','Jum','Sab','Min']" !!};
-        const data = {!! isset($trends) ? json_encode($trends->pluck('count')) : "[5, 8, 12, 7, 15, 10, 4]" !!};
+        const labels = {!! json_encode($trends->pluck('month')) !!};
+        const data = {!! json_encode($trends->pluck('count')) !!};
 
         new Chart(ctx, {
             type: 'line',

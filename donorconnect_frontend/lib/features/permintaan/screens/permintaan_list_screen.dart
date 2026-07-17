@@ -89,7 +89,7 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('DonorConnect', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Sahabat Donor', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.primary,
         elevation: 0,
         actions: [

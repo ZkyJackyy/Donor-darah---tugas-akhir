@@ -33,10 +33,10 @@ class AdminBloodRequestController extends Controller
 
         // Default to UDD PMI Kota Padang as per AGENTS.md if no location provided
         if (empty($data['hospital_name'])) {
-            $data['hospital_name'] = 'UDD PMI Kota Padang';
-            $data['hospital_address'] = 'Jl. Sisingamangaraja No.34, Padang';
-            $data['latitude'] = -0.9471;
-            $data['longitude'] = 100.4172;
+            $data['hospital_name'] = config('donorconnect.default_hospital_name');
+            $data['hospital_address'] = config('donorconnect.default_hospital_address');
+            $data['latitude'] = config('donorconnect.default_lat');
+            $data['longitude'] = config('donorconnect.default_lng');
         }
 
         $bloodRequest = BloodRequest::create([
@@ -133,8 +133,8 @@ class AdminBloodRequestController extends Controller
             'is_available' => false // Lock user from filter
         ]);
 
-        // Auto-transition to fulfilled if quota met
-        $this->checkAndFulfillRequest($candidate->blood_request_id);
+        // Auto-transition to fulfilled if quota of verified candidates met
+        $candidate->bloodRequest->checkAndAutoFulfill();
 
         return $this->success(null, 'Candidate manually verified and history updated.');
     }
@@ -191,22 +191,10 @@ class AdminBloodRequestController extends Controller
             'is_available' => false
         ]);
 
-        // Auto-transition to fulfilled if quota met
-        $this->checkAndFulfillRequest($candidate->blood_request_id);
+        // Auto-transition to fulfilled if quota of verified candidates met
+        $candidate->bloodRequest->checkAndAutoFulfill();
 
-        return $this->success(null, 'QR Verification successful. User locked for 56 days.');
-    }
-
-    private function checkAndFulfillRequest(int $bloodRequestId): void
-    {
-        $bloodRequest = BloodRequest::findOrFail($bloodRequestId);
-        $confirmedCount = DonorCandidate::where('blood_request_id', $bloodRequestId)
-            ->where('status', 'confirmed')
-            ->count();
-
-        if ($confirmedCount >= $bloodRequest->required_bags && $bloodRequest->status === 'open') {
-            $bloodRequest->update(['status' => 'fulfilled']);
-        }
+        return $this->success(null, 'QR Verification successful. User locked for ' . config('donorconnect.donation_cooldown_days', 56) . ' days.');
     }
 
     public function verifyByCode(Request $request)
@@ -250,7 +238,7 @@ class AdminBloodRequestController extends Controller
             'is_available' => false
         ]);
 
-        $this->checkAndFulfillRequest($candidate->blood_request_id);
+        $candidate->bloodRequest->checkAndAutoFulfill();
 
         return $this->success([
             'candidate' => [

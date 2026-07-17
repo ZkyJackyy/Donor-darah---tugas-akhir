@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\BloodRequest;
-use App\Models\DonorCandidate;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -26,17 +25,14 @@ class CheckRequestStatusJob implements ShouldQueue
     {
         $now = now();
 
-        // ── 1. Auto-fulfill: confirmed >= required_bags ──
+        // ── 1. Auto-fulfill: verified >= required_bags ──
         $openRequests = BloodRequest::where('status', 'open')->get();
 
         foreach ($openRequests as $request) {
-            $confirmedCount = DonorCandidate::where('blood_request_id', $request->id)
-                ->where('status', 'confirmed')
-                ->count();
+            $request->checkAndAutoFulfill();
 
-            if ($confirmedCount >= $request->required_bags) {
-                $request->update(['status' => 'fulfilled']);
-                Log::info("Request #{$request->id} AUTO-FULFILLED ({$confirmedCount}/{$request->required_bags} confirmed)");
+            if ($request->status === 'fulfilled') {
+                Log::info("Request #{$request->id} AUTO-FULFILLED (quota of verified donors met)");
                 continue;
             }
 

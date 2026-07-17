@@ -55,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Icon(Icons.bloodtype, size: 100, color: AppColors.primary),
             SizedBox(height: 24),
             Text(
-              'DonorConnect',
+              'Sahabat Donor',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,

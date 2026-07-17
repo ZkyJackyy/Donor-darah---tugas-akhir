@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\BloodRequest;
@@ -23,8 +24,15 @@ class DonorFilterServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Query DonorFilterService pakai fungsi trig raw SQL (ACOS/RADIANS) yang
+        // hanya didukung MySQL, tidak ada di SQLite (dipakai untuk test lokal/CI).
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            $this->markTestSkipped('SQLite does not natively support geometric raw SQL functions used in Haversine.');
+        }
+
         $this->service = new DonorFilterService();
-        
+
         // Setup a baseline request
         $this->request = BloodRequest::factory()->create([
             'blood_type' => 'O',

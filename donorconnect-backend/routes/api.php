@@ -16,6 +16,8 @@ Route::post('/auth/register', [AuthController::class, 'register'])->middleware('
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:60,1');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:10,1');
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
+Route::post('/auth/email/verify', [AuthController::class, 'verifyEmail'])->middleware('throttle:10,1');
+Route::post('/auth/email/resend', [AuthController::class, 'resendVerificationCode'])->middleware('throttle:5,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     // Authenticated Auth Routes

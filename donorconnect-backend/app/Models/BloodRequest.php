@@ -38,4 +38,21 @@ class BloodRequest extends Model
     {
         return $this->hasMany(DonorCandidate::class);
     }
+
+    /**
+     * Transisi otomatis ke 'fulfilled' begitu jumlah kandidat yang benar-benar
+     * verified (bukan sekadar confirmed) sudah memenuhi required_bags.
+     */
+    public function checkAndAutoFulfill(): void
+    {
+        if ($this->status !== 'open') {
+            return;
+        }
+
+        $verifiedCount = $this->donorCandidates()->where('status', 'verified')->count();
+
+        if ($verifiedCount >= $this->required_bags) {
+            $this->update(['status' => 'fulfilled']);
+        }
+    }
 }

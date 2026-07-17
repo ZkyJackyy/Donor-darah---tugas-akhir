@@ -9,7 +9,7 @@
     </div>
     
     <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-        <form method="GET" action="{{ route('admin.reports.index') }}" class="flex bg-white rounded-md border border-gray-300 overflow-hidden shadow-sm">
+        <form method="GET" action="{{ route('admin.reports.index') }}" class="flex bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
             <select name="month" class="pl-4 pr-8 py-2 bg-transparent text-sm font-medium text-gray-700 focus:outline-none border-r border-gray-100 cursor-pointer appearance-none">
                 @for($m=1; $m<=12; $m++)
                     <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>{{ \Carbon\Carbon::create()->month($m)->format('F') }}</option>
@@ -20,18 +20,22 @@
                     <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
                 @endfor
             </select>
-            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 text-sm font-bold uppercase tracking-wider transition">
+            <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 text-sm font-bold uppercase tracking-wider transition">
                 Filter
             </button>
         </form>
+        <a href="{{ route('admin.reports.pdf', ['month' => $month, 'year' => $year]) }}" target="_blank" class="inline-flex items-center justify-center bg-gray-800 hover:bg-gray-900 text-white px-5 py-2 rounded-xl text-sm font-bold transition">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            Export PDF
+        </a>
     </div>
 </div>
 
 <!-- Stats Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
         <div class="flex items-center space-x-3 mb-3">
-            <div class="p-2 bg-red-100 text-red-600 rounded-md">
+            <div class="p-2 bg-brand-50 text-brand-600 rounded-md">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
             <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Donasi Berhasil</span>
@@ -39,7 +43,7 @@
         <div class="text-2xl font-bold text-gray-800">{{ $totalSuccessfulDonors }}</div>
     </div>
 
-    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
         <div class="flex items-center space-x-3 mb-3">
             <div class="p-2 bg-blue-100 text-blue-600 rounded-md">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
@@ -49,7 +53,7 @@
         <div class="text-2xl font-bold text-gray-800">{{ $totalRequests }}</div>
     </div>
 
-    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
         <div class="flex items-center space-x-3 mb-3">
             <div class="p-2 bg-orange-100 text-orange-600 rounded-md">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
@@ -59,7 +63,7 @@
         <div class="text-2xl font-bold text-gray-800">{{ $totalBagsRequested }}</div>
     </div>
 
-    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
         <div class="flex items-center space-x-3 mb-3">
             <div class="p-2 bg-green-100 text-green-600 rounded-md">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -70,8 +74,43 @@
     </div>
 </div>
 
+<!-- Breakdown Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <h3 class="text-xs font-bold text-gray-800 uppercase tracking-widest">Donasi per Golongan Darah</h3>
+        </div>
+        <div class="p-6 space-y-3">
+            @forelse($bloodTypeBreakdown as $row)
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-gray-700">{{ $row->blood_type }}</span>
+                <span class="text-sm font-bold text-gray-800">{{ $row->count }}</span>
+            </div>
+            @empty
+            <p class="text-xs text-gray-400 text-center py-4">Belum ada data bulan ini</p>
+            @endforelse
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <h3 class="text-xs font-bold text-gray-800 uppercase tracking-widest">Permintaan per Tingkat Urgensi</h3>
+        </div>
+        <div class="p-6 space-y-3">
+            @forelse($urgencyBreakdown as $row)
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-gray-700 uppercase">{{ $row->urgency_level }}</span>
+                <span class="text-sm font-bold text-gray-800">{{ $row->count }}</span>
+            </div>
+            @empty
+            <p class="text-xs text-gray-400 text-center py-4">Belum ada data bulan ini</p>
+            @endforelse
+        </div>
+    </div>
+</div>
+
 <!-- History Table -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+<div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
         <h3 class="text-xs font-bold text-gray-800 uppercase tracking-widest">Riwayat Verifikasi Donasi</h3>
     </div>
@@ -97,7 +136,7 @@
                         <div class="text-[11px] text-gray-400">{{ $history->user->phone }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
-                        <span class="px-2 py-0.5 bg-red-50 text-red-700 text-[10px] font-bold rounded border border-red-100">
+                        <span class="px-2 py-0.5 bg-brand-50 text-brand-700 text-[10px] font-bold rounded border border-brand-100">
                             {{ $history->user->blood_type }}{{ $history->user->rhesus }}
                         </span>
                     </td>
@@ -105,7 +144,7 @@
                         <div class="text-xs font-medium text-gray-700">{{ $history->location_name }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right">
-                        <a href="{{ route('admin.blood-requests.show', $history->blood_request_id) }}" class="text-xs font-bold text-red-600 hover:underline uppercase tracking-tighter">
+                        <a href="{{ route('admin.blood-requests.show', $history->blood_request_id) }}" class="text-xs font-bold text-brand-600 hover:underline uppercase tracking-tighter">
                             #{{ $history->blood_request_id }}
                         </a>
                     </td>

@@ -9,16 +9,22 @@ use Illuminate\Support\Facades\DB;
 class DonorFilterService
 {
     /**
-     * Wave definitions for gradual broadcast:
+     * Wave definitions for gradual broadcast, derived from config('donorconnect.wave_distance_km')
+     * (env DONORCONNECT_WAVE_1_KM/WAVE_2_KM/WAVE_3_KM):
      * Wave 1: 0-5 km (immediate)
      * Wave 2: 5-10 km (if quota not met)
      * Wave 3: 10-20 km (if quota still not met)
      */
-    protected const WAVE_RANGES = [
-        1 => ['min' => 0, 'max' => 5],
-        2 => ['min' => 5, 'max' => 10],
-        3 => ['min' => 10, 'max' => 20],
-    ];
+    public static function waveRanges(): array
+    {
+        [$w0, $w1, $w2, $w3] = config('donorconnect.wave_distance_km', [0, 5, 10, 20]);
+
+        return [
+            1 => ['min' => $w0, 'max' => $w1],
+            2 => ['min' => $w1, 'max' => $w2],
+            3 => ['min' => $w2, 'max' => $w3],
+        ];
+    }
 
     /**
      * Filter eligible donors based on medical requirements, blood type, and geolocation.
@@ -37,9 +43,10 @@ class DonorFilterService
         // Determine distance range based on wave. If no wave given, cover the
         // full range across all waves instead of leaving this null (a null
         // range would blow up the HAVING clause below).
+        $waveRanges = self::waveRanges();
         $distanceRange = $wave
-            ? (self::WAVE_RANGES[$wave] ?? self::WAVE_RANGES[1])
-            : ['min' => self::WAVE_RANGES[1]['min'], 'max' => self::WAVE_RANGES[3]['max']];
+            ? ($waveRanges[$wave] ?? $waveRanges[1])
+            : ['min' => $waveRanges[1]['min'], 'max' => $waveRanges[3]['max']];
 
         // Using parameterized PDO raw query for protection against SQL Injection
         // Calculating age via TIMESTAMPDIFF
@@ -68,7 +75,7 @@ class DonorFilterService
               AND birth_date IS NOT NULL
               AND TIMESTAMPDIFF(YEAR, birth_date, CURRENT_DATE) >= 17
               AND TIMESTAMPDIFF(YEAR, birth_date, CURRENT_DATE) <= 60
-              AND (last_donor_date IS NULL OR DATEDIFF(CURRENT_DATE, last_donor_date) >= 56)
+              AND (last_donor_date IS NULL OR DATEDIFF(CURRENT_DATE, last_donor_date) >= :cooldown_days)
               AND blood_type = :blood_type
               AND rhesus = :rhesus
               AND id NOT IN (
@@ -85,6 +92,7 @@ class DonorFilterService
             'blood_type' => $bloodType,
             'rhesus' => $rhesus,
             'existing_request_id' => $request->id,
+            'cooldown_days' => config('donorconnect.donation_cooldown_days', 56),
             'min_distance' => $distanceRange['min'],
             'max_distance' => $distanceRange['max'],
         ]);

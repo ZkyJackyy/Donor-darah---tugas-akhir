@@ -30,7 +30,9 @@ class AdminBloodRequestWebController extends Controller
             $query->where('status', $request->status);
         }
 
-        $bloodRequests = $query->orderBy('id', 'desc')->paginate(10);
+        $bloodRequests = $query->withCount(['donorCandidates as verified_candidates_count' => function ($q) {
+            $q->where('status', 'verified');
+        }])->orderBy('id', 'desc')->paginate(10);
         $bloodRequests->appends($request->all());
 
         return view('admin.blood-requests.index', compact('bloodRequests'));
@@ -58,10 +60,10 @@ class AdminBloodRequestWebController extends Controller
 
         // Default to UDD PMI Kota Padang as per AGENTS.md if no location provided
         if (empty($validated['hospital_name'])) {
-            $validated['hospital_name'] = 'UDD PMI Kota Padang';
-            $validated['hospital_address'] = 'Jl. Sisingamangaraja No.34, Padang';
-            $validated['latitude'] = -0.9471;
-            $validated['longitude'] = 100.4172;
+            $validated['hospital_name'] = config('donorconnect.default_hospital_name');
+            $validated['hospital_address'] = config('donorconnect.default_hospital_address');
+            $validated['latitude'] = config('donorconnect.default_lat');
+            $validated['longitude'] = config('donorconnect.default_lng');
         }
 
         $bloodRequest = BloodRequest::create([
@@ -77,7 +79,7 @@ class AdminBloodRequestWebController extends Controller
 
     public function show($id)
     {
-        $bloodRequest = BloodRequest::with('donorCandidates.user')->findOrFail($id);
+        $bloodRequest = BloodRequest::with('donorCandidates.user', 'admin')->findOrFail($id);
         return view('admin.blood-requests.show', compact('bloodRequest'));
     }
 
@@ -93,7 +95,7 @@ class AdminBloodRequestWebController extends Controller
     // Refreshing active candidates table for the 30s Polling Loop
     public function pollCandidates($id)
     {
-        $candidates = DonorCandidate::with('user')
+        $candidates = DonorCandidate::with('user', 'screening')
             ->where('blood_request_id', $id)
             ->orderBy('id', 'desc')
             ->get();
@@ -179,6 +181,9 @@ class AdminBloodRequestWebController extends Controller
             'is_available' => false
         ]);
 
+        // Auto-transition to fulfilled if quota of verified candidates met
+        $candidate->bloodRequest->checkAndAutoFulfill();
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['message' => 'Candidate manually verified successfully.', 'status' => 'verified']);
         }
@@ -209,7 +214,7 @@ class AdminBloodRequestWebController extends Controller
 
     public function exportPdf($id)
     {
-        $bloodRequest = BloodRequest::with('donorCandidates.user')->findOrFail($id);
+        $bloodRequest = BloodRequest::with('donorCandidates.user', 'donorCandidates.screening')->findOrFail($id);
         $pdf = Pdf::loadView('admin.blood-requests.pdf', compact('bloodRequest'));
         return $pdf->download("blood-request-{$bloodRequest->id}-candidates.pdf");
     }
@@ -273,6 +278,9 @@ class AdminBloodRequestWebController extends Controller
             'last_donor_date' => now()->toDateString(),
             'is_available' => false
         ]);
+
+        // Auto-transition to fulfilled if quota of verified candidates met
+        $candidate->bloodRequest->checkAndAutoFulfill();
 
         return response()->json([
             'success' => true,

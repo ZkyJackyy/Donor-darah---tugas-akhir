@@ -28,17 +28,20 @@ class UserBloodRequestController extends Controller
 
         $formattedRequests = $requests->map(function ($bloodRequest) {
             $candidateStatus = null;
+            $verifiedAt = null;
             if ($bloodRequest->donorCandidates->isNotEmpty()) {
                 $candidate = $bloodRequest->donorCandidates->first();
                 $candidateStatus = $candidate->status;
+                $verifiedAt = $candidate->verified_at?->toIso8601String();
             }
 
             $data = $bloodRequest->toArray();
             unset($data['donor_candidates']);
-            
+
             $data['user_candidate_info'] = [
                 'is_candidate' => $candidateStatus !== null,
                 'status' => $candidateStatus,
+                'verified_at' => $verifiedAt,
             ];
 
             return $data;
@@ -62,12 +65,18 @@ class UserBloodRequestController extends Controller
         $candidateStatus = null;
         $qrToken = null;
         $candidateId = null;
+        $verifiedAt = null;
+        $confirmedAt = null;
+        $kodeVerifikasi = null;
 
         if ($bloodRequest->donorCandidates->isNotEmpty()) {
             $candidate = $bloodRequest->donorCandidates->first();
             $candidateStatus = $candidate->status;
             $qrToken = $candidate->qr_token;
             $candidateId = $candidate->id;
+            $verifiedAt = $candidate->verified_at?->toIso8601String();
+            $confirmedAt = $candidate->confirmed_at?->toIso8601String();
+            $kodeVerifikasi = $candidate->kode_verifikasi;
         }
 
         // Count how many are currently confirmed to give the frontend an idea of the quota
@@ -82,7 +91,10 @@ class UserBloodRequestController extends Controller
             'is_candidate' => $candidateStatus !== null,
             'candidate_id' => $candidateId,
             'status' => $candidateStatus,
-            'qr_token' => $qrToken
+            'qr_token' => $qrToken,
+            'verified_at' => $verifiedAt,
+            'confirmed_at' => $confirmedAt,
+            'kode_verifikasi' => $kodeVerifikasi,
         ];
         
         $data['quota'] = [

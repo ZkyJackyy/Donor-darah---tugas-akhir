@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Welcome to DonorConnect',
+                    'Welcome to Sahabat Donor',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 24,

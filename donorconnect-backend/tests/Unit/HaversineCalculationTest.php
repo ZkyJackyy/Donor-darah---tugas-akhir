@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\BloodRequest;
@@ -11,7 +11,7 @@ use App\Services\DonorFilterService;
 
 class HaversineCalculationTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     public function test_haversine_calculates_distance_accurately()
     {

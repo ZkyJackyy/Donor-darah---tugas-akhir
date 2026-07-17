@@ -10,7 +10,7 @@ class AdminDonorController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::where('role', 'user');
+        $query = User::where('role', 'user')->withCount('donorHistories');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -21,7 +21,12 @@ class AdminDonorController extends Controller
             });
         }
 
+        if ($request->filled('blood_type')) {
+            $query->where('blood_type', $request->blood_type);
+        }
+
         $donors = $query->paginate(20);
+        $donors->appends($request->all());
         return view('admin.donors.index', compact('donors'));
     }
 }

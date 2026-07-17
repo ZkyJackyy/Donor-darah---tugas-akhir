@@ -120,6 +120,56 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> verifyEmail(String email, String code) async {
+    _setLoading(true);
+    try {
+      final response = await _apiService.post(ApiConstants.verifyEmail, data: {
+        'email': email,
+        'code': code,
+      });
+
+      if (response.data['status'] == true) {
+        _user = UserModel.fromJson(response.data['data']);
+        return true;
+      } else {
+        _error = response.data['message'];
+        return false;
+      }
+    } on DioException catch (e) {
+      _error = ApiErrorHandler.getMessage(e);
+      return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> resendVerificationCode(String email) async {
+    _setLoading(true);
+    try {
+      final response = await _apiService.post(ApiConstants.resendVerification, data: {
+        'email': email,
+      });
+
+      if (response.data['status'] == true) {
+        return true;
+      } else {
+        _error = response.data['message'];
+        return false;
+      }
+    } on DioException catch (e) {
+      _error = ApiErrorHandler.getMessage(e);
+      return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<String?> updateLocation() async {
     try {
       final position = await _locationService.getCurrentPosition();

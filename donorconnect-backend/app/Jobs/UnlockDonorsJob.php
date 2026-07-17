@@ -18,23 +18,25 @@ class UnlockDonorsJob implements ShouldQueue
     public $backoff = 60;
 
     /**
-     * Handle: unlock donor yang sudah melewati masa tunggu 56 hari.
+     * Handle: unlock donor yang sudah melewati masa tunggu cooldown.
      * Dijalankan oleh scheduler setiap hari.
      */
     public function handle(): void
     {
+        $cooldownDays = config('donorconnect.donation_cooldown_days', 56);
+
         // Cari donor yang:
         // - last_donor_date tidak null
-        // - last_donor_date + 56 hari <= hari ini
+        // - last_donor_date + cooldown hari <= hari ini
         // - is_available = false (belum di-unlock)
         $unlocked = User::where('role', 'user')
             ->where('is_available', false)
             ->whereNotNull('last_donor_date')
-            ->where('last_donor_date', '<=', now()->subDays(56)->toDateString())
+            ->where('last_donor_date', '<=', now()->subDays($cooldownDays)->toDateString())
             ->update(['is_available' => true]);
 
         if ($unlocked > 0) {
-            Log::info("UNLOCK: {$unlocked} donors unlocked (56-day cooldown passed)");
+            Log::info("UNLOCK: {$unlocked} donors unlocked ({$cooldownDays}-day cooldown passed)");
         }
     }
 }

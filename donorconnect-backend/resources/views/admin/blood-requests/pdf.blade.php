@@ -13,12 +13,13 @@
         .verified { background: #c6f6d5; color: #22543d; }
         .confirmed { background: #bee3f8; color: #2b6cb0; }
         .notified { background: #fefcbf; color: #744210; }
+        .declined { background: #fed7d7; color: #822727; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1 class="title">DonorConnect Official Report</h1>
+        <h1 class="title">Sahabat Donor Official Report</h1>
         <p class="subtitle">Request #{{ $bloodRequest->id }} | {{ $bloodRequest->hospital_name }}</p>
         <p class="subtitle" style="font-size: 12px">Generated: {{ \Carbon\Carbon::now()->toDateTimeString() }}</p>
     </div>
@@ -26,6 +27,7 @@
     <div style="margin-bottom: 20px;">
         <strong>Blood Required:</strong> {{ $bloodRequest->required_bags }} Bags ({{ $bloodRequest->blood_type }}{{ $bloodRequest->rhesus }})<br>
         <strong>Urgency:</strong> {{ strtoupper($bloodRequest->urgency_level) }}<br>
+        <strong>Deadline:</strong> {{ $bloodRequest->deadline ? $bloodRequest->deadline->format('Y-m-d H:i') . ' WIB' : '-' }}<br>
         <strong>Total Candidates Recruited:</strong> {{ $bloodRequest->donorCandidates->count() }}
     </div>
 
@@ -37,6 +39,7 @@
                 <th>Phone Number</th>
                 <th>Distance</th>
                 <th>Engagement Status</th>
+                <th>Screening</th>
                 <th>Verified At</th>
             </tr>
         </thead>
@@ -49,6 +52,13 @@
                 <td>{{ number_format($candidate->distance_km, 2) }} km</td>
                 <td>
                     <span class="badge {{ $candidate->status }}">{{ $candidate->status }}</span>
+                </td>
+                <td>
+                    @if($candidate->screening)
+                        {{ ($candidate->screening->health_status && $candidate->screening->min_weight && $candidate->screening->no_medicine && $candidate->screening->not_pregnant) ? 'Lolos' : 'Tidak Lolos' }}
+                    @else
+                        -
+                    @endif
                 </td>
                 <td>{{ $candidate->verified_at ? $candidate->verified_at->format('Y-m-d H:i') : '-' }}</td>
             </tr>

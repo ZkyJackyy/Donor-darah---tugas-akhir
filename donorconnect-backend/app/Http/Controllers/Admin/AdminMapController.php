@@ -16,7 +16,6 @@ class AdminMapController extends Controller
     public function donorsJson(Request $request)
     {
         $query = User::where('role', 'user')
-            ->where('is_available', true)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude');
 
@@ -28,7 +27,7 @@ class AdminMapController extends Controller
             $query->where('rhesus', $request->rhesus);
         }
 
-        $donors = $query->select('id', 'name', 'phone', 'blood_type', 'rhesus', 'latitude', 'longitude', 'last_donor_date')
+        $donors = $query->select('id', 'name', 'phone', 'blood_type', 'rhesus', 'latitude', 'longitude', 'last_donor_date', 'is_available')
             ->get();
 
         return response()->json($donors);

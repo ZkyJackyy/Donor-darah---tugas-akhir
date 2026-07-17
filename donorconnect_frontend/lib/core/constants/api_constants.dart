@@ -6,7 +6,7 @@ class ApiConstants {
   // machine without overriding it via --dart-define.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://172.21.212.246/api',
+    defaultValue: 'http://172.21.212.246:8000/api',
     // defaultValue: 'http://10.0.2.2:8000/api',
   );
 
@@ -17,6 +17,8 @@ class ApiConstants {
   static const String forgotPassword = '/auth/forgot-password';
   static const String resetPassword = '/auth/reset-password';
   static const String changePassword = '/auth/change-password';
+  static const String verifyEmail = '/auth/email/verify';
+  static const String resendVerification = '/auth/email/resend';
 
   // Profile
   static const String profile = '/profile';

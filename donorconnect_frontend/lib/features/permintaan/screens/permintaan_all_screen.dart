@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../providers/permintaan_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../shared/models/blood_request_model.dart';
+import '../../../shared/widgets/status_badge.dart';
 
 class PermintaanAllScreen extends StatefulWidget {
   const PermintaanAllScreen({super.key});
@@ -79,11 +80,14 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
                   itemBuilder: (context, index) {
                     final item = sortedList[index];
                     final priority = getPriority(item);
-                    return Card(
+                    final isDone = priority == 2;
+
+                    final card = Card(
                       clipBehavior: Clip.antiAlias,
                       margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 2,
+                      elevation: isDone ? 0 : 2,
+                      color: isDone ? AppColors.background : null,
                       child: Column(
                         children: [
                           if (priority == 0)
@@ -103,14 +107,18 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: isDone
+                                ? AppColors.success.withValues(alpha: 0.1)
+                                : AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Center(
-                            child: Text(
-                              item.golonganDarah,
-                              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20),
-                            ),
+                            child: isDone
+                                ? const Icon(Icons.check_circle, color: AppColors.success, size: 26)
+                                : Text(
+                                    item.golonganDarah,
+                                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20),
+                                  ),
                           ),
                         ),
                         title: Text(
@@ -127,59 +135,66 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 6),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.location_on, size: 14, color: AppColors.primary),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        item.distance != null 
-                                            ? '${item.distance!.toStringAsFixed(1)} km dari Anda' 
-                                            : 'Jarak tidak diketahui',
-                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                            if (isDone)
+                              Row(
+                                children: [
+                                  const Icon(Icons.event_available, size: 14, color: AppColors.textSecondary),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      'Donor selesai • ${item.verifiedAtFormatted}',
+                                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.timer, size: 14, color: Colors.grey),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        'Batas: ${item.batasWaktu}',
-                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                        overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const StatusBadge(label: 'SELESAI'),
+                                ],
+                              )
+                            else
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.location_on, size: 14, color: AppColors.primary),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          item.distance != null
+                                              ? '${item.distance!.toStringAsFixed(1)} km dari Anda'
+                                              : 'Jarak tidak diketahui',
+                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.timer, size: 14, color: Colors.grey),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          'Batas: ${item.batasWaktu}',
+                                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                           ],
                         ),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
                         onTap: () => context.push('/permintaan/${item.id}'),
                       ),
-                      if (priority == 2)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          color: Colors.green.shade50,
-                          child: const Text(
-                            '✅ Selesai Melakukan Donor',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
-                          ),
-                        ),
                       ],
                     ),
                   );
+
+                    return isDone ? Opacity(opacity: 0.7, child: card) : card;
                 },
                 ),
       bottomNavigationBar: BottomNavigationBar(
