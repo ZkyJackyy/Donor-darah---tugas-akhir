@@ -120,6 +120,11 @@ class AdminBloodRequestWebController extends Controller
     public function notifyWeb($id, DonorFilterService $filterService, WhatsAppService $waService)
     {
         $bloodRequest = BloodRequest::findOrFail($id);
+
+        if ($bloodRequest->status !== 'open') {
+            return back()->with('error', "Permintaan ini berstatus '{$bloodRequest->status}' — tidak bisa mengirim broadcast WA lagi.");
+        }
+
         $eligibleDonors = $filterService->filterEligibleDonors($bloodRequest);
         $candidates = collect();
 
@@ -154,12 +159,20 @@ class AdminBloodRequestWebController extends Controller
     public function verifyWeb($id, Request $request)
     {
         $candidate = DonorCandidate::with('user', 'bloodRequest')->findOrFail($id);
-        
+
         if ($candidate->status === 'verified') {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['message' => 'Candidate is already verified.'], 400);
             }
             return back()->with('error', 'Candidate is already verified.');
+        }
+
+        if ($candidate->bloodRequest->status !== 'open') {
+            $message = "Permintaan ini berstatus '{$candidate->bloodRequest->status}' — kandidat tidak bisa diverifikasi lagi.";
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $message], 400);
+            }
+            return back()->with('error', $message);
         }
 
         $candidate->update([
@@ -258,6 +271,10 @@ class AdminBloodRequestWebController extends Controller
 
         if ($candidate->status !== 'confirmed') {
             return response()->json(['success' => false, 'message' => "Status kandidat '{$candidate->status}' — belum bisa diverifikasi."], 400);
+        }
+
+        if ($candidate->bloodRequest->status !== 'open') {
+            return response()->json(['success' => false, 'message' => "Permintaan ini berstatus '{$candidate->bloodRequest->status}' — kandidat tidak bisa diverifikasi lagi."], 400);
         }
 
         $candidate->update([

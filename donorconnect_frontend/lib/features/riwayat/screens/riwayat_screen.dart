@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../providers/riwayat_provider.dart';
 
@@ -16,7 +15,9 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RiwayatProvider>().fetchRiwayatList();
+      if (context.read<RiwayatProvider>().riwayatList.isEmpty) {
+        context.read<RiwayatProvider>().fetchRiwayatList();
+      }
     });
   }
 
@@ -119,35 +120,6 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                         );
                       },
                     ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
-        onTap: (index) {
-          if (index == 0) context.go('/home');
-          if (index == 1) context.go('/permintaan-all');
-          if (index == 3) context.go('/profile');
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'Permintaan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Riwayat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
-      ),
     );
   }
 }

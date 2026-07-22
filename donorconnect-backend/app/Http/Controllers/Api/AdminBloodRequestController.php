@@ -63,6 +63,10 @@ class AdminBloodRequestController extends Controller
 
     public function notify(BloodRequest $bloodRequest, DonorFilterService $filterService, \App\Services\WhatsAppService $waService)
     {
+        if ($bloodRequest->status !== 'open') {
+            return $this->error("Permintaan ini berstatus '{$bloodRequest->status}' — tidak bisa mengirim broadcast WA lagi.", 400);
+        }
+
         // Get all waves of eligible donors
         $waves = $filterService->filterAllWaves($bloodRequest);
         $totalQueued = 0;
@@ -110,6 +114,10 @@ class AdminBloodRequestController extends Controller
     {
         if ($candidate->status === 'verified') {
             return $this->error('Candidate already verified', 400);
+        }
+
+        if ($candidate->bloodRequest->status !== 'open') {
+            return $this->error("Blood request status is '{$candidate->bloodRequest->status}' — candidate can no longer be verified.", 400);
         }
 
         $candidate->update([
@@ -170,6 +178,10 @@ class AdminBloodRequestController extends Controller
             return $this->error('Candidate already verified', 400);
         }
 
+        if ($candidate->bloodRequest->status !== 'open') {
+            return $this->error("Blood request status is '{$candidate->bloodRequest->status}' — candidate can no longer be verified.", 400);
+        }
+
         $candidate->update([
             'status' => 'verified',
             'verified_at' => now(),
@@ -217,6 +229,10 @@ class AdminBloodRequestController extends Controller
 
         if ($candidate->status !== 'confirmed') {
             return $this->error("Status kandidat '{$candidate->status}' — belum bisa diverifikasi", 400);
+        }
+
+        if ($candidate->bloodRequest->status !== 'open') {
+            return $this->error("Permintaan ini berstatus '{$candidate->bloodRequest->status}' — kandidat tidak bisa diverifikasi lagi.", 400);
         }
 
         $candidate->update([

@@ -133,7 +133,7 @@
                                         <span x-show="!candidate.screening" class="text-[10px] text-gray-300 font-medium">-</span>
                                     </td>
                                     <td class="px-6 py-4 text-right">
-                                        <template x-if="candidate.status !== 'verified'">
+                                        <template x-if="candidate.status !== 'verified' && status === 'open'">
                                             <form :action="`/admin/blood-requests/verify/${candidate.id}`" method="POST">
                                                 @csrf
                                                 <button type="submit" class="text-[10px] font-bold text-red-600 hover:text-red-800 uppercase tracking-widest underline">Verifikasi</button>

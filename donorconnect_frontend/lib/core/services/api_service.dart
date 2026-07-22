@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
@@ -53,5 +54,17 @@ class ApiService {
   // Simple PUT request wrapper
   Future<Response> put(String path, {dynamic data}) async {
     return await _dio.put(path, data: data);
+  }
+
+  // Multipart POST request wrapper (file upload)
+  Future<Response> postMultipart(
+    String path, {
+    required String fieldName,
+    required File file,
+  }) async {
+    final formData = FormData.fromMap({
+      fieldName: await MultipartFile.fromFile(file.path),
+    });
+    return await _dio.post(path, data: formData);
   }
 }

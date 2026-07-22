@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // User Routes
     Route::get('/profile', [UserProfileController::class, 'show']);
     Route::put('/profile/update', [UserProfileController::class, 'update']);
+    Route::post('/profile/photo', [UserProfileController::class, 'updatePhoto']);
     Route::put('/location/update', [UserProfileController::class, 'updateLocation']);
 
     Route::post('/donor/screening', [DonorActionController::class, 'screening']);

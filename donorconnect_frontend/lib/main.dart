@@ -171,10 +171,6 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         builder: (context, state) => VerifyEmailScreen(email: state.extra as String?),
       ),
       GoRoute(
-        path: '/home',
-        builder: (context, state) => const PermintaanListScreen(),
-      ),
-      GoRoute(
         path: '/permintaan/:id',
         builder: (context, state) {
           final id = int.tryParse(state.pathParameters['id'] ?? '');
@@ -197,20 +193,55 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         },
       ),
       GoRoute(
-        path: '/riwayat',
-        builder: (context, state) => const RiwayatScreen(),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
         path: '/profile/edit',
         builder: (context, state) => const EditProfileScreen(),
       ),
-      GoRoute(
-        path: '/permintaan-all',
-        builder: (context, state) => const PermintaanAllScreen(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => Scaffold(
+          body: navigationShell,
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: navigationShell.currentIndex,
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: AppColors.primary,
+            unselectedItemColor: AppColors.textSecondary,
+            onTap: (index) => navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
+            ),
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
+              BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Permintaan'),
+              BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
+              BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+            ],
+          ),
+        ),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/home',
+              builder: (context, state) => const PermintaanListScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/permintaan-all',
+              builder: (context, state) => const PermintaanAllScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/riwayat',
+              builder: (context, state) => const RiwayatScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+          ]),
+        ],
       ),
       GoRoute(
         path: '/notifikasi',

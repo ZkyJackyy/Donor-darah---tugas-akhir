@@ -197,35 +197,6 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
                     return isDone ? Opacity(opacity: 0.7, child: card) : card;
                 },
                 ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
-        onTap: (index) {
-          if (index == 0) context.go('/home');
-          if (index == 2) context.go('/riwayat');
-          if (index == 3) context.go('/profile');
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'Permintaan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Riwayat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
-      ),
     );
   }
 }

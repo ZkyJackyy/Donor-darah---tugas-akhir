@@ -19,8 +19,12 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PermintaanProvider>().fetchPermintaanList();
-      context.read<AuthProvider>().getProfile();
+      if (context.read<PermintaanProvider>().permintaanList.isEmpty) {
+        context.read<PermintaanProvider>().fetchPermintaanList();
+      }
+      if (context.read<AuthProvider>().user == null) {
+        context.read<AuthProvider>().getProfile();
+      }
       _showLocationWarningIfAny();
     });
   }
@@ -150,9 +154,15 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
                                             onPressed: () async {
-                                              await context.read<PermintaanProvider>().fetchPermintaanList();
-                                              await context.read<AuthProvider>().getProfile();
-                                              if (mounted) {
+                                              final authProvider = context.read<AuthProvider>();
+                                              final permintaanProvider = context.read<PermintaanProvider>();
+                                              final locationError = await authProvider.updateLocation();
+                                              await permintaanProvider.fetchPermintaanList();
+                                              await authProvider.getProfile();
+                                              if (!mounted) return;
+                                              if (locationError != null) {
+                                                AppSnackbar.showError(context, locationError);
+                                              } else {
                                                 AppSnackbar.showSuccess(context, 'Data diperbarui...');
                                               }
                                             },
@@ -391,35 +401,6 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
               ],
             ),
           ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
-        onTap: (index) {
-          if (index == 1) context.go('/permintaan-all');
-          if (index == 2) context.go('/riwayat');
-          if (index == 3) context.go('/profile');
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'Permintaan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Riwayat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
-      ),
     );
   }
 }

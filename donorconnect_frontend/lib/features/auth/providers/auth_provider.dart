@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -233,15 +234,17 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> getProfile() async {
     try {
-      final response = await _apiService.get('/profile');
+      final response = await _apiService.get(ApiConstants.profile);
       if (response.data['status'] == true) {
         _user = UserModel.fromJson(response.data['data']);
         notifyListeners();
         return true;
       }
+      _error = response.data['message'];
       return false;
     } catch (e) {
       debugPrint("Get profile error: $e");
+      _error = 'Terjadi kesalahan tidak terduga';
       return false;
     }
   }
@@ -255,7 +258,7 @@ class AuthProvider with ChangeNotifier {
   }) async {
     _setLoading(true);
     try {
-      final response = await _apiService.put('/profile/update', data: {
+      final response = await _apiService.put(ApiConstants.updateProfile, data: {
         if (name != null) 'name': name,
         if (phone != null) 'phone': phone,
         if (weight != null) 'weight': weight,
@@ -265,6 +268,35 @@ class AuthProvider with ChangeNotifier {
 
       if (response.data['status'] == true) {
         _user = UserModel.fromJson(response.data['data']);
+        notifyListeners();
+        return true;
+      } else {
+        _error = response.data['message'];
+        return false;
+      }
+    } on DioException catch (e) {
+      _error = ApiErrorHandler.getMessage(e);
+      return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> updatePhoto(File photo) async {
+    _setLoading(true);
+    try {
+      final response = await _apiService.postMultipart(
+        ApiConstants.updatePhoto,
+        fieldName: 'photo',
+        file: photo,
+      );
+
+      if (response.data['status'] == true) {
+        _user = UserModel.fromJson(response.data['data']);
+        notifyListeners();
         return true;
       } else {
         _error = response.data['message'];

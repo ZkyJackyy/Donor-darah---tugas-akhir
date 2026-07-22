@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class UserProfileController extends Controller
 {
@@ -47,6 +48,24 @@ class UserProfileController extends Controller
         $user->save();
         
         return $this->success(new UserResource($user), 'Profile updated successfully');
+    }
+
+    public function updatePhoto(Request $request): JsonResponse
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        $user = $request->user();
+
+        if ($user->photo) {
+            Storage::disk('public')->delete($user->photo);
+        }
+
+        $path = $request->file('photo')->store('avatars', 'public');
+        $user->update(['photo' => $path]);
+
+        return $this->success(new UserResource($user), 'Photo updated successfully');
     }
 
     public function updateLocation(UpdateLocationRequest $request): JsonResponse

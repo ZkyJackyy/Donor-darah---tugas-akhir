@@ -49,11 +49,10 @@ class AuthController extends Controller
             return $this->error('Kode tidak valid atau sudah kedaluwarsa', 400);
         }
 
-        $user->update([
-            'email_verified_at' => now(),
-            'email_verification_code' => null,
-            'email_verification_code_expires_at' => null,
-        ]);
+        $user->email_verified_at = now();
+        $user->email_verification_code = null;
+        $user->email_verification_code_expires_at = null;
+        $user->save();
 
         return $this->success(new UserResource($user), 'Email berhasil diverifikasi');
     }

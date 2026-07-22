@@ -3,6 +3,7 @@ class UserModel {
   final String name;
   final String email;
   final String? phone;
+  final String? photoUrl;
   final double? weight;
   final String? birthDate;
   final bool isAvailable;
@@ -17,6 +18,7 @@ class UserModel {
     required this.name,
     required this.email,
     this.phone,
+    this.photoUrl,
     this.weight,
     this.birthDate,
     this.isAvailable = true,
@@ -35,6 +37,7 @@ class UserModel {
       name: json['name'],
       email: json['email'],
       phone: json['phone'],
+      photoUrl: json['photo_url'],
       weight: json['weight'] != null ? double.tryParse(json['weight'].toString()) : null,
       birthDate: json['birth_date'],
       isAvailable: json['is_available'] == true,
@@ -52,6 +55,7 @@ class UserModel {
       'name': name,
       'email': email,
       'phone': phone,
+      'photo_url': photoUrl,
       'weight': weight,
       'birth_date': birthDate,
       'is_available': isAvailable,

@@ -6,7 +6,7 @@ class ApiConstants {
   // machine without overriding it via --dart-define.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://172.21.212.246:8000/api',
+    defaultValue: 'http://10.97.3.246:8000/api',
     // defaultValue: 'http://10.0.2.2:8000/api',
   );
 
@@ -22,6 +22,8 @@ class ApiConstants {
 
   // Profile
   static const String profile = '/profile';
+  static const String updateProfile = '/profile/update';
+  static const String updatePhoto = '/profile/photo';
   static const String updateLocation = '/location/update';
 
   // Blood Requests

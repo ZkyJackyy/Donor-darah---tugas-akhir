@@ -10,6 +10,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -33,6 +35,7 @@
         }
     </script>
     <style>
+        [x-cloak] { display: none !important; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         
         /* Floating Label CSS */
@@ -113,12 +116,16 @@
                     </div>
                     
                     <!-- Floating Password -->
-                    <div class="relative floating-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
-                        <input type="password" id="password" name="password" required placeholder=" " 
-                            class="w-full bg-transparent text-sm text-gray-900 focus:outline-none placeholder-transparent peer">
+                    <div class="relative floating-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2" x-data="{ show: false }">
+                        <input :type="show ? 'text' : 'password'" id="password" name="password" required placeholder=" "
+                            class="w-full bg-transparent text-sm text-gray-900 focus:outline-none placeholder-transparent peer pr-10">
                         <label for="password" class="floating-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm origin-left peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400">
                             Kata Sandi
                         </label>
+                        <button type="button" @click="show = !show" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            <svg x-show="show" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.243M9.878 9.878L3 3m6.878 6.878L21 21"></path></svg>
+                        </button>
                     </div>
 
                     <div class="flex items-center justify-between mt-4">

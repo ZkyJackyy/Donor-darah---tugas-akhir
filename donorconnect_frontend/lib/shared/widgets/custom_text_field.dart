@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   final String label;
   final String? hintText;
   final TextEditingController? controller;
@@ -26,12 +26,30 @@ class CustomTextField extends StatelessWidget {
   });
 
   @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  late bool _obscure = widget.isPassword;
+
+  @override
   Widget build(BuildContext context) {
+    final effectiveSuffixIcon = widget.suffixIcon ??
+        (widget.isPassword
+            ? IconButton(
+                icon: Icon(
+                  _obscure ? Icons.visibility_off : Icons.visibility,
+                  color: AppColors.textSecondary,
+                ),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              )
+            : null);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -40,16 +58,16 @@ class CustomTextField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextFormField(
-          controller: controller,
-          obscureText: isPassword,
-          keyboardType: keyboardType,
-          validator: validator,
-          maxLength: maxLength,
+          controller: widget.controller,
+          obscureText: _obscure,
+          keyboardType: widget.keyboardType,
+          validator: widget.validator,
+          maxLength: widget.maxLength,
           decoration: InputDecoration(
-            hintText: hintText,
+            hintText: widget.hintText,
             hintStyle: const TextStyle(color: AppColors.textSecondary),
-            prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.primary) : null,
-            suffixIcon: suffixIcon,
+            prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon, color: AppColors.primary) : null,
+            suffixIcon: effectiveSuffixIcon,
             filled: true,
             fillColor: AppColors.surface,
             border: OutlineInputBorder(

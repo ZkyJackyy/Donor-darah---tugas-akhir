@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +22,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _weightController;
   DateTime? _selectedDate;
+  File? _pickedPhoto;
+  bool _isUploadingPhoto = false;
 
   @override
   void initState() {
@@ -63,13 +67,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  Future<void> _pickPhoto() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() {
+      _pickedPhoto = File(picked.path);
+      _isUploadingPhoto = true;
+    });
+
+    final success = await context.read<AuthProvider>().updatePhoto(_pickedPhoto!);
+
+    if (!mounted) return;
+    setState(() => _isUploadingPhoto = false);
+
+    if (success) {
+      AppSnackbar.showSuccess(context, 'Foto profil berhasil diperbarui!');
+    } else {
+      AppSnackbar.showError(context, context.read<AuthProvider>().error ?? 'Gagal memperbarui foto profil');
+    }
+  }
+
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final weightText = _weightController.text.trim();
     final success = await context.read<AuthProvider>().updateProfile(
       name: _nameController.text,
       phone: _phoneController.text,
-      weight: double.tryParse(_weightController.text),
+      weight: weightText.isNotEmpty ? double.tryParse(weightText) : null,
       birthDate: _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null,
     );
 
@@ -77,6 +107,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     if (success) {
       AppSnackbar.showSuccess(context, 'Profil berhasil diperbarui!');
+      context.pop();
     } else {
       AppSnackbar.showError(context, context.read<AuthProvider>().error ?? 'Gagal memperbarui profil');
     }
@@ -85,6 +116,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = context.watch<AuthProvider>().isLoading;
+    final user = context.watch<AuthProvider>().user;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -100,10 +132,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const CircleAvatar(
-                radius: 50,
-                backgroundColor: AppColors.primaryLight,
-                child: Icon(Icons.person, size: 50, color: Colors.white),
+              Center(
+                child: GestureDetector(
+                  onTap: _isUploadingPhoto ? null : _pickPhoto,
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: AppColors.primaryLight,
+                        backgroundImage: _pickedPhoto != null
+                            ? FileImage(_pickedPhoto!)
+                            : (user?.photoUrl != null
+                                ? NetworkImage(user!.photoUrl!)
+                                : null) as ImageProvider?,
+                        child: _pickedPhoto == null && user?.photoUrl == null
+                            ? const Icon(Icons.person, size: 50, color: Colors.white)
+                            : null,
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: _isUploadingPhoto
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 32),
               TextFormField(
@@ -137,7 +203,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 keyboardType: TextInputType.number,
                 validator: (val) {
-                  if (val == null || val.isEmpty) return 'Berat badan wajib diisi';
+                  if (val == null || val.isEmpty) return null;
                   if (double.tryParse(val) == null) return 'Gunakan angka saja';
                   return null;
                 },
