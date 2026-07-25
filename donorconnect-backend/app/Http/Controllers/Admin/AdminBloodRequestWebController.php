@@ -167,6 +167,14 @@ class AdminBloodRequestWebController extends Controller
             return back()->with('error', 'Candidate is already verified.');
         }
 
+        if ($candidate->status !== 'confirmed') {
+            $message = "Status kandidat '{$candidate->status}' — belum bisa diverifikasi. Kandidat harus mengkonfirmasi kehadiran terlebih dahulu.";
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $message], 400);
+            }
+            return back()->with('error', $message);
+        }
+
         if ($candidate->bloodRequest->status !== 'open') {
             $message = "Permintaan ini berstatus '{$candidate->bloodRequest->status}' — kandidat tidak bisa diverifikasi lagi.";
             if ($request->ajax() || $request->wantsJson()) {

@@ -116,6 +116,10 @@ class AdminBloodRequestController extends Controller
             return $this->error('Candidate already verified', 400);
         }
 
+        if ($candidate->status !== 'confirmed') {
+            return $this->error("Candidate status is '{$candidate->status}' — candidate must confirm attendance before being verified.", 400);
+        }
+
         if ($candidate->bloodRequest->status !== 'open') {
             return $this->error("Blood request status is '{$candidate->bloodRequest->status}' — candidate can no longer be verified.", 400);
         }
@@ -176,6 +180,10 @@ class AdminBloodRequestController extends Controller
 
         if ($candidate->status === 'verified') {
             return $this->error('Candidate already verified', 400);
+        }
+
+        if ($candidate->status !== 'confirmed') {
+            return $this->error("Candidate status is '{$candidate->status}' — candidate must confirm attendance before being verified.", 400);
         }
 
         if ($candidate->bloodRequest->status !== 'open') {
