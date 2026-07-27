@@ -20,8 +20,11 @@ Route::post('/auth/email/verify', [AuthController::class, 'verifyEmail'])->middl
 Route::post('/auth/email/resend', [AuthController::class, 'resendVerificationCode'])->middleware('throttle:5,1');
 
 Route::middleware('auth:sanctum')->group(function () {
-    // Authenticated Auth Routes
+    // Authenticated Auth Routes (allowed even if email isn't verified yet)
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+});
+
+Route::middleware(['auth:sanctum', 'verified.email'])->group(function () {
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
 
     // User Routes
@@ -43,20 +46,22 @@ Route::middleware('auth:sanctum')->group(function () {
     // User Notifications (Mobile App)
     Route::get('/user/notifications', [UserNotificationController::class, 'index']);
     Route::get('/user/notifications/unread-count', [UserNotificationController::class, 'unreadCount']);
+});
 
-    // Admin Routes
-    Route::middleware('admin')->group(function () {
-        Route::post('/verify/qr', [AdminBloodRequestController::class, 'verifyQr']);
-        Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+// Admin Routes — staff accounts aren't created through the public
+// register/verify-email flow, so they're gated by 'admin' only, not
+// 'verified.email'.
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/verify/qr', [AdminBloodRequestController::class, 'verifyQr']);
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 
-        Route::get('/blood-requests', [AdminBloodRequestController::class, 'index']);
-        Route::post('/blood-requests', [AdminBloodRequestController::class, 'store']);
-        Route::get('/blood-requests/{bloodRequest}', [AdminBloodRequestController::class, 'show']);
+    Route::get('/blood-requests', [AdminBloodRequestController::class, 'index']);
+    Route::post('/blood-requests', [AdminBloodRequestController::class, 'store']);
+    Route::get('/blood-requests/{bloodRequest}', [AdminBloodRequestController::class, 'show']);
 
-        Route::get('/blood-requests/{bloodRequest}/preview-donors', [AdminBloodRequestController::class, 'previewDonors']);
-        Route::post('/blood-requests/{bloodRequest}/notify', [AdminBloodRequestController::class, 'notify'])->middleware('throttle:5,1');
+    Route::get('/blood-requests/{bloodRequest}/preview-donors', [AdminBloodRequestController::class, 'previewDonors']);
+    Route::post('/blood-requests/{bloodRequest}/notify', [AdminBloodRequestController::class, 'notify'])->middleware('throttle:5,1');
 
-        Route::post('/donor-candidates/{candidate}/verify', [AdminBloodRequestController::class, 'verify']);
-        Route::post('/verify/code', [AdminBloodRequestController::class, 'verifyByCode']);
-    });
+    Route::post('/donor-candidates/{candidate}/verify', [AdminBloodRequestController::class, 'verify']);
+    Route::post('/verify/code', [AdminBloodRequestController::class, 'verifyByCode']);
 });

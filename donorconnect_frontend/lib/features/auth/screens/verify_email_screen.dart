@@ -71,6 +71,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     }
   }
 
+  void _cancelVerification() async {
+    await context.read<AuthProvider>().logout();
+    if (!mounted) return;
+    context.go('/login');
+  }
+
   void _resend() async {
     final email = _email;
     if (email == null) {
@@ -101,6 +107,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.primary),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: isLoading ? null : _cancelVerification,
+        ),
       ),
       body: SafeArea(
         child: Center(
