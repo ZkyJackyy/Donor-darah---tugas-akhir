@@ -22,6 +22,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Wave Delay
+    |--------------------------------------------------------------------------
+    |
+    | Jeda waktu (menit) sebelum gelombang broadcast berikutnya berjalan,
+    | berdasarkan urgency_level permintaan darah.
+    |
+    */
+
+    'wave_delay_minutes' => [
+        'critical' => (int) env('DONORCONNECT_WAVE_DELAY_CRITICAL', 10),
+        'urgent' => (int) env('DONORCONNECT_WAVE_DELAY_URGENT', 20),
+        'normal' => (int) env('DONORCONNECT_WAVE_DELAY_NORMAL', 30),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Donation Cooldown
     |--------------------------------------------------------------------------
     |

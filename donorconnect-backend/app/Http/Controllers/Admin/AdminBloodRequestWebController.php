@@ -143,17 +143,21 @@ class AdminBloodRequestWebController extends Controller
 
         $waService->notifyAllCandidates($candidates, $bloodRequest);
 
-        // Chain wave 2/3 otomatis: jika kuota belum terpenuhi, wave berikutnya jalan 30 menit kemudian
+        // Chain wave 2/3 otomatis: jika kuota belum terpenuhi, wave berikutnya jalan
+        // beberapa menit kemudian (durasi tergantung urgency_level permintaan)
         $confirmedCount = DonorCandidate::where('blood_request_id', $bloodRequest->id)
             ->where('status', 'confirmed')
             ->count();
 
+        $delayMinutes = config('donorconnect.wave_delay_minutes')[$bloodRequest->urgency_level]
+            ?? config('donorconnect.wave_delay_minutes.normal');
+
         if ($confirmedCount < $bloodRequest->required_bags) {
             WaveChainJob::dispatch($bloodRequest->id, 2)
-                ->delay(now()->addMinutes(30));
+                ->delay(now()->addMinutes($delayMinutes));
         }
 
-        return back()->with('success', "WhatsApp notifications queued for {$candidates->count()} eligible donors. Wave 2 akan otomatis berjalan dalam 30 menit jika kuota belum terpenuhi.");
+        return back()->with('success', "WhatsApp notifications queued for {$candidates->count()} eligible donors. Wave 2 akan otomatis berjalan dalam {$delayMinutes} menit jika kuota belum terpenuhi.");
     }
 
     public function verifyWeb($id, Request $request)

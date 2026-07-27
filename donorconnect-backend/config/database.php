@@ -60,7 +60,7 @@ return [
             // Pin the DB session timezone to match APP_TIMEZONE so raw SQL
             // date math (DonorFilterService's CURRENT_DATE/TIMESTAMPDIFF)
             // can't drift a calendar day off PHP's now() around midnight.
-            'timezone' => env('DB_TIMEZONE', '+00:00'),
+            'timezone' => env('DB_TIMEZONE', (new DateTime('now', new DateTimeZone(env('APP_TIMEZONE', 'UTC'))))->format('P')),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
@@ -81,7 +81,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'timezone' => env('DB_TIMEZONE', '+00:00'),
+            'timezone' => env('DB_TIMEZONE', (new DateTime('now', new DateTimeZone(env('APP_TIMEZONE', 'UTC'))))->format('P')),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

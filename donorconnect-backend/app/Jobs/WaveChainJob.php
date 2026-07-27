@@ -39,7 +39,7 @@ class WaveChainJob implements ShouldQueue
      * jika kuota belum terpenuhi.
      *
      * Flow:
-     *   Wave 1 → delay 30 menit → cek quota → Wave 2 → delay 30 menit → cek quota → Wave 3
+     *   Wave 1 → delay N menit (tergantung urgency_level) → cek quota → Wave 2 → ... → Wave 3
      */
     public function handle(DonorFilterService $filterService, WhatsAppService $waService): void
     {
@@ -99,9 +99,11 @@ class WaveChainJob implements ShouldQueue
         // Chain ke gelombang berikutnya (max 3)
         if ($this->currentWave < 3) {
             $nextWave = $this->currentWave + 1;
+            $delayMinutes = config('donorconnect.wave_delay_minutes')[$request->urgency_level]
+                ?? config('donorconnect.wave_delay_minutes.normal');
             static::dispatch($this->bloodRequestId, $nextWave)
-                ->delay(now()->addMinutes(30));
-            Log::info("WaveChain: Gelombang {$nextWave} scheduled dalam 30 menit untuk request #{$this->bloodRequestId}");
+                ->delay(now()->addMinutes($delayMinutes));
+            Log::info("WaveChain: Gelombang {$nextWave} scheduled dalam {$delayMinutes} menit untuk request #{$this->bloodRequestId}");
         }
     }
 }
