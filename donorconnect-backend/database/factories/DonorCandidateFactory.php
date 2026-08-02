@@ -24,7 +24,7 @@ class DonorCandidateFactory extends Factory
             'notified_at' => fake()->optional()->dateTime(),
             'confirmed_at' => fake()->optional()->dateTime(),
             'verified_at' => fake()->optional()->dateTime(),
-            'verification_method' => fake()->optional()->randomElement(['qr', 'manual']),
+            'verification_method' => fake()->optional()->randomElement(['manual', 'code']),
         ];
     }
 }

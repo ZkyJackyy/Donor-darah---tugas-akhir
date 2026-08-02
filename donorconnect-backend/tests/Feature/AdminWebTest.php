@@ -79,6 +79,7 @@ class AdminWebTest extends TestCase
         $this->actingAs($this->admin);
         
         $response = $this->post('/admin/blood-requests', [
+            'type' => 'emergency',
             'blood_type' => 'AB',
             'rhesus' => '+',
             'required_bags' => 3,

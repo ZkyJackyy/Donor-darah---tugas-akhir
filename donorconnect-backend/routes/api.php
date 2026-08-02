@@ -36,12 +36,12 @@ Route::middleware(['auth:sanctum', 'verified.email'])->group(function () {
     Route::post('/donor/screening', [DonorActionController::class, 'screening']);
     Route::post('/donor/confirm', [DonorActionController::class, 'confirm']);
     Route::get('/donor/history', [DonorActionController::class, 'history']);
-    Route::get('/donor-candidates/{candidate}/qr-code', [DonorActionController::class, 'qrCode']);
 
     // User Blood Request Routes (Mobile App)
     Route::get('/user/blood-requests', [UserBloodRequestController::class, 'index']);
     Route::get('/user/blood-requests/history', [UserBloodRequestController::class, 'history']);
     Route::get('/user/blood-requests/{id}', [UserBloodRequestController::class, 'show']);
+    Route::post('/user/blood-requests/{bloodRequest}/join', [UserBloodRequestController::class, 'join']);
 
     // User Notifications (Mobile App)
     Route::get('/user/notifications', [UserNotificationController::class, 'index']);
@@ -52,7 +52,6 @@ Route::middleware(['auth:sanctum', 'verified.email'])->group(function () {
 // register/verify-email flow, so they're gated by 'admin' only, not
 // 'verified.email'.
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-    Route::post('/verify/qr', [AdminBloodRequestController::class, 'verifyQr']);
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 
     Route::get('/blood-requests', [AdminBloodRequestController::class, 'index']);

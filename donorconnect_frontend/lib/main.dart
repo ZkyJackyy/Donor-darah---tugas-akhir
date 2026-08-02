@@ -17,7 +17,6 @@ import 'features/skrining/providers/skrining_provider.dart';
 import 'features/konfirmasi/providers/konfirmasi_provider.dart';
 import 'features/riwayat/providers/riwayat_provider.dart';
 import 'features/notifikasi/providers/notifikasi_provider.dart';
-import 'features/scan/providers/scan_provider.dart';
 
 // Screens
 import 'features/auth/screens/login_screen.dart';
@@ -32,7 +31,6 @@ import 'features/konfirmasi/screens/tiket_digital_screen.dart';
 import 'shared/models/ticket_data.dart';
 import 'features/riwayat/screens/riwayat_screen.dart';
 import 'features/notifikasi/screens/notifikasi_screen.dart';
-import 'features/scan/screens/scan_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/edit_profile_screen.dart';
 
@@ -247,10 +245,6 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         path: '/notifikasi',
         builder: (context, state) => const NotifikasiScreen(),
       ),
-      GoRoute(
-        path: '/scan',
-        builder: (context, state) => const ScanScreen(),
-      ),
     ],
   );
 
@@ -264,7 +258,6 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         ChangeNotifierProvider(create: (_) => KonfirmasiProvider()),
         ChangeNotifierProvider(create: (_) => RiwayatProvider()),
         ChangeNotifierProvider(create: (_) => NotifikasiProvider()),
-        ChangeNotifierProvider(create: (_) => ScanProvider()),
       ],
       child: MaterialApp.router(
         title: 'Sahabat Donor',

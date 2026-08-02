@@ -115,14 +115,16 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
                           child: Center(
                             child: isDone
                                 ? const Icon(Icons.check_circle, color: AppColors.success, size: 26)
-                                : Text(
-                                    item.golonganDarah,
-                                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20),
-                                  ),
+                                : item.type == 'event'
+                                    ? const Icon(Icons.event_available, color: AppColors.primary, size: 24)
+                                    : Text(
+                                        item.golonganDarah,
+                                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20),
+                                      ),
                           ),
                         ),
                         title: Text(
-                          'Dibutuhkan ${item.jumlahKantong} Kantong',
+                          item.type == 'event' ? 'Event Donor Darah Terbuka' : 'Dibutuhkan ${item.jumlahKantong} Kantong',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Column(
@@ -169,6 +171,22 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
                                       ),
                                     ],
                                   ),
+                                  if (item.type == 'event' && item.eventStartsAt != null) ...[
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.event, size: 14, color: Colors.grey),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            'Mulai: ${item.eventStartsAtFormatted}',
+                                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
@@ -176,7 +194,7 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
-                                          'Batas: ${item.batasWaktu}',
+                                          item.type == 'event' ? 'Selesai: ${item.batasWaktu}' : 'Batas: ${item.batasWaktu}',
                                           style: const TextStyle(fontSize: 12, color: Colors.grey),
                                           overflow: TextOverflow.ellipsis,
                                         ),

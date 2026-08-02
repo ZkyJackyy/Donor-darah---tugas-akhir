@@ -25,7 +25,12 @@
     </div>
 
     <div style="margin-bottom: 20px;">
+        <strong>Type:</strong> {{ $bloodRequest->type === 'event' ? 'Open Donation Event' : 'Emergency Request' }}<br>
+        @if($bloodRequest->type === 'event')
+        <strong>Blood Required:</strong> All types {{ $bloodRequest->required_bags ? "(target {$bloodRequest->required_bags} bags)" : '(no target)' }}<br>
+        @else
         <strong>Blood Required:</strong> {{ $bloodRequest->required_bags }} Bags ({{ $bloodRequest->blood_type }}{{ $bloodRequest->rhesus }})<br>
+        @endif
         <strong>Urgency:</strong> {{ strtoupper($bloodRequest->urgency_level) }}<br>
         <strong>Deadline:</strong> {{ $bloodRequest->deadline ? $bloodRequest->deadline->format('Y-m-d H:i') . ' WIB' : '-' }}<br>
         <strong>Total Candidates Recruited:</strong> {{ $bloodRequest->donorCandidates->count() }}
@@ -49,7 +54,7 @@
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $candidate->user->name }}</td>
                 <td>{{ $candidate->user->phone }}</td>
-                <td>{{ number_format($candidate->distance_km, 2) }} km</td>
+                <td>{{ $candidate->distance_km !== null ? number_format($candidate->distance_km, 2) . ' km' : '-' }}</td>
                 <td>
                     <span class="badge {{ $candidate->status }}">{{ $candidate->status }}</span>
                 </td>

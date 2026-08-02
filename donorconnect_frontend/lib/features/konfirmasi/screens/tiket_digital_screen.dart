@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
@@ -16,14 +15,14 @@ class TiketDigitalScreen extends StatelessWidget {
     final now = DateTime.now();
     final isExpired = ticket.expiresAt != null && now.isAfter(ticket.expiresAt!);
     final isInactive = ticket.isUsed || isExpired;
-    final inactiveMessage = ticket.isUsed ? 'Tiket ini sudah digunakan' : 'QR Code sudah kadaluarsa';
+    final inactiveMessage = ticket.isUsed ? 'Tiket ini sudah digunakan' : 'Tiket sudah kadaluarsa';
 
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.go('/home'),
@@ -35,23 +34,23 @@ class TiketDigitalScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.verified, color: Colors.white, size: 56),
+              const Icon(Icons.verified, color: AppColors.primary, size: 56),
               const SizedBox(height: 16),
               const Text(
                 'Tiket Digital Donor',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 ticket.isUsed
                     ? 'Terima kasih, donasi Anda untuk permintaan ini sudah selesai.'
-                    : 'Tunjukkan QR Code ini kepada petugas PMI saat Anda tiba di lokasi.',
+                    : 'Tunjukkan kode verifikasi ini kepada petugas PMI saat Anda tiba di lokasi.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 16),
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
               ),
               const SizedBox(height: 32),
               Container(
@@ -60,6 +59,7 @@ class TiketDigitalScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
                   boxShadow: const [
                     BoxShadow(
                       color: Colors.black12,
@@ -70,13 +70,10 @@ class TiketDigitalScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Opacity(
-                      opacity: isInactive ? 0.3 : 1.0,
-                      child: QrImageView(
-                        data: ticket.qrToken,
-                        version: QrVersions.auto,
-                        size: 180.0,
-                      ),
+                    Icon(
+                      Icons.confirmation_number_outlined,
+                      size: 56,
+                      color: isInactive ? AppColors.textSecondary.withValues(alpha: 0.4) : AppColors.primary,
                     ),
                     if (isInactive) ...[
                       const SizedBox(height: 8),
@@ -94,7 +91,7 @@ class TiketDigitalScreen extends StatelessWidget {
                     _TicketRow(label: 'Tanggal', value: ticket.tanggal),
                     const SizedBox(height: 12),
                     const Text(
-                      'Kode Verifikasi Cadangan',
+                      'Kode Verifikasi',
                       style: TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
@@ -117,7 +114,7 @@ class TiketDigitalScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Sebutkan kode ini ke petugas jika QR tidak bisa dipindai',
+                      'Sebutkan kode ini kepada petugas untuk diverifikasi',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
                     ),
@@ -134,8 +131,8 @@ class TiketDigitalScreen extends StatelessWidget {
               const SizedBox(height: 48),
               CustomButton(
                 text: 'Kembali ke Beranda',
-                color: Colors.white,
-                textColor: AppColors.primary,
+                color: AppColors.primary,
+                textColor: Colors.white,
                 onPressed: () => context.go('/home'),
               ),
             ],

@@ -42,5 +42,4 @@ class ApiConstants {
 
   // Verification (admin only)
   static const String verifyKode = '/verify/code';
-  static const String verifyQr = '/verify/qr';
 }

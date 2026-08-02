@@ -67,6 +67,13 @@ class AdminBloodRequestController extends Controller
             return $this->error("Permintaan ini berstatus '{$bloodRequest->status}' — tidak bisa mengirim broadcast WA lagi.", 400);
         }
 
+        if ($bloodRequest->isEvent()) {
+            $donors = \App\Models\User::where('is_available', true)->where('role', 'user')->get();
+            $waService->announceEvent($donors, $bloodRequest);
+
+            return $this->success(null, "Successfully queued event announcement for {$donors->count()} donor(s).");
+        }
+
         // Get all waves of eligible donors
         $waves = $filterService->filterAllWaves($bloodRequest);
         $totalQueued = 0;
@@ -149,72 +156,6 @@ class AdminBloodRequestController extends Controller
         $candidate->bloodRequest->checkAndAutoFulfill();
 
         return $this->success(null, 'Candidate manually verified and history updated.');
-    }
-
-    public function verifyQr(Request $request)
-    {
-        $request->validate(['token' => 'required|string']);
-
-        $parts = explode('|', $request->token);
-        if (count($parts) !== 2) {
-            return $this->error('Invalid QR Token format', 400);
-        }
-
-        [$signature, $encodedPayload] = $parts;
-        $payload = base64_decode($encodedPayload);
-
-        // Verify HMAC
-        $expectedSignature = hash_hmac('sha256', $payload, config('app.key'));
-        if (!hash_equals($expectedSignature, $signature)) {
-            return $this->error('Invalid QR Signature', 400);
-        }
-
-        $data = json_decode($payload, true);
-
-        // Check Expiry
-        if (now()->timestamp > $data['expires_at']) {
-            return $this->error('QR Token expired', 400);
-        }
-
-        $candidate = DonorCandidate::with('user', 'bloodRequest')->findOrFail($data['candidate_id']);
-
-        if ($candidate->status === 'verified') {
-            return $this->error('Candidate already verified', 400);
-        }
-
-        if ($candidate->status !== 'confirmed') {
-            return $this->error("Candidate status is '{$candidate->status}' — candidate must confirm attendance before being verified.", 400);
-        }
-
-        if ($candidate->bloodRequest->status !== 'open') {
-            return $this->error("Blood request status is '{$candidate->bloodRequest->status}' — candidate can no longer be verified.", 400);
-        }
-
-        $candidate->update([
-            'status' => 'verified',
-            'verified_at' => now(),
-            'verification_method' => 'qr'
-        ]);
-
-        // Generate History
-        DonorHistory::create([
-            'user_id' => $candidate->user_id,
-            'blood_request_id' => $candidate->blood_request_id,
-            'donor_date' => now()->toDateString(),
-            'location_name' => $candidate->bloodRequest->hospital_name,
-            'verified_by' => auth()->id()
-        ]);
-
-        // Lock user from filter
-        $candidate->user->update([
-            'last_donor_date' => now()->toDateString(),
-            'is_available' => false
-        ]);
-
-        // Auto-transition to fulfilled if quota of verified candidates met
-        $candidate->bloodRequest->checkAndAutoFulfill();
-
-        return $this->success(null, 'QR Verification successful. User locked for ' . config('donorconnect.donation_cooldown_days', 56) . ' days.');
     }
 
     public function verifyByCode(Request $request)

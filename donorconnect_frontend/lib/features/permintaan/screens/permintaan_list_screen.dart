@@ -69,7 +69,9 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
         return 2;
       }
       bool isEligibleForUser = false;
-      if (user != null && item.golonganDarah == user.golonganDarah && daysRemaining <= 0) {
+      if (item.type == 'event') {
+        isEligibleForUser = daysRemaining <= 0;
+      } else if (user != null && item.golonganDarah == user.golonganDarah && daysRemaining <= 0) {
          isEligibleForUser = true;
       }
       if (item.userCandidateStatus == 'notified' || isEligibleForUser) {
@@ -300,12 +302,17 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                                     if (priority == 0)
                                       Container(
                                         width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(vertical: 6),
-                                        color: Colors.red.shade50,
-                                        child: const Text(
-                                          '🌟 Cocok Untuk Anda!',
+                                        padding: const EdgeInsets.symmetric(vertical: 7),
+                                        color: AppColors.primary.withValues(alpha: 0.08),
+                                        child: Text(
+                                          item.type == 'event' ? 'TERBUKA UNTUK SEMUA' : 'COCOK UNTUK ANDA',
                                           textAlign: TextAlign.center,
-                                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12),
+                                          style: const TextStyle(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                            letterSpacing: 0.5,
+                                          ),
                                         ),
                                       ),
                                     ListTile(
@@ -318,14 +325,16 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Center(
-                                      child: Text(
-                                        item.golonganDarah,
-                                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20),
-                                      ),
+                                      child: item.type == 'event'
+                                          ? const Icon(Icons.event_available, color: AppColors.primary, size: 24)
+                                          : Text(
+                                              item.golonganDarah,
+                                              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20),
+                                            ),
                                     ),
                                   ),
                                   title: Text(
-                                    'Dibutuhkan ${item.jumlahKantong} Kantong',
+                                    item.type == 'event' ? 'Event Donor Darah Terbuka' : 'Dibutuhkan ${item.jumlahKantong} Kantong',
                                     style: const TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                   subtitle: Column(
@@ -356,6 +365,22 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                                               ),
                                             ],
                                           ),
+                                          if (item.type == 'event' && item.eventStartsAt != null) ...[
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.event, size: 14, color: Colors.grey),
+                                                const SizedBox(width: 4),
+                                                Expanded(
+                                                  child: Text(
+                                                    'Mulai: ${item.eventStartsAtFormatted}',
+                                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
                                           const SizedBox(height: 4),
                                           Row(
                                             children: [
@@ -363,7 +388,7 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                                               const SizedBox(width: 4),
                                               Expanded(
                                                 child: Text(
-                                                  'Batas: ${item.batasWaktu}',
+                                                  item.type == 'event' ? 'Selesai: ${item.batasWaktu}' : 'Batas: ${item.batasWaktu}',
                                                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
@@ -380,12 +405,17 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                                   if (priority == 2)
                                     Container(
                                       width: double.infinity,
-                                      padding: const EdgeInsets.symmetric(vertical: 6),
-                                      color: Colors.green.shade50,
+                                      padding: const EdgeInsets.symmetric(vertical: 7),
+                                      color: AppColors.success.withValues(alpha: 0.08),
                                       child: const Text(
-                                        '✅ Selesai Melakukan Donor',
+                                        'SELESAI MELAKUKAN DONOR',
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                                        style: TextStyle(
+                                          color: AppColors.success,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                          letterSpacing: 0.5,
+                                        ),
                                       ),
                                     ),
                                   ],

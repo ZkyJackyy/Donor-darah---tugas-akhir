@@ -7,7 +7,6 @@ class TicketData {
   final double? beratBadan;
   final String namaRS;
   final int requestId;
-  final String qrToken;
   final String kodeVerifikasi;
   final String tanggal;
   final DateTime? expiresAt;
@@ -20,7 +19,6 @@ class TicketData {
     this.beratBadan,
     required this.namaRS,
     required this.requestId,
-    required this.qrToken,
     required this.kodeVerifikasi,
     required this.tanggal,
     this.expiresAt,
@@ -34,7 +32,6 @@ class TicketData {
     required String? rhesus,
     required String? hospitalName,
     required int requestId,
-    required String? qrToken,
     required String? kodeVerifikasi,
     required DateTime? expiresAt,
   }) {
@@ -44,7 +41,6 @@ class TicketData {
       rhesus: rhesus ?? '-',
       namaRS: hospitalName ?? '-',
       requestId: requestId,
-      qrToken: qrToken ?? '',
       kodeVerifikasi: kodeVerifikasi ?? '-',
       tanggal: formatIndonesianDate(DateTime.now().toIso8601String()),
       expiresAt: expiresAt,
@@ -65,7 +61,7 @@ class TicketData {
     bool isUsed = false,
   }) {
     // Backend tidak mengirim ulang expiry saat re-fetch, jadi dihitung ulang di sini.
-    // Harus tetap sinkron dengan config('donorconnect.qr.expiry_minutes') di backend.
+    // Harus tetap sinkron dengan config('donorconnect.confirmation_expiry_minutes') di backend.
     DateTime? expiresAt;
     if (includeExpiry) {
       final confirmedAtRaw = userInfo['confirmed_at'] as String?;
@@ -82,7 +78,6 @@ class TicketData {
       rhesus: rhesus,
       namaRS: hospitalName ?? '-',
       requestId: requestId,
-      qrToken: userInfo['qr_token'] ?? '',
       kodeVerifikasi: userInfo['kode_verifikasi'] ?? '-',
       tanggal: formatIndonesianDate(userInfo[dateField] as String?),
       expiresAt: expiresAt,

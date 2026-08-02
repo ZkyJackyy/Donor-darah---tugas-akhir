@@ -25,6 +25,10 @@ class DonorActionController extends Controller
             ->with('bloodRequest')
             ->firstOrFail();
 
+        if ($request->status === 'confirmed' && $candidate->status !== 'screening_passed') {
+            return $this->error('Anda harus menyelesaikan skrining mandiri terlebih dahulu sebelum konfirmasi kesediaan.', 400);
+        }
+
         // Atomic quota check inside transaction to prevent race condition
         if ($request->status === 'confirmed') {
             $result = DB::transaction(function () use ($candidate) {
@@ -33,43 +37,46 @@ class DonorActionController extends Controller
                     ->lockForUpdate()
                     ->first();
 
+                if ($bloodRequest->status !== 'open') {
+                    return 'closed';
+                }
+
+                // Count 'confirmed' AND 'verified' — a candidate that has
+                // already been verified still occupies a quota slot, so
+                // excluding it would let the request over-fill once one
+                // donor gets verified before the rest confirm.
                 $confirmedCount = DonorCandidate::where('blood_request_id', $candidate->blood_request_id)
-                    ->where('status', 'confirmed')
+                    ->whereIn('status', ['confirmed', 'verified'])
                     ->count();
 
                 if ($confirmedCount >= $bloodRequest->required_bags) {
-                    return null; // Quota full
+                    return 'full';
                 }
 
                 return $bloodRequest;
             });
 
-            if ($result === null) {
+            if ($result === 'closed') {
+                return $this->error('Permintaan ini sudah tidak menerima konfirmasi baru (status saat ini bukan open).', 400);
+            }
+
+            if ($result === 'full') {
                 return $this->error('Kuota pendonor sudah penuh untuk permintaan ini', 400);
             }
         }
 
-        $qrToken = null;
         $kodeVerifikasi = null;
         $expiresAt = null;
         $confirmedAt = null;
         if ($request->status === 'confirmed') {
             $confirmedAt = now();
-            $expiresAt = $confirmedAt->copy()->addMinutes(config('donorconnect.qr.expiry_minutes', 120));
-            $payload = json_encode([
-                'candidate_id' => $candidate->id,
-                'user_id' => $candidate->user_id,
-                'request_id' => $candidate->blood_request_id,
-                'expires_at' => $expiresAt->timestamp
-            ]);
-            $qrToken = hash_hmac('sha256', $payload, config('app.key')) . '|' . base64_encode($payload);
-            $kodeVerifikasi = $this->generateUniqueVerificationCode();
+            $expiresAt = $confirmedAt->copy()->addMinutes(config('donorconnect.confirmation_expiry_minutes', 120));
+            $kodeVerifikasi = DonorCandidate::generateVerificationCode();
         }
 
         $updateData = [
             'status' => $request->status,
             'confirmed_at' => $confirmedAt,
-            'qr_token' => $qrToken,
             'kode_verifikasi' => $kodeVerifikasi,
         ];
 
@@ -89,7 +96,7 @@ class DonorActionController extends Controller
                 if (!$isDuplicateCode || $attempt === $maxAttempts) {
                     throw $e;
                 }
-                $updateData['kode_verifikasi'] = $this->generateUniqueVerificationCode();
+                $updateData['kode_verifikasi'] = DonorCandidate::generateVerificationCode();
             }
         }
 
@@ -117,31 +124,10 @@ class DonorActionController extends Controller
 
         return $this->success([
             'status' => $candidate->status,
-            'qr_token' => $qrToken,
             'kode_verifikasi' => $updateData['kode_verifikasi'],
             'hospital_name' => $candidate->bloodRequest->hospital_name,
             'expires_at' => $expiresAt?->toIso8601String(),
         ], 'Donor status updated successfully');
-    }
-
-    private function generateUniqueVerificationCode(): string
-    {
-        do {
-            $code = strtoupper(substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 6));
-        } while (DonorCandidate::where('kode_verifikasi', $code)->exists());
-
-        return $code;
-    }
-
-    public function qrCode(DonorCandidate $candidate)
-    {
-        if ($candidate->user_id !== auth()->id() || $candidate->status !== 'confirmed') {
-            return $this->forbidden('Unauthorized or invalid status');
-        }
-
-        return $this->success([
-            'qr_token' => $candidate->qr_token
-        ]);
     }
 
     public function history()

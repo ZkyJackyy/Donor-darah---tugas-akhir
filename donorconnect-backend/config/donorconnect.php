@@ -64,17 +64,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | QR Code Settings
+    | Confirmation Expiry
     |--------------------------------------------------------------------------
     |
-    | Pengaturan QR Code untuk verifikasi donor.
+    | Berapa lama (menit) tiket konfirmasi donor berlaku sebelum kadaluarsa.
     |
     */
 
-    'qr' => [
-        'expiry_minutes' => (int) env('DONORCONNECT_QR_EXPIRY_MINUTES', 120),
-        'size' => 300,
-    ],
+    'confirmation_expiry_minutes' => (int) env('DONORCONNECT_CONFIRMATION_EXPIRY_MINUTES', 120),
 
     /*
     |--------------------------------------------------------------------------

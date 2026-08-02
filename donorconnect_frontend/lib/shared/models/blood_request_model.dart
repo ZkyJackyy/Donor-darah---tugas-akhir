@@ -2,6 +2,8 @@ import '../../core/utils/date_formatter.dart';
 
 class BloodRequestModel {
   final int id;
+  final String type;
+  final DateTime? eventStartsAt;
   final String golonganDarah;
   final String rhesus;
   final int jumlahKantong;
@@ -17,6 +19,8 @@ class BloodRequestModel {
 
   BloodRequestModel({
     required this.id,
+    this.type = 'emergency',
+    this.eventStartsAt,
     required this.golonganDarah,
     required this.rhesus,
     required this.jumlahKantong,
@@ -32,10 +36,13 @@ class BloodRequestModel {
   });
 
   String get verifiedAtFormatted => formatIndonesianDate(verifiedAt?.toIso8601String());
+  String get eventStartsAtFormatted => formatIndonesianDate(eventStartsAt?.toIso8601String());
 
   factory BloodRequestModel.fromJson(Map<String, dynamic> json) {
     return BloodRequestModel(
       id: json['id'],
+      type: json['type'] ?? 'emergency',
+      eventStartsAt: json['event_starts_at'] != null ? DateTime.parse(json['event_starts_at']).toLocal() : null,
       golonganDarah: json['blood_type'] ?? '',
       rhesus: json['rhesus'] ?? '',
       jumlahKantong: json['required_bags'] ?? 0,
@@ -55,6 +62,8 @@ class BloodRequestModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'type': type,
+      'event_starts_at': eventStartsAt?.toIso8601String(),
       'blood_type': golonganDarah,
       'rhesus': rhesus,
       'required_bags': jumlahKantong,

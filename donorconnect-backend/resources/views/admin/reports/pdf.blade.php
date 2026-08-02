@@ -7,7 +7,7 @@
         .title { font-size: 24px; font-weight: bold; color: #e53e3e; margin: 0;}
         .subtitle { font-size: 14px; color: #666; margin-top: 5px;}
         .stats { display: table; width: 100%; margin-bottom: 20px; }
-        .stat-box { display: table-cell; width: 25%; text-align: center; padding: 10px; border: 1px solid #eee; }
+        .stat-box { display: table-cell; width: 33%; text-align: center; padding: 10px; border: 1px solid #eee; }
         .stat-value { font-size: 20px; font-weight: bold; color: #e53e3e; }
         .stat-label { font-size: 11px; color: #666; text-transform: uppercase; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -24,22 +24,35 @@
         <p class="subtitle" style="font-size: 12px">Generated: {{ \Carbon\Carbon::now()->toDateTimeString() }}</p>
     </div>
 
+    <h2 style="margin-top: 0;">Permintaan Darah (Kebutuhan)</h2>
     <div class="stats">
         <div class="stat-box">
-            <div class="stat-value">{{ $totalSuccessfulDonors }}</div>
-            <div class="stat-label">Donasi Berhasil</div>
-        </div>
-        <div class="stat-box">
             <div class="stat-value">{{ $totalRequests }}</div>
-            <div class="stat-label">Total Permintaan</div>
+            <div class="stat-label">Permintaan Dibuat</div>
         </div>
         <div class="stat-box">
             <div class="stat-value">{{ $totalBagsRequested }}</div>
-            <div class="stat-label">Kantong Darah</div>
+            <div class="stat-label">Kantong Diminta</div>
         </div>
         <div class="stat-box">
             <div class="stat-value">{{ $completedRequests }}</div>
-            <div class="stat-label">Req. Selesai</div>
+            <div class="stat-label">Permintaan Fulfilled</div>
+        </div>
+    </div>
+
+    <h2>Realisasi Donasi</h2>
+    <div class="stats">
+        <div class="stat-box">
+            <div class="stat-value">{{ $totalSuccessfulDonors }}</div>
+            <div class="stat-label">Donasi Terverifikasi</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ $totalBagsFulfilled }}</div>
+            <div class="stat-label">Kantong Terpenuhi</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ $fulfillmentRate }}%</div>
+            <div class="stat-label">Tingkat Pemenuhan</div>
         </div>
     </div>
 

@@ -303,7 +303,6 @@ Running migrations.
 - ✅ **POST `/donor/screening` ✨**
 - ✅ POST `/donor/confirm`
 - ✅ GET `/donor/history`
-- ✅ GET `/donor-candidates/{candidate}/qr-code`
 
 **Admin Routes** (Protected + admin middleware):
 
@@ -313,7 +312,7 @@ Running migrations.
 - ✅ GET `/blood-requests/{id}/preview-donors`
 - ✅ POST `/blood-requests/{id}/notify` (with wave support ✨)
 - ✅ POST `/donor-candidates/{id}/verify`
-- ✅ POST `/verify/qr`
+- ✅ POST `/verify/code`
 - ✅ GET `/dashboard/stats`
 
 **Rate Limiting**:
@@ -360,10 +359,10 @@ public function rules(): array {
 | Medical criteria filtering     | ✅ 100% | Age 17-60, interval 56 days, weight 45kg    |
 | Wave-based broadcast (1, 2, 3) | ✅ 100% | ✨ NEW - 3-wave implementation              |
 | Kuota checking                 | ✅ 100% | ✨ NEW - prevents overbooking               |
-| QR token generation            | ✅ 100% | HMAC signed, 2-hour expiry                  |
+| Verification code generation   | ✅ 100% | Unique 6-char kode_verifikasi                |
 | Screening endpoint             | ✅ 100% | ✨ NEW - 4-checkbox validation              |
 | API response format            | ✅ 100% | ✨ NEW - consistent {status, message, data} |
-| Admin verification             | ✅ 100% | Both manual & QR methods                    |
+| Admin verification             | ✅ 100% | Manual & code-based methods                 |
 | Update last_donor_date         | ✅ 100% | Auto-updated on verification                |
 | Deep link format               | ✅ 100% | `donorconnect://request/{id}`               |
 
@@ -375,7 +374,7 @@ public function rules(): array {
 
 - Password hashing (bcrypt)
 - Token-based auth (Laravel Sanctum)
-- HMAC-signed QR tokens
+- Unique verification codes (kode_verifikasi)
 - Admin middleware protection
 - SQL injection prevention (parameterized queries)
 - Rate limiting on auth endpoints

@@ -19,7 +19,6 @@ class DonorCandidate extends Model
         'confirmed_at',
         'verified_at',
         'verification_method',
-        'qr_token',
         'kode_verifikasi',
     ];
 
@@ -46,5 +45,14 @@ class DonorCandidate extends Model
     public function screening()
     {
         return $this->hasOne(DonorScreening::class);
+    }
+
+    public static function generateVerificationCode(): string
+    {
+        do {
+            $code = strtoupper(substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 6));
+        } while (static::where('kode_verifikasi', $code)->exists());
+
+        return $code;
     }
 }

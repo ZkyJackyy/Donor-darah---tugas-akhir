@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminBloodRequestWebController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminMapController;
 use App\Http\Controllers\Admin\AdminSettingsController;
+use App\Http\Controllers\Admin\AdminVerifyController;
 
 use App\Http\Controllers\Admin\AdminBroadcastController;
 
@@ -17,7 +18,7 @@ Route::get('/', function () {
 
 // Admin Web Auth Routes
 Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.attempt');
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1')->name('admin.login.attempt');
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
 // Web Admin Pages
@@ -33,9 +34,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     Route::post('/blood-requests/{id}/notify', [AdminBloodRequestWebController::class, 'notifyWeb'])->middleware('throttle:5,1')->name('blood-requests.notify');
     Route::post('/blood-requests/verify/{id}', [AdminBloodRequestWebController::class, 'verifyWeb'])->name('blood-requests.verify');
-    Route::post('/blood-requests/verify-qr', [AdminBloodRequestWebController::class, 'verifyQrWeb'])->name('blood-requests.verify-qr');
     Route::patch('/blood-requests/{id}/status', [AdminBloodRequestWebController::class, 'updateStatus'])->name('blood-requests.update-status');
     Route::get('/blood-requests/{id}/pdf', [AdminBloodRequestWebController::class, 'exportPdf'])->name('blood-requests.pdf');
+
+    // Verify by Code
+    Route::get('/verify', [AdminVerifyController::class, 'index'])->name('verify.index');
+    Route::post('/verify', [AdminVerifyController::class, 'submit'])->name('verify.submit');
 
     // Reports
     Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');

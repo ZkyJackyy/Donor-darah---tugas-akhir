@@ -40,13 +40,25 @@
                     <tr class="hover:bg-gray-50/50 transition-colors group">
                         <td class="px-6 py-5 font-bold text-gray-400 text-sm">{{ ($bloodRequests->currentPage() - 1) * $bloodRequests->perPage() + $loop->iteration }}</td>
                         <td class="px-6 py-5">
+                            <div class="flex items-center gap-2 mb-1">
+                                @if($req->type === 'event')
+                                    <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-700 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">Event Terbuka</span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">Darurat</span>
+                                @endif
+                            </div>
                             <div class="font-bold text-gray-800 leading-tight">{{ $req->hospital_name }}</div>
                             <div class="text-[11px] text-gray-400 mt-1 line-clamp-1 max-w-[200px]" title="{{ $req->hospital_address }}">{{ $req->hospital_address }}</div>
                         </td>
                         <td class="px-6 py-5">
-                            <div class="text-sm font-bold text-gray-700">
-                                {{ $req->blood_type }}{{ $req->rhesus }} × {{ $req->required_bags }} <span class="text-xs font-medium text-gray-400">Kantong</span>
-                            </div>
+                            @if($req->type === 'event')
+                                <div class="text-sm font-bold text-gray-700">Semua Golongan</div>
+                                <div class="text-xs font-medium text-gray-400">{{ $req->required_bags ? "Target {$req->required_bags} kantong" : 'Tanpa target' }}</div>
+                            @else
+                                <div class="text-sm font-bold text-gray-700">
+                                    {{ $req->blood_type }}{{ $req->rhesus }} × {{ $req->required_bags }} <span class="text-xs font-medium text-gray-400">Kantong</span>
+                                </div>
+                            @endif
                         </td>
                         <td class="px-6 py-5">
                             @if($req->urgency_level == 'critical')

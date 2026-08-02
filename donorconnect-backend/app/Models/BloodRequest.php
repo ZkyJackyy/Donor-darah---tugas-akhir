@@ -12,6 +12,8 @@ class BloodRequest extends Model
 
     protected $fillable = [
         'admin_id',
+        'type',
+        'event_starts_at',
         'blood_type',
         'rhesus',
         'urgency_level',
@@ -27,6 +29,7 @@ class BloodRequest extends Model
 
     protected $casts = [
         'deadline' => 'datetime',
+        'event_starts_at' => 'datetime',
     ];
 
     public function admin()
@@ -39,13 +42,21 @@ class BloodRequest extends Model
         return $this->hasMany(DonorCandidate::class);
     }
 
+    public function isEvent(): bool
+    {
+        return $this->type === 'event';
+    }
+
     /**
      * Transisi otomatis ke 'fulfilled' begitu jumlah kandidat yang benar-benar
      * verified (bukan sekadar confirmed) sudah memenuhi required_bags.
+     *
+     * Event terbuka tidak punya kuota keras (required_bags cuma target
+     * informatif), jadi tidak pernah auto-fulfilled — admin tutup manual.
      */
     public function checkAndAutoFulfill(): void
     {
-        if ($this->status !== 'open') {
+        if ($this->status !== 'open' || $this->isEvent() || $this->required_bags === null) {
             return;
         }
 

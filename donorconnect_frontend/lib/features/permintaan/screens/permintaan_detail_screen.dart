@@ -54,6 +54,34 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     }
   }
 
+  // Dipanggil untuk permintaan tipe 'event' (donor darah terbuka) —
+  // user mendaftar sendiri, langsung dapat tiket tanpa skrining.
+  void _handleJoinEvent(int requestId) async {
+    final konfirmasi = context.read<KonfirmasiProvider>();
+    final success = await konfirmasi.joinEvent(requestId);
+
+    if (!mounted) return;
+
+    if (success) {
+      final user = context.read<AuthProvider>().user;
+      final item = context.read<PermintaanProvider>().selectedPermintaan;
+
+      context.push('/tiket', extra: TicketData.fromConfirmResult(
+        donorName: user?.name,
+        golonganDarah: user?.golonganDarah ?? item?.golonganDarah,
+        rhesus: user?.rhesus ?? item?.rhesus,
+        hospitalName: konfirmasi.hospitalName ?? item?.hospitalName,
+        requestId: requestId,
+        kodeVerifikasi: konfirmasi.kodeVerifikasi,
+        expiresAt: konfirmasi.expiresAt,
+      ));
+
+      context.read<PermintaanProvider>().fetchPermintaanDetail(requestId);
+    } else {
+      AppSnackbar.showError(context, konfirmasi.error ?? 'Gagal mendaftar sebagai pendonor');
+    }
+  }
+
   // Dipanggil saat status 'screening_passed' → langsung konfirmasi ke API
   void _handleKonfirmasiLangsung(int donorCandidateId) async {
     final success = await context.read<KonfirmasiProvider>().confirmDonor(
@@ -68,14 +96,13 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
       final user = context.read<AuthProvider>().user;
       final item = context.read<PermintaanProvider>().selectedPermintaan;
 
-      if (konfirmasi.qrToken != null) {
+      if (konfirmasi.kodeVerifikasi != null) {
         context.push('/tiket', extra: TicketData.fromConfirmResult(
           donorName: user?.name,
           golonganDarah: user?.golonganDarah ?? item?.golonganDarah,
           rhesus: user?.rhesus ?? item?.rhesus,
           hospitalName: konfirmasi.hospitalName ?? item?.hospitalName,
           requestId: widget.requestId,
-          qrToken: konfirmasi.qrToken,
           kodeVerifikasi: konfirmasi.kodeVerifikasi,
           expiresAt: konfirmasi.expiresAt,
         ));
@@ -155,14 +182,47 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
 
   Widget _buildActionSection(Map<String, dynamic>? userInfo, bool isLoading, BloodRequestModel item) {
     if (userInfo == null || userInfo['is_candidate'] != true) {
-      return Card(
-        color: Colors.amber.shade100,
+      if (item.type == 'event') {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Event donor darah ini terbuka untuk semua golongan darah. Daftar sekarang untuk mendapatkan tiket kehadiran.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            CustomButton(
+              text: 'Ikut Donor',
+              onPressed: () => _handleJoinEvent(item.id),
+              isLoading: isLoading,
+            ),
+          ],
+        );
+      }
+
+      return Container(
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+        ),
         child: const Padding(
           padding: EdgeInsets.all(16.0),
           child: Text(
             'Maaf, Anda belum terdaftar sebagai kandidat pendonor untuk permintaan ini. Silakan tunggu notifikasi dari admin.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           ),
         ),
       );
@@ -172,14 +232,18 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     final int candidateId = userInfo['candidate_id'];
 
     if (status == 'declined') {
-      return Card(
-        color: Colors.amber.shade100,
+      return Container(
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+        ),
         child: const Padding(
           padding: EdgeInsets.all(16.0),
           child: Text(
             'Anda telah menolak permintaan ini.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.warning),
           ),
         ),
       );
@@ -188,20 +252,27 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     if (status == 'verified') {
       final verifiedAtFormatted = formatIndonesianDate(userInfo['verified_at'] as String?);
 
-      return Card(
-        color: AppColors.success.withValues(alpha: 0.1),
+      return Container(
+        decoration: BoxDecoration(
+          color: AppColors.success.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
-              const Icon(Icons.check_circle, color: AppColors.success, size: 48),
-              const SizedBox(height: 12),
               const Text(
-                'Donor Selesai & Terverifikasi',
+                'DONOR SELESAI & TERVERIFIKASI',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.success, fontSize: 16),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.success,
+                  fontSize: 14,
+                  letterSpacing: 0.5,
+                ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 'Terima kasih atas donasi Anda pada $verifiedAtFormatted',
                 textAlign: TextAlign.center,
@@ -295,70 +366,102 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Hero: golongan darah paling penting, ditonjolkan besar
                       Container(
-                        padding: const EdgeInsets.all(24),
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 28),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryLight.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.primaryLight.withOpacity(0.3)),
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.water_drop, size: 64, color: AppColors.primary),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Dibutuhkan Pendonor Darah',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              item.urgencyLevel == 'urgent' || item.urgencyLevel == 'critical' 
-                                  ? 'Segera Dibutuhkan' 
-                                  : 'Permintaan Normal',
-                              style: TextStyle(
-                                color: item.urgencyLevel == 'normal' ? AppColors.success : AppColors.error, 
-                                fontWeight: FontWeight.bold
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(20),
                               ),
+                              child: Text(
+                                item.type == 'event'
+                                    ? 'EVENT TERBUKA'
+                                    : item.urgencyLevel == 'critical'
+                                        ? 'KRITIS'
+                                        : item.urgencyLevel == 'urgent'
+                                            ? 'MENDESAK'
+                                            : 'NORMAL',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            item.type == 'event'
+                                ? const Icon(Icons.event_available, color: Colors.white, size: 48)
+                                : Text(
+                                    '${item.golonganDarah} ${item.rhesus}',
+                                    style: const TextStyle(
+                                      fontSize: 44,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                            const SizedBox(height: 6),
+                            Text(
+                              item.type == 'event' ? 'Donor Darah Terbuka untuk Semua Golongan' : 'Golongan Darah Dibutuhkan',
+                              style: const TextStyle(color: Colors.white70, fontSize: 13),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
+
+                      // Informasi permintaan, disusun sebagai daftar rapi tanpa ikon
                       const Text(
                         'Informasi Permintaan',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
                       ),
-                      const Divider(),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.bloodtype, color: AppColors.primary),
-                        title: const Text('Golongan Darah & Rhesus'),
-                        subtitle: Text('${item.golonganDarah} / ${item.rhesus}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _InfoRow(
+                              label: 'Kebutuhan',
+                              value: item.type == 'event'
+                                  ? (item.jumlahKantong > 0 ? 'Target ${item.jumlahKantong} Kantong' : 'Tanpa Batas')
+                                  : '${item.jumlahKantong} Kantong',
+                            ),
+                            const _InfoDivider(),
+                            _InfoRow(label: 'Lokasi', value: item.hospitalName ?? '-'),
+                            if (item.type == 'event' && item.eventStartsAt != null) ...[
+                              const _InfoDivider(),
+                              _InfoRow(label: 'Jadwal Mulai', value: item.eventStartsAtFormatted),
+                            ],
+                            const _InfoDivider(),
+                            _InfoRow(
+                              label: item.type == 'event' ? 'Jadwal Selesai' : 'Batas Waktu',
+                              value: item.batasWaktu,
+                              isLast: true,
+                            ),
+                          ],
+                        ),
                       ),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.shopping_bag, color: AppColors.primary),
-                        title: const Text('Kebutuhan'),
-                        subtitle: Text('${item.jumlahKantong} Kantong', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      ),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.location_on, color: AppColors.primary),
-                        title: const Text('Lokasi'),
-                        subtitle: Text(item.hospitalName ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      ),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.timer, color: AppColors.primary),
-                        title: const Text('Batas Waktu'),
-                        subtitle: Text(item.batasWaktu, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      ),
-                      
-                      const SizedBox(height: 16),
+
                       if (item.latitude != 0.0) ...[
+                        const SizedBox(height: 24),
                         const Text(
                           'Lokasi Donor',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
                         ),
                         const SizedBox(height: 12),
                         Container(
@@ -388,24 +491,61 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        OutlinedButton.icon(
+                        OutlinedButton(
                           onPressed: () => _openMaps(item.latitude, item.longitude),
-                          icon: const Icon(Icons.directions),
-                          label: const Text('Petunjuk Arah'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.primary,
                             side: const BorderSide(color: AppColors.primary),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
+                          child: const Text('Petunjuk Arah', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ],
-                      
-                      const SizedBox(height: 48),
+
+                      const SizedBox(height: 40),
                       _buildActionSection(userInfo, isLoading, item),
                     ],
                   ),
                 ),
     );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isLast;
+
+  const _InfoRow({required this.label, required this.value, this.isLast = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.textPrimary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoDivider extends StatelessWidget {
+  const _InfoDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(height: 1, color: Colors.grey.shade200, indent: 16, endIndent: 16);
   }
 }

@@ -5,7 +5,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../scan/providers/scan_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,21 +15,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isUpdating = false;
-
-  Future<void> _openScanVerification() async {
-    final result = await context.push<String>('/scan');
-    if (result == null || !mounted) return;
-
-    final scanProvider = context.read<ScanProvider>();
-    final success = await scanProvider.verify(result);
-    if (!mounted) return;
-
-    if (success) {
-      AppSnackbar.showSuccess(context, scanProvider.resultMessage ?? 'Verifikasi berhasil');
-    } else {
-      AppSnackbar.showError(context, scanProvider.error ?? 'Verifikasi gagal');
-    }
-  }
 
   void _toggleAvailability(bool newValue) async {
     setState(() => _isUpdating = true);
@@ -130,18 +114,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   ),
-                  if (user.isAdmin) ...[
-                    const SizedBox(height: 16),
-                    _buildInfoCard(
-                      title: 'Menu Admin',
-                      children: [
-                        CustomButton(
-                          text: 'Verifikasi Donor (Scan/Kode)',
-                          onPressed: _openScanVerification,
-                        ),
-                      ],
-                    ),
-                  ],
                   const SizedBox(height: 32),
                   CustomButton(
                     text: 'Edit Profil',

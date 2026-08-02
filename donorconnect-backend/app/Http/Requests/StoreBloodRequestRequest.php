@@ -14,14 +14,16 @@ class StoreBloodRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'blood_type' => 'required|in:A,B,AB,O',
-            'rhesus' => 'required|in:+,-',
+            'type' => 'required|in:emergency,event',
+            'blood_type' => 'required_if:type,emergency|nullable|in:A,B,AB,O',
+            'rhesus' => 'required_if:type,emergency|nullable|in:+,-',
             'urgency_level' => 'required|in:normal,urgent,critical',
             'hospital_name' => 'nullable|string|max:255',
             'hospital_address' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
-            'required_bags' => 'required|integer|min:1',
+            'required_bags' => 'required_if:type,emergency|nullable|integer|min:1',
+            'event_starts_at' => 'required_if:type,event|nullable|date|after:now|before:deadline',
             'deadline' => 'required|date|after:now',
             'notes' => 'nullable|string',
         ];

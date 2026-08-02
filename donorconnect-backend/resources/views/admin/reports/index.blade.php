@@ -31,26 +31,20 @@
     </div>
 </div>
 
-<!-- Stats Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
-        <div class="flex items-center space-x-3 mb-3">
-            <div class="p-2 bg-brand-50 text-brand-600 rounded-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Donasi Berhasil</span>
-        </div>
-        <div class="text-2xl font-bold text-gray-800">{{ $totalSuccessfulDonors }}</div>
-    </div>
-
+<!-- Section: Permintaan (Demand) -->
+<div class="mb-3 flex items-center gap-2">
+    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Permintaan Darah (Kebutuhan)</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
         <div class="flex items-center space-x-3 mb-3">
             <div class="p-2 bg-blue-100 text-blue-600 rounded-md">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
             </div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Total Permintaan</span>
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Permintaan Dibuat</span>
         </div>
         <div class="text-2xl font-bold text-gray-800">{{ $totalRequests }}</div>
+        <p class="text-[11px] text-gray-400 mt-1">Jumlah permintaan darah baru bulan ini</p>
     </div>
 
     <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
@@ -58,19 +52,60 @@
             <div class="p-2 bg-orange-100 text-orange-600 rounded-md">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
             </div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Kantong Darah</span>
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Kantong Diminta</span>
         </div>
         <div class="text-2xl font-bold text-gray-800">{{ $totalBagsRequested }}</div>
+        <p class="text-[11px] text-gray-400 mt-1">Total kebutuhan kantong dari semua permintaan bulan ini</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
+        <div class="flex items-center space-x-3 mb-3">
+            <div class="p-2 bg-purple-100 text-purple-600 rounded-md">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Permintaan Fulfilled</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-800">{{ $completedRequests }}</div>
+        <p class="text-[11px] text-gray-400 mt-1">Permintaan (dibuat bulan ini) yang kuotanya sudah tercapai</p>
+    </div>
+</div>
+
+<!-- Section: Realisasi (Supply) -->
+<div class="mb-3 flex items-center gap-2">
+    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Realisasi Donasi</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
+        <div class="flex items-center space-x-3 mb-3">
+            <div class="p-2 bg-brand-50 text-brand-600 rounded-md">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Donasi Terverifikasi</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-800">{{ $totalSuccessfulDonors }}</div>
+        <p class="text-[11px] text-gray-400 mt-1">Jumlah pendonor yang hadir & diverifikasi bulan ini</p>
     </div>
 
     <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
         <div class="flex items-center space-x-3 mb-3">
             <div class="p-2 bg-green-100 text-green-600 rounded-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
             </div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Req. Selesai</span>
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Kantong Terpenuhi</span>
         </div>
-        <div class="text-2xl font-bold text-gray-800">{{ $completedRequests }}</div>
+        <div class="text-2xl font-bold text-gray-800">{{ $totalBagsFulfilled }}</div>
+        <p class="text-[11px] text-gray-400 mt-1">1 donasi terverifikasi = 1 kantong (dari {{ $totalBagsRequested }} diminta)</p>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
+        <div class="flex items-center space-x-3 mb-3">
+            <div class="p-2 bg-red-100 text-red-600 rounded-md">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            </div>
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Tingkat Pemenuhan</span>
+        </div>
+        <div class="text-2xl font-bold text-gray-800">{{ $fulfillmentRate }}%</div>
+        <p class="text-[11px] text-gray-400 mt-1">Kantong terpenuhi ÷ kantong diminta</p>
     </div>
 </div>
 

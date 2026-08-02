@@ -29,8 +29,8 @@ class AdminReportController extends Controller
 
     private function buildReportData(Request $request): array
     {
-        $month = $request->input('month', Carbon::now()->month);
-        $year = $request->input('year', Carbon::now()->year);
+        $month = (int) $request->input('month', Carbon::now()->month);
+        $year = (int) $request->input('year', Carbon::now()->year);
 
         // Menghitung donasi yang sukses (diverifikasi)
         $histories = DonorHistory::with(['user', 'bloodRequest'])
@@ -51,11 +51,19 @@ class AdminReportController extends Controller
             ->whereYear('created_at', $year)
             ->sum('required_bags');
 
-        // Total completed requests
+        // Total completed requests (status sudah fulfilled)
         $completedRequests = BloodRequest::where('status', 'fulfilled')
             ->whereMonth('created_at', $month)
             ->whereYear('created_at', $year)
             ->count();
+
+        // Kantong yang benar-benar terpenuhi = jumlah donasi terverifikasi (1 histori = 1 kantong)
+        $totalBagsFulfilled = $totalSuccessfulDonors;
+
+        // Persentase kebutuhan kantong yang berhasil terpenuhi bulan ini
+        $fulfillmentRate = $totalBagsRequested > 0
+            ? round(($totalBagsFulfilled / $totalBagsRequested) * 100, 1)
+            : 0;
 
         // Breakdown donasi sukses per golongan darah
         $bloodTypeBreakdown = DonorHistory::join('users', 'users.id', '=', 'donor_histories.user_id')
@@ -79,6 +87,8 @@ class AdminReportController extends Controller
             'totalSuccessfulDonors',
             'totalRequests',
             'totalBagsRequested',
+            'totalBagsFulfilled',
+            'fulfillmentRate',
             'completedRequests',
             'bloodTypeBreakdown',
             'urgencyBreakdown',

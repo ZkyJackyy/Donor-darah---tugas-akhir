@@ -12,6 +12,8 @@ class BloodRequestResource extends JsonResource
         return [
             'id' => $this->id,
             'admin_id' => $this->admin_id,
+            'type' => $this->type,
+            'event_starts_at' => $this->event_starts_at?->toIso8601String(),
             'blood_type' => $this->blood_type,
             'rhesus' => $this->rhesus,
             'urgency_level' => $this->urgency_level,

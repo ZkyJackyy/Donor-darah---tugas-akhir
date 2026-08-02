@@ -27,6 +27,15 @@
         background-color: transparent;
         padding: 0 4px;
     }
+
+    .type-option { transition: all 0.15s; }
+    .type-option:has(input:checked) {
+        border-color: #ef4444;
+        background-color: #fef2f2;
+    }
+    #blood-type-fields.is-hidden,
+    #required_bags_input[data-hidden="true"],
+    #event-schedule-fields[data-hidden="true"] { display: none; }
 </style>
 
 @if($errors->any())
@@ -45,22 +54,48 @@
     
     <!-- Left Column: Form Details -->
     <div class="lg:col-span-7 space-y-6">
+        <!-- Card 0: Jenis Permintaan -->
+        <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-8">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Jenis Permintaan</h3>
+                    <p class="text-xs text-gray-500 font-medium">Pilih apakah ini kebutuhan darurat atau kegiatan donor darah terbuka.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <label class="type-option relative cursor-pointer rounded-xl border-2 border-brand-500 bg-brand-50 p-4 block">
+                    <input type="radio" name="type" value="emergency" class="sr-only" checked>
+                    <span class="block text-sm font-bold text-gray-900">Permintaan Darurat</span>
+                    <span class="block text-xs text-gray-500 mt-1">Golongan darah spesifik, broadcast WA bertingkat (wave) berdasar jarak.</span>
+                </label>
+                <label class="type-option relative cursor-pointer rounded-xl border-2 border-gray-200 bg-gray-50 p-4 block">
+                    <input type="radio" name="type" value="event" class="sr-only">
+                    <span class="block text-sm font-bold text-gray-900">Event Donor Terbuka</span>
+                    <span class="block text-xs text-gray-500 mt-1">Terbuka untuk semua golongan darah, tanpa wave, satu kali pengumuman WA.</span>
+                </label>
+            </div>
+        </div>
+
         <!-- Card 1: Medical Details -->
-        <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-8 relative overflow-hidden">
+        <div id="blood-spec-card" class="bg-white rounded-2xl shadow-card border border-gray-100 p-8 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-32 h-32 bg-brand-50 rounded-bl-full -mr-16 -mt-16 z-0"></div>
-            
+
             <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-8 pb-4 border-b border-gray-50">
                     <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900">Spesifikasi Darah</h3>
-                        <p class="text-xs text-gray-500 font-medium">Tentukan kebutuhan spesifik golongan darah pasien.</p>
+                        <h3 id="blood-spec-title" class="text-lg font-bold text-gray-900">Spesifikasi Darah</h3>
+                        <p id="blood-spec-subtitle" class="text-xs text-gray-500 font-medium">Tentukan kebutuhan spesifik golongan darah pasien.</p>
                     </div>
                 </div>
-                
-                <div class="grid grid-cols-2 gap-6 mb-6">
+
+                <div id="blood-type-fields" class="grid grid-cols-2 gap-6 mb-6">
                     <!-- Golongan Darah -->
                     <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
                         <select name="blood_type" class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none appearance-none cursor-pointer peer" required>
@@ -75,7 +110,7 @@
                         </label>
                         <svg class="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
-                    
+
                     <!-- Rhesus -->
                     <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
                         <select name="rhesus" class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none appearance-none cursor-pointer peer" required>
@@ -93,9 +128,9 @@
                 <div class="grid grid-cols-2 gap-6 mb-6">
                     <!-- Jumlah Kantong -->
                     <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
-                        <input type="number" name="required_bags" min="1" value="{{ old('required_bags', 1) }}" required placeholder=" " 
+                        <input type="number" id="required_bags_input" name="required_bags" min="1" value="{{ old('required_bags', 1) }}" required placeholder=" "
                             class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer">
-                        <label class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
+                        <label id="required_bags_label" class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
                             Jumlah Kantong
                         </label>
                     </div>
@@ -114,11 +149,22 @@
                     </div>
                 </div>
 
+                <div id="event-schedule-fields" class="grid grid-cols-2 gap-6 mb-6" data-hidden="true">
+                    <!-- Jadwal Mulai (event only) -->
+                    <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
+                        <input type="datetime-local" id="event_starts_at_input" name="event_starts_at" value="{{ old('event_starts_at') }}" placeholder=" "
+                            class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer">
+                        <label class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
+                            Jadwal Mulai
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Deadline -->
                 <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
-                    <input type="datetime-local" name="deadline" value="{{ old('deadline') }}" required placeholder=" " 
+                    <input type="datetime-local" name="deadline" value="{{ old('deadline') }}" required placeholder=" "
                         class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer">
-                    <label class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left" style="transform: translateY(-130%) scale(0.85); color: #ef4444; font-weight: 700;">
+                    <label id="deadline_label" class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left" style="transform: translateY(-130%) scale(0.85); color: #ef4444; font-weight: 700;">
                         Batas Waktu Terpenuhi
                     </label>
                 </div>
@@ -196,7 +242,7 @@
 
                 <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-extrabold py-3.5 rounded-xl text-sm uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                    Publikasikan Permintaan
+                    <span id="submit-btn-text">Publikasikan Permintaan</span>
                 </button>
             </div>
         </div>
@@ -206,6 +252,65 @@
 @push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    // Toggle Jenis Permintaan: Darurat vs Event Donor Terbuka
+    const typeRadios = document.querySelectorAll('input[name="type"]');
+    const typeOptionLabels = document.querySelectorAll('.type-option');
+    const bloodTypeFields = document.getElementById('blood-type-fields');
+    const bloodTypeSelect = document.querySelector('select[name="blood_type"]');
+    const rhesusSelect = document.querySelector('select[name="rhesus"]');
+    const requiredBagsInput = document.getElementById('required_bags_input');
+    const requiredBagsLabel = document.getElementById('required_bags_label');
+    const specTitle = document.getElementById('blood-spec-title');
+    const specSubtitle = document.getElementById('blood-spec-subtitle');
+    const submitBtnText = document.getElementById('submit-btn-text');
+    const eventScheduleFields = document.getElementById('event-schedule-fields');
+    const eventStartsAtInput = document.getElementById('event_starts_at_input');
+    const deadlineLabel = document.getElementById('deadline_label');
+
+    function applyTypeUI(type) {
+        const isEvent = type === 'event';
+
+        typeOptionLabels.forEach(label => {
+            const input = label.querySelector('input[type="radio"]');
+            label.classList.toggle('border-brand-500', input.value === type);
+            label.classList.toggle('bg-brand-50', input.value === type);
+            label.classList.toggle('border-gray-200', input.value !== type);
+            label.classList.toggle('bg-gray-50', input.value !== type);
+        });
+
+        bloodTypeFields.classList.toggle('is-hidden', isEvent);
+        bloodTypeSelect.required = !isEvent;
+        rhesusSelect.required = !isEvent;
+        if (isEvent) {
+            bloodTypeSelect.value = '';
+            rhesusSelect.value = '';
+        }
+
+        requiredBagsInput.required = !isEvent;
+        requiredBagsLabel.textContent = isEvent ? 'Target Kantong (opsional)' : 'Jumlah Kantong';
+
+        eventScheduleFields.dataset.hidden = isEvent ? 'false' : 'true';
+        eventStartsAtInput.required = isEvent;
+        if (!isEvent) eventStartsAtInput.value = '';
+        deadlineLabel.textContent = isEvent ? 'Jadwal Selesai' : 'Batas Waktu Terpenuhi';
+
+        specTitle.textContent = isEvent ? 'Target Donor (Opsional)' : 'Spesifikasi Darah';
+        specSubtitle.textContent = isEvent
+            ? 'Event ini terbuka untuk semua golongan darah — tidak ada kuota keras.'
+            : 'Tentukan kebutuhan spesifik golongan darah pasien.';
+
+        if (submitBtnText) {
+            submitBtnText.textContent = isEvent ? 'Publikasikan Event' : 'Publikasikan Permintaan';
+        }
+    }
+
+    typeRadios.forEach(radio => {
+        radio.addEventListener('change', () => applyTypeUI(radio.value));
+    });
+
+    const checkedType = document.querySelector('input[name="type"]:checked');
+    applyTypeUI(checkedType ? checkedType.value : 'emergency');
+
     const latInput = document.getElementById('latitude');
     const lngInput = document.getElementById('longitude');
 

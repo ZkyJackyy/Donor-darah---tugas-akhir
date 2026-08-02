@@ -14,7 +14,7 @@ class VerifyCandidateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'method' => 'required|in:qr,manual',
+            'method' => 'required|in:manual',
         ];
     }
 }

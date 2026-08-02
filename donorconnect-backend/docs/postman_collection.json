@@ -138,17 +138,6 @@
 						],
 						"url": "{{base_url}}/donor/history"
 					}
-				},
-				{
-					"name": "Fetch Display QR",
-					"request": {
-						"method": "GET",
-						"header": [
-							{"key": "Accept", "value": "application/json"},
-							{"key": "Authorization", "value": "Bearer {{access_token}}"}
-						],
-						"url": "{{base_url}}/donor-candidates/1/qr-code"
-					}
 				}
 			]
 		},
@@ -156,17 +145,17 @@
 			"name": "Administrative API (Requires App.Admin Scope)",
 			"item": [
 				{
-					"name": "Scan & Verify QR Code Endpoint",
+					"name": "Verify Donor by Code",
 					"request": {
 						"method": "POST",
 						"header": [
 							{"key": "Accept", "value": "application/json"},
 							{"key": "Authorization", "value": "Bearer {{access_token}}"}
 						],
-						"url": "{{base_url}}/verify/qr",
+						"url": "{{base_url}}/verify/code",
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"token\": \"A_LONG_SECURE_HMAC_STRING_HERE\"\n}",
+							"raw": "{\n    \"kode_verifikasi\": \"ABC123\"\n}",
 							"options": {"raw": {"language": "json"}}
 						}
 					}

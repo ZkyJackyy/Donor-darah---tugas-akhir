@@ -18,6 +18,7 @@ class BloodRequestFactory extends Factory
     {
         return [
             'admin_id' => \App\Models\User::factory(),
+            'type' => 'emergency',
             'blood_type' => fake()->randomElement(['A', 'B', 'AB', 'O']),
             'rhesus' => fake()->randomElement(['+', '-']),
             'urgency_level' => fake()->randomElement(['normal', 'urgent', 'critical']),
@@ -29,5 +30,19 @@ class BloodRequestFactory extends Factory
             'status' => fake()->randomElement(['open', 'fulfilled', 'cancelled']),
             'notes' => fake()->optional()->sentence(),
         ];
+    }
+
+    /**
+     * Event donor darah terbuka: tanpa golongan darah spesifik, tanpa kuota keras.
+     */
+    public function event(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'event',
+            'event_starts_at' => now()->addDays(3),
+            'blood_type' => null,
+            'rhesus' => null,
+            'required_bags' => null,
+        ]);
     }
 }

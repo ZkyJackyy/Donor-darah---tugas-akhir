@@ -34,7 +34,7 @@ The bridge linking requested emergencies against verified nearby users.
 - **user_id**: Foreign Key -> `users.id`
 - **distance_km**: Float (Calculated at API generation)
 - **status**: Enum ('pending', 'notified', 'confirmed', 'declined', 'verified', 'no_response')
-- **qr_token**: String (HMAC-Sha256 secure signed verification code)
+- **kode_verifikasi**: String, 6 chars (manual verification code)
 - **notified_at, confirmed_at, verified_at**: Timestamps
 
 ## 4. donor_histories

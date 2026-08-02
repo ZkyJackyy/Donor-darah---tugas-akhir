@@ -63,7 +63,6 @@ class UserBloodRequestController extends Controller
 
         // Inject specific candidate data for convenience in the mobile app
         $candidateStatus = null;
-        $qrToken = null;
         $candidateId = null;
         $verifiedAt = null;
         $confirmedAt = null;
@@ -72,7 +71,6 @@ class UserBloodRequestController extends Controller
         if ($bloodRequest->donorCandidates->isNotEmpty()) {
             $candidate = $bloodRequest->donorCandidates->first();
             $candidateStatus = $candidate->status;
-            $qrToken = $candidate->qr_token;
             $candidateId = $candidate->id;
             $verifiedAt = $candidate->verified_at?->toIso8601String();
             $confirmedAt = $candidate->confirmed_at?->toIso8601String();
@@ -91,7 +89,6 @@ class UserBloodRequestController extends Controller
             'is_candidate' => $candidateStatus !== null,
             'candidate_id' => $candidateId,
             'status' => $candidateStatus,
-            'qr_token' => $qrToken,
             'verified_at' => $verifiedAt,
             'confirmed_at' => $confirmedAt,
             'kode_verifikasi' => $kodeVerifikasi,
@@ -104,6 +101,85 @@ class UserBloodRequestController extends Controller
         ];
 
         return $this->success($data, 'Blood request details fetched successfully');
+    }
+
+    /**
+     * Self-registration donor untuk permintaan tipe 'event' (donor darah
+     * terbuka) — tidak lewat wave/filter golongan darah seperti permintaan
+     * 'emergency'. Langsung jadi kandidat 'confirmed' dengan kode verifikasi,
+     * tanpa skrining mandiri. Verifikasi kehadiran tetap oleh admin di lokasi.
+     */
+    public function join(BloodRequest $bloodRequest, Request $request)
+    {
+        if (!$bloodRequest->isEvent()) {
+            return $this->error('Permintaan ini bukan event donor terbuka.', 403);
+        }
+
+        if ($bloodRequest->status !== 'open') {
+            return $this->error("Permintaan ini berstatus '{$bloodRequest->status}' — tidak bisa didaftarkan lagi.", 400);
+        }
+
+        $user = $request->user();
+
+        $alreadyCandidate = DonorCandidate::where('blood_request_id', $bloodRequest->id)
+            ->where('user_id', $user->id)
+            ->exists();
+
+        if ($alreadyCandidate) {
+            return $this->error('Anda sudah terdaftar sebagai kandidat pendonor untuk permintaan ini.', 400);
+        }
+
+        if (!$this->isMedicallyEligible($user)) {
+            return $this->error('Anda belum memenuhi syarat kesehatan dasar untuk mendonor saat ini (usia, berat badan, atau masa jeda donor terakhir).', 400);
+        }
+
+        $confirmedAt = now();
+        $expiresAt = $confirmedAt->copy()->addMinutes(config('donorconnect.confirmation_expiry_minutes', 120));
+        $kodeVerifikasi = DonorCandidate::generateVerificationCode();
+
+        $candidate = DonorCandidate::create([
+            'blood_request_id' => $bloodRequest->id,
+            'user_id' => $user->id,
+            'distance_km' => null,
+            'status' => 'confirmed',
+            'notified_at' => $confirmedAt,
+            'confirmed_at' => $confirmedAt,
+            'kode_verifikasi' => $kodeVerifikasi,
+        ]);
+
+        return $this->success([
+            'candidate_id' => $candidate->id,
+            'status' => $candidate->status,
+            'kode_verifikasi' => $kodeVerifikasi,
+            'hospital_name' => $bloodRequest->hospital_name,
+            'expires_at' => $expiresAt->toIso8601String(),
+        ], 'Berhasil mendaftar sebagai pendonor. Tunjukkan kode verifikasi di lokasi.');
+    }
+
+    /**
+     * Syarat medis dasar (bukan pencocokan golongan darah/jarak) — sama
+     * dengan kondisi non-blood-type di DonorFilterService, dicek langsung
+     * di PHP karena ini untuk satu user, bukan query massal.
+     */
+    private function isMedicallyEligible(\App\Models\User $user): bool
+    {
+        if (!$user->is_available || $user->weight === null || $user->weight < 45 || $user->birth_date === null) {
+            return false;
+        }
+
+        $age = $user->birth_date->age;
+        if ($age < 17 || $age > 60) {
+            return false;
+        }
+
+        if ($user->last_donor_date !== null) {
+            $cooldownDays = config('donorconnect.donation_cooldown_days', 56);
+            if (now()->diffInDays($user->last_donor_date) < $cooldownDays) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

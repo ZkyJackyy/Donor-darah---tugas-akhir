@@ -9,7 +9,11 @@
     <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div class="flex items-center space-x-4">
             <div class="w-12 h-12 bg-red-100 text-red-600 rounded-lg flex items-center justify-center font-bold text-xl">
-                {{ $bloodRequest->blood_type }}{{ $bloodRequest->rhesus }}
+                @if($bloodRequest->type === 'event')
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                @else
+                    {{ $bloodRequest->blood_type }}{{ $bloodRequest->rhesus }}
+                @endif
             </div>
             <div>
                 <div class="flex items-center gap-2">
@@ -21,8 +25,18 @@
                               'bg-gray-200 text-gray-600': status !== 'open' && status !== 'fulfilled'
                           }"
                           x-text="status"></span>
+                    @if($bloodRequest->type === 'event')
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700">Event Terbuka</span>
+                    @endif
                 </div>
-                <p class="text-sm text-gray-500 font-medium">{{ $bloodRequest->hospital_name }} • {{ $bloodRequest->required_bags }} Kantong</p>
+                <p class="text-sm text-gray-500 font-medium">
+                    {{ $bloodRequest->hospital_name }}
+                    @if($bloodRequest->type === 'event')
+                        • {{ $bloodRequest->required_bags ? "Target {$bloodRequest->required_bags} kantong" : 'Tanpa target kantong' }}
+                    @else
+                        • {{ $bloodRequest->required_bags }} Kantong
+                    @endif
+                </p>
             </div>
         </div>
 
@@ -91,10 +105,14 @@
                         <thead>
                             <tr class="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-50">
                                 <th class="px-6 py-4">Pendonor</th>
+                                @if($bloodRequest->type !== 'event')
                                 <th class="px-6 py-4 text-center">Jarak</th>
+                                @endif
                                 <th class="px-6 py-4">Status</th>
                                 <th class="px-6 py-4">Waktu</th>
+                                @if($bloodRequest->type !== 'event')
                                 <th class="px-6 py-4 text-center">Skrining</th>
+                                @endif
                                 <th class="px-6 py-4 text-right">Opsi</th>
                             </tr>
                         </thead>
@@ -105,9 +123,11 @@
                                         <div class="font-semibold text-gray-800" x-text="candidate.user.name"></div>
                                         <div class="text-[11px] text-gray-400 font-medium" x-text="candidate.user.phone"></div>
                                     </td>
+                                    @if($bloodRequest->type !== 'event')
                                     <td class="px-6 py-4 text-center">
-                                        <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded" x-text="parseFloat(candidate.distance_km).toFixed(2) + ' KM'"></span>
+                                        <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded" x-text="candidate.distance_km !== null ? parseFloat(candidate.distance_km).toFixed(2) + ' KM' : '-'"></span>
                                     </td>
+                                    @endif
                                     <td class="px-6 py-4">
                                         <span class="px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider border"
                                               :class="{
@@ -124,6 +144,7 @@
                                         <div x-show="candidate.confirmed_at">Konfirmasi: <span x-text="candidate.confirmed_at ? new Date(candidate.confirmed_at).toLocaleString('id-ID') : ''"></span></div>
                                         <div x-show="candidate.verified_at">Verifikasi: <span x-text="candidate.verified_at ? new Date(candidate.verified_at).toLocaleString('id-ID') : ''"></span></div>
                                     </td>
+                                    @if($bloodRequest->type !== 'event')
                                     <td class="px-6 py-4 text-center">
                                         <template x-if="candidate.screening">
                                             <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -132,6 +153,7 @@
                                         </template>
                                         <span x-show="!candidate.screening" class="text-[10px] text-gray-300 font-medium">-</span>
                                     </td>
+                                    @endif
                                     <td class="px-6 py-4 text-right">
                                         <template x-if="candidate.status === 'confirmed' && status === 'open'">
                                             <form :action="`/admin/blood-requests/verify/${candidate.id}`" method="POST">
@@ -154,6 +176,22 @@
 
         <!-- Sidebar Section -->
         <div class="space-y-6">
+            @if($bloodRequest->type === 'event')
+            <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+                <h3 class="text-xs font-bold text-gray-800 uppercase tracking-widest mb-2">Event Donor Terbuka</h3>
+                <p class="text-xs text-gray-500 leading-relaxed mb-4">Permintaan ini terbuka untuk semua golongan darah dan tidak memakai penyaringan jarak/wave. Pendonor mendaftar sendiri lewat aplikasi setelah menerima pengumuman WhatsApp.</p>
+                <div class="space-y-3 pt-3 border-t border-gray-100">
+                    <div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Jadwal Mulai</div>
+                        <div class="text-sm font-bold text-gray-800 mt-0.5">{{ $bloodRequest->event_starts_at ? $bloodRequest->event_starts_at->format('d M Y, H:i') . ' WIB' : '-' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Jadwal Selesai</div>
+                        <div class="text-sm font-bold text-gray-800 mt-0.5">{{ $bloodRequest->deadline ? $bloodRequest->deadline->format('d M Y, H:i') . ' WIB' : '-' }}</div>
+                    </div>
+                </div>
+            </div>
+            @else
             <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                     <h3 class="text-xs font-bold text-gray-800 uppercase tracking-widest">Prediksi Jangkauan</h3>
@@ -167,7 +205,7 @@
                         <div class="p-3 bg-white rounded-md border border-gray-100 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <span class="text-xs font-bold text-gray-800" x-text="p.name"></span>
-                                <span class="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded" x-text="parseFloat(p.distance_km).toFixed(2) + ' KM'"></span>
+                                <span class="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded" x-text="p.distance_km !== null ? parseFloat(p.distance_km).toFixed(2) + ' KM' : '-'"></span>
                             </div>
                             <p class="text-[10px] text-gray-400 mt-1 uppercase" x-text="'Gol ' + p.blood_type + ' • ' + p.phone"></p>
                         </div>
@@ -178,6 +216,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </div>
 </div>

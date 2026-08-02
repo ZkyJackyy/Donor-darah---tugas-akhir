@@ -9,7 +9,7 @@ sequenceDiagram
     actor Donor as Candidate
     participant API as Laravel REST API
     participant Worker as Redis Queue (Fonnte WA)
-    participant Flutter as Mobile App Scanner
+    participant Flutter as Mobile App
     
     %% Phase 1: Request
     Admin->>WebUI: Creates Blood Request (Map Pinpointing)
@@ -29,16 +29,16 @@ sequenceDiagram
     Donor->>Flutter: Hits "Confirm Donation"
     Flutter->>API: POST /api/donor/confirm (status: confirmed)
     
-    %% Phase 4: Token Exchange
-    API->>API: Verify constraints & generate HMAC QR Token
-    API-->>Flutter: Return qr_token
-    Flutter->>Flutter: Navigate to /confirmation/{token} rendering QRImageView
+    %% Phase 4: Ticket Issuance
+    API->>API: Verify constraints & generate kode_verifikasi
+    API-->>Flutter: Return kode_verifikasi
+    Flutter->>Flutter: Navigate to /tiket rendering digital ticket
     
-    %% Phase 5: Verification Scans
-    Donor->>Admin: Reaches Hospital, Presents rendered Mobile App QR
-    Admin->>Flutter: Opens Admin /scan Route (MobileScanner)
-    Flutter->>API: POST /api/verify/qr (Body: {token})
-    API->>API: Verify hash boundaries & Expiry dates
+    %% Phase 5: Verification
+    Donor->>Admin: Reaches Hospital, Shows digital ticket (kode_verifikasi)
+    Admin->>WebUI: Enters kode_verifikasi or clicks manual verify
+    WebUI->>API: POST /admin/blood-requests/verify/{id} or /api/verify/code
+    API->>API: Validate candidate status & request status
     
     %% Phase 6: Closure Limits
     API->>API: update donor_candidates (status = 'verified')
