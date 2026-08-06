@@ -11,18 +11,18 @@
 
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-            <h1 class="font-bold text-2xl text-gray-900 tracking-tight">Peta Lokasi Pendonor</h1>
+            <h1 class="font-semibold text-2xl text-gray-900 tracking-tight">Peta Lokasi Pendonor</h1>
             <p class="text-sm text-gray-400 mt-0.5">Visualisasi distribusi pendonor di sekitar PMI</p>
         </div>
         <div class="flex items-center gap-3">
-            <select x-model="filterBloodType" @change="fetchDonors()" class="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+            <select x-model="filterBloodType" @change="fetchDonors()" class="border border-gray-200 rounded-md px-3 py-2.5 text-sm text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors">
                 <option value="">Semua Golongan</option>
                 <option value="A">A</option>
                 <option value="B">B</option>
                 <option value="AB">AB</option>
                 <option value="O">O</option>
             </select>
-            <select x-model="filterRhesus" @change="fetchDonors()" class="border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+            <select x-model="filterRhesus" @change="fetchDonors()" class="border border-gray-200 rounded-md px-3 py-2.5 text-sm text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors">
                 <option value="">Semua Rhesus</option>
                 <option value="+">Positif (+)</option>
                 <option value="-">Negatif (-)</option>
@@ -34,20 +34,20 @@
     </div>
 
     <!-- Map Container -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div id="map" style="height: 520px; width: 100%;"></div>
     </div>
 
     <!-- Legend -->
     <div class="flex items-center gap-6 text-xs text-gray-500 font-medium">
         <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-brand-600 shadow-sm"></span> PMI UDD Padang
+            <span class="w-3 h-3 rounded-full bg-brand-600"></span> PMI UDD Padang
         </div>
         <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></span> Pendonor Aktif
+            <span class="w-3 h-3 rounded-full bg-sky-500"></span> Pendonor Aktif
         </div>
         <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-amber-400 shadow-sm"></span> Masa Cooldown
+            <span class="w-3 h-3 rounded-full bg-amber-400"></span> Masa Cooldown
         </div>
         <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full border-2 border-blue-400 bg-blue-100"></span> Radius 5 KM

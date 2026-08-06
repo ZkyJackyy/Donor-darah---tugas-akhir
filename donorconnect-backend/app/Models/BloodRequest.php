@@ -12,6 +12,7 @@ class BloodRequest extends Model
 
     protected $fillable = [
         'admin_id',
+        'requested_by_user_id',
         'type',
         'event_starts_at',
         'blood_type',
@@ -25,6 +26,9 @@ class BloodRequest extends Model
         'deadline',
         'status',
         'notes',
+        'patient_name',
+        'patient_relationship',
+        'rejection_reason',
     ];
 
     protected $casts = [
@@ -37,6 +41,11 @@ class BloodRequest extends Model
         return $this->belongsTo(User::class, 'admin_id');
     }
 
+    public function requestedBy()
+    {
+        return $this->belongsTo(User::class, 'requested_by_user_id');
+    }
+
     public function donorCandidates()
     {
         return $this->hasMany(DonorCandidate::class);
@@ -45,6 +54,11 @@ class BloodRequest extends Model
     public function isEvent(): bool
     {
         return $this->type === 'event';
+    }
+
+    public function isPendingReview(): bool
+    {
+        return $this->status === 'pending_review';
     }
 
     /**

@@ -29,6 +29,8 @@ class ApiConstants {
   // Blood Requests
   static const String bloodRequests = '/user/blood-requests';
   static const String bloodRequestsHistory = '/user/blood-requests/history';
+  static const String bloodRequestsMySubmissions =
+      '/user/blood-requests/my-submissions';
 
   // Donor Actions
   static const String screening = '/donor/screening';

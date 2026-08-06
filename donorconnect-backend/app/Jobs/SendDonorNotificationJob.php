@@ -7,10 +7,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use App\Models\User;
 use App\Models\WaLog;
 use Exception;
+use Throwable;
 
 class SendDonorNotificationJob implements ShouldQueue
 {
@@ -94,6 +96,20 @@ class SendDonorNotificationJob implements ShouldQueue
             
             // Re-throw so Queue Worker detects failure and applies backoff
             throw $e;
+        }
+    }
+
+    /**
+     * Called once the job has exhausted all retry attempts. Release the
+     * 24h duplicate-notify cache key (set in WhatsAppService before dispatch)
+     * so a later wave or manual re-notify can retry this donor instead of
+     * silently skipping them for a full day despite never having received
+     * a message.
+     */
+    public function failed(?Throwable $exception): void
+    {
+        if ($this->bloodRequestId !== null) {
+            Cache::forget("notify_{$this->user->id}_{$this->bloodRequestId}");
         }
     }
 }

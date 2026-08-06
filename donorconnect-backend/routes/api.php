@@ -39,9 +39,10 @@ Route::middleware(['auth:sanctum', 'verified.email'])->group(function () {
 
     // User Blood Request Routes (Mobile App)
     Route::get('/user/blood-requests', [UserBloodRequestController::class, 'index']);
+    Route::post('/user/blood-requests', [UserBloodRequestController::class, 'store']);
     Route::get('/user/blood-requests/history', [UserBloodRequestController::class, 'history']);
+    Route::get('/user/blood-requests/my-submissions', [UserBloodRequestController::class, 'mySubmissions']);
     Route::get('/user/blood-requests/{id}', [UserBloodRequestController::class, 'show']);
-    Route::post('/user/blood-requests/{bloodRequest}/join', [UserBloodRequestController::class, 'join']);
 
     // User Notifications (Mobile App)
     Route::get('/user/notifications', [UserNotificationController::class, 'index']);

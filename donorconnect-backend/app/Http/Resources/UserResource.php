@@ -20,6 +20,7 @@ class UserResource extends JsonResource
             'weight' => $this->weight ? (float) $this->weight : null,
             'blood_type' => $this->blood_type,
             'rhesus' => $this->rhesus,
+            'gender' => $this->gender,
             'last_donor_date' => $this->last_donor_date?->format('Y-m-d'),
             'latitude' => (float) $this->latitude,
             'longitude' => (float) $this->longitude,

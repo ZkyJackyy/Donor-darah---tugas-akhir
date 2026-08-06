@@ -16,6 +16,13 @@ class RiwayatProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  void clear() {
+    _riwayatList = [];
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
+  }
+
   Future<void> fetchRiwayatList() async {
     _isLoading = true;
     _error = null;

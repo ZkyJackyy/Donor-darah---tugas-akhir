@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/session_cleanup.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../providers/permintaan_provider.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -103,7 +104,9 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
               await context.read<AuthProvider>().logout();
-              if (context.mounted) context.go('/login');
+              if (!context.mounted) return;
+              resetUserScopedProviders(context);
+              context.go('/login');
             },
           )
         ],

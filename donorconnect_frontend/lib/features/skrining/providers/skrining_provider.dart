@@ -9,9 +9,11 @@ class SkriningProvider with ChangeNotifier {
   
   bool _isLoading = false;
   String? _error;
+  bool? _eligible;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
+  bool? get eligible => _eligible;
 
   Future<bool> submitScreening({
     required int donorCandidateId,
@@ -22,6 +24,7 @@ class SkriningProvider with ChangeNotifier {
   }) async {
     _isLoading = true;
     _error = null;
+    _eligible = null;
     notifyListeners();
 
     try {
@@ -34,6 +37,7 @@ class SkriningProvider with ChangeNotifier {
       });
 
       if (response.data['status'] == true) {
+        _eligible = response.data['data']?['eligible'] as bool?;
         return true;
       } else {
         _error = response.data['message'];

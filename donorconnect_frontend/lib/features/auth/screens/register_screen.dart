@@ -27,6 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   DateTime? _selectedDate;
   String _bloodType = 'A';
   String _rhesus = '+';
+  String _gender = 'male';
 
   @override
   void dispose() {
@@ -82,6 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             weight: double.tryParse(_weightController.text) ?? 0,
             bloodType: _bloodType,
             rhesus: _rhesus,
+            gender: _gender,
           );
       
       if (!mounted) return;
@@ -169,7 +171,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     keyboardType: TextInputType.phone,
                     validator: (value) => value == null || value.isEmpty ? 'Phone number is required' : null,
                   ),
-                  
+                  const SizedBox(height: 16),
+                  const Text("Gender", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _gender,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: AppColors.surface,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'male', child: Text('Male')),
+                      DropdownMenuItem(value: 'female', child: Text('Female')),
+                    ],
+                    onChanged: (newValue) {
+                      setState(() { _gender = newValue!; });
+                    },
+                  ),
+
                   const SizedBox(height: 32),
                   // Medical Info
                   const Text("Medical Information", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),

@@ -28,6 +28,10 @@ class AdminBloodRequestWebController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        } else {
+            // Pengajuan yang belum divalidasi admin punya halaman sendiri
+            // (Pengajuan Keluarga), jadi tidak nyampur di listing utama.
+            $query->whereNotIn('status', ['pending_review', 'rejected']);
         }
 
         $bloodRequests = $query->withCount(['donorCandidates as verified_candidates_count' => function ($q) {
@@ -41,6 +45,53 @@ class AdminBloodRequestWebController extends Controller
     public function create()
     {
         return view('admin.blood-requests.create');
+    }
+
+    public function pendingIndex()
+    {
+        $bloodRequests = BloodRequest::where('status', 'pending_review')
+            ->with('requestedBy')
+            ->orderBy('id', 'desc')
+            ->paginate(10);
+
+        return view('admin.blood-requests.pending', compact('bloodRequests'));
+    }
+
+    public function approve($id)
+    {
+        $bloodRequest = BloodRequest::findOrFail($id);
+
+        if (!$bloodRequest->isPendingReview()) {
+            return back()->with('error', "Pengajuan ini sudah berstatus '{$bloodRequest->status}' — tidak bisa disetujui lagi.");
+        }
+
+        $bloodRequest->update([
+            'status' => 'open',
+            'admin_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('admin.blood-requests.show', $bloodRequest->id)
+            ->with('success', 'Pengajuan disetujui dan masuk alur pencarian pendonor.');
+    }
+
+    public function reject($id, Request $request)
+    {
+        $bloodRequest = BloodRequest::findOrFail($id);
+
+        if (!$bloodRequest->isPendingReview()) {
+            return back()->with('error', "Pengajuan ini sudah berstatus '{$bloodRequest->status}' — tidak bisa ditolak lagi.");
+        }
+
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        $bloodRequest->update([
+            'status' => 'rejected',
+            'rejection_reason' => $validated['rejection_reason'],
+        ]);
+
+        return back()->with('success', 'Pengajuan ditolak.');
     }
 
     public function store(Request $request)
@@ -81,7 +132,7 @@ class AdminBloodRequestWebController extends Controller
 
     public function show($id)
     {
-        $bloodRequest = BloodRequest::with('donorCandidates.user', 'admin')->findOrFail($id);
+        $bloodRequest = BloodRequest::with('donorCandidates.user', 'admin', 'requestedBy')->findOrFail($id);
         return view('admin.blood-requests.show', compact('bloodRequest'));
     }
 

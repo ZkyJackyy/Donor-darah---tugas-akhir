@@ -12,13 +12,17 @@ class PermintaanProvider with ChangeNotifier {
   List<BloodRequestModel> _permintaanList = [];
   BloodRequestModel? _selectedPermintaan;
   Map<String, dynamic>? _userCandidateInfo;
+  List<BloodRequestModel> _mySubmissions = [];
   bool _isLoading = false;
+  bool _isSubmitting = false;
   String? _error;
 
   List<BloodRequestModel> get permintaanList => _permintaanList;
   BloodRequestModel? get selectedPermintaan => _selectedPermintaan;
   Map<String, dynamic>? get userCandidateInfo => _userCandidateInfo;
+  List<BloodRequestModel> get mySubmissions => _mySubmissions;
   bool get isLoading => _isLoading;
+  bool get isSubmitting => _isSubmitting;
   String? get error => _error;
 
   Future<void> fetchPermintaanList() async {
@@ -99,6 +103,97 @@ class PermintaanProvider with ChangeNotifier {
       final lastPosition = await Geolocator.getLastKnownPosition();
       if (lastPosition != null) return lastPosition;
       rethrow;
+    }
+  }
+
+  void clear() {
+    _permintaanList = [];
+    _selectedPermintaan = null;
+    _userCandidateInfo = null;
+    _mySubmissions = [];
+    _isLoading = false;
+    _isSubmitting = false;
+    _error = null;
+    notifyListeners();
+  }
+
+  Future<bool> submitPermintaan({
+    required String bloodType,
+    required String rhesus,
+    required int requiredBags,
+    required String patientName,
+    required String patientRelationship,
+    required String hospitalName,
+    required String hospitalAddress,
+    required String urgencyLevel,
+    required String deadline,
+    String? notes,
+  }) async {
+    _isSubmitting = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.post(ApiConstants.bloodRequests, data: {
+        'blood_type': bloodType,
+        'rhesus': rhesus,
+        'required_bags': requiredBags,
+        'patient_name': patientName,
+        'patient_relationship': patientRelationship,
+        'hospital_name': hospitalName,
+        'hospital_address': hospitalAddress,
+        'urgency_level': urgencyLevel,
+        'deadline': deadline,
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+      });
+
+      if (response.data['status'] == true) {
+        return true;
+      } else {
+        _error = response.data['message'];
+        return false;
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 422) {
+        final errors = e.response?.data['errors'] as Map<String, dynamic>?;
+        if (errors != null && errors.isNotEmpty) {
+          _error = errors.values.first[0].toString();
+        } else {
+          _error = ApiErrorHandler.getMessage(e);
+        }
+      } else {
+        _error = ApiErrorHandler.getMessage(e);
+      }
+      return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+      return false;
+    } finally {
+      _isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchMySubmissions() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.get(ApiConstants.bloodRequestsMySubmissions);
+      if (response.data['status'] == true) {
+        final List data = response.data['data'];
+        _mySubmissions = data.map((json) => BloodRequestModel.fromJson(json)).toList();
+      } else {
+        _error = response.data['message'];
+      }
+    } on DioException catch (e) {
+      _error = ApiErrorHandler.getMessage(e);
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

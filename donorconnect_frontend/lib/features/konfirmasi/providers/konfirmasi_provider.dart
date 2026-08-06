@@ -57,39 +57,6 @@ class KonfirmasiProvider with ChangeNotifier {
     }
   }
 
-  /// Self-registration donor untuk permintaan tipe 'event' (donor darah
-  /// terbuka) — langsung dapat tiket, tanpa melalui skrining/konfirmasi
-  /// bertahap seperti permintaan darurat.
-  Future<bool> joinEvent(int requestId) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final response = await _apiService.post('/user/blood-requests/$requestId/join');
-
-      if (response.data['status'] == true) {
-        final data = response.data['data'];
-        _kodeVerifikasi = data['kode_verifikasi'];
-        _hospitalName = data['hospital_name'];
-        _expiresAt = data['expires_at'] != null ? DateTime.parse(data['expires_at']).toLocal() : null;
-        return true;
-      } else {
-        _error = response.data['message'];
-        return false;
-      }
-    } on DioException catch (e) {
-      _error = ApiErrorHandler.getMessage(e);
-      return false;
-    } catch (e) {
-      _error = 'Terjadi kesalahan tidak terduga';
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
   void resetTicketData() {
     _kodeVerifikasi = null;
     _hospitalName = null;

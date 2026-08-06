@@ -29,9 +29,18 @@ class DonorActionController extends Controller
             return $this->error('Anda harus menyelesaikan skrining mandiri terlebih dahulu sebelum konfirmasi kesediaan.', 400);
         }
 
-        // Atomic quota check inside transaction to prevent race condition
+        $kodeVerifikasi = null;
+        $expiresAt = null;
+
         if ($request->status === 'confirmed') {
-            $result = DB::transaction(function () use ($candidate) {
+            $confirmedAt = now();
+            $expiresAt = $confirmedAt->copy()->addMinutes(config('donorconnect.confirmation_expiry_minutes', 120));
+
+            // Quota check-and-write must happen atomically inside the same
+            // lock: doing the count and the status write in separate
+            // transactions let two concurrent confirmations both pass the
+            // check before either wrote, over-filling required_bags.
+            $result = DB::transaction(function () use ($candidate, $confirmedAt) {
                 // Lock the blood request row for update
                 $bloodRequest = BloodRequest::where('id', $candidate->blood_request_id)
                     ->lockForUpdate()
@@ -53,7 +62,31 @@ class DonorActionController extends Controller
                     return 'full';
                 }
 
-                return $bloodRequest;
+                // The DB has a unique index on kode_verifikasi, but
+                // generation and this update aren't atomic, so two
+                // concurrent confirmations could race onto the same code.
+                // Retry with a freshly generated code on that specific
+                // collision instead of surfacing a 500 to the donor.
+                $kode = DonorCandidate::generateVerificationCode();
+                $maxAttempts = 5;
+                for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                    try {
+                        $candidate->update([
+                            'status' => 'confirmed',
+                            'confirmed_at' => $confirmedAt,
+                            'kode_verifikasi' => $kode,
+                        ]);
+                        break;
+                    } catch (QueryException $e) {
+                        $isDuplicateCode = str_contains($e->getMessage(), 'kode_verifikasi');
+                        if (!$isDuplicateCode || $attempt === $maxAttempts) {
+                            throw $e;
+                        }
+                        $kode = DonorCandidate::generateVerificationCode();
+                    }
+                }
+
+                return $kode;
             });
 
             if ($result === 'closed') {
@@ -63,41 +96,10 @@ class DonorActionController extends Controller
             if ($result === 'full') {
                 return $this->error('Kuota pendonor sudah penuh untuk permintaan ini', 400);
             }
-        }
 
-        $kodeVerifikasi = null;
-        $expiresAt = null;
-        $confirmedAt = null;
-        if ($request->status === 'confirmed') {
-            $confirmedAt = now();
-            $expiresAt = $confirmedAt->copy()->addMinutes(config('donorconnect.confirmation_expiry_minutes', 120));
-            $kodeVerifikasi = DonorCandidate::generateVerificationCode();
-        }
-
-        $updateData = [
-            'status' => $request->status,
-            'confirmed_at' => $confirmedAt,
-            'kode_verifikasi' => $kodeVerifikasi,
-        ];
-
-        // The DB has a unique index on kode_verifikasi, but generation and
-        // this update aren't atomic, so two concurrent confirmations could
-        // race onto the same code between the exists() check and here.
-        // Retry with a freshly generated code on that specific collision
-        // instead of surfacing a 500 to the donor.
-        $maxAttempts = 5;
-        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
-            try {
-                $candidate->update($updateData);
-                break;
-            } catch (QueryException $e) {
-                $isDuplicateCode = $request->status === 'confirmed'
-                    && str_contains($e->getMessage(), 'kode_verifikasi');
-                if (!$isDuplicateCode || $attempt === $maxAttempts) {
-                    throw $e;
-                }
-                $updateData['kode_verifikasi'] = DonorCandidate::generateVerificationCode();
-            }
+            $kodeVerifikasi = $result;
+        } else {
+            $candidate->update(['status' => $request->status, 'confirmed_at' => null, 'kode_verifikasi' => null]);
         }
 
         if ($request->status === 'declined') {
@@ -124,7 +126,7 @@ class DonorActionController extends Controller
 
         return $this->success([
             'status' => $candidate->status,
-            'kode_verifikasi' => $updateData['kode_verifikasi'],
+            'kode_verifikasi' => $kodeVerifikasi,
             'hospital_name' => $candidate->bloodRequest->hospital_name,
             'expires_at' => $expiresAt?->toIso8601String(),
         ], 'Donor status updated successfully');
@@ -146,27 +148,36 @@ class DonorActionController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        // Only allow screening for candidates in notified or pending status
-        if (!in_array($candidate->status, ['notified', 'pending'])) {
+        // Only allow (re-)screening while notified/pending, or after a previous failed attempt
+        // (kondisi seperti obat/kehamilan bisa berubah, jadi user boleh mengulang skrining)
+        if (!in_array($candidate->status, ['notified', 'pending', 'screening_failed'])) {
             return $this->error('Kandidat tidak dapat melakukan skrining dengan status saat ini', 400);
         }
 
-        // Create or update screening record
+        $validated = $request->validated();
+        $isEligible = $validated['health_status'] && $validated['min_weight']
+            && $validated['no_medicine'] && $validated['not_pregnant'];
+
+        // Simpan jawaban apa adanya (jujur), baik lolos maupun tidak, untuk histori/audit
         $screening = DonorScreening::updateOrCreate(
             ['donor_candidate_id' => $candidate->id],
             [
-                ...$request->validated(),
+                ...$validated,
                 'screened_at' => now(),
             ]
         );
 
-        // Update candidate status to screening_passed agar frontend bisa lanjut ke konfirmasi
-        $candidate->update(['status' => 'screening_passed']);
+        $candidate->update(['status' => $isEligible ? 'screening_passed' : 'screening_failed']);
+
+        $message = $isEligible
+            ? 'Self-assessment screening completed successfully'
+            : 'Anda belum memenuhi syarat untuk mendonor saat ini berdasarkan hasil skrining mandiri';
 
         return $this->success([
             'screening_id' => $screening->id,
             'completed' => true,
-        ], 'Self-assessment screening completed successfully');
+            'eligible' => $isEligible,
+        ], $message);
     }
 
 }

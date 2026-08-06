@@ -24,6 +24,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   DateTime? _selectedDate;
   File? _pickedPhoto;
   bool _isUploadingPhoto = false;
+  String? _gender;
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController = TextEditingController(text: user?.name);
     _phoneController = TextEditingController(text: user?.phone);
     _weightController = TextEditingController(text: user?.weight?.toString());
+    _gender = user?.gender;
     if (user?.birthDate != null) {
       _selectedDate = DateTime.tryParse(user!.birthDate!);
     }
@@ -101,6 +103,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       phone: _phoneController.text,
       weight: weightText.isNotEmpty ? double.tryParse(weightText) : null,
       birthDate: _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null,
+      gender: _gender,
     );
 
     if (!mounted) return;
@@ -207,6 +210,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   if (double.tryParse(val) == null) return 'Gunakan angka saja';
                   return null;
                 },
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _gender,
+                decoration: const InputDecoration(
+                  labelText: 'Jenis Kelamin',
+                  prefixIcon: Icon(Icons.wc_outlined),
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'male', child: Text('Laki-laki')),
+                  DropdownMenuItem(value: 'female', child: Text('Perempuan')),
+                ],
+                onChanged: (newValue) => setState(() => _gender = newValue),
               ),
               const SizedBox(height: 16),
               InkWell(

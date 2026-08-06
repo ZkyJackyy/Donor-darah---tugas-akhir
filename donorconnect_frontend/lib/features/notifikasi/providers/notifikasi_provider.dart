@@ -46,6 +46,14 @@ class NotifikasiProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  void clear() {
+    _notifications = [];
+    _unreadCount = 0;
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
+  }
+
   Future<void> fetchNotifications() async {
     _isLoading = true;
     _error = null;

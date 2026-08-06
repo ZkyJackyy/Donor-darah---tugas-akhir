@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="mb-6">
-    <a href="{{ route('admin.blood-requests.index') }}" class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-brand-600 transition-colors bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm">
+    <a href="{{ route('admin.blood-requests.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-brand-600 transition-colors bg-white px-4 py-2 rounded-md border border-gray-200">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
         Kembali
     </a>
@@ -22,8 +22,8 @@
     .float-input textarea:focus ~ .float-label,
     .float-input textarea:not(:placeholder-shown) ~ .float-label {
         transform: translateY(-130%) scale(0.85);
-        color: #ef4444;
-        font-weight: 700;
+        color: #dc2626;
+        font-weight: 600;
         background-color: transparent;
         padding: 0 4px;
     }
@@ -39,8 +39,8 @@
 </style>
 
 @if($errors->any())
-<div class="max-w-6xl mx-auto mb-6 bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl shadow-sm">
-    <h4 class="text-sm font-bold text-red-900 mb-2">Permintaan tidak dapat disimpan, periksa kembali isian berikut:</h4>
+<div class="max-w-6xl mx-auto mb-6 bg-red-50 border border-red-200 text-red-800 p-4 rounded-md">
+    <h4 class="text-sm font-semibold text-red-900 mb-2">Permintaan tidak dapat disimpan, periksa kembali isian berikut:</h4>
     <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
         @foreach($errors->all() as $error)
             <li>{{ $error }}</li>
@@ -55,13 +55,13 @@
     <!-- Left Column: Form Details -->
     <div class="lg:col-span-7 space-y-6">
         <!-- Card 0: Jenis Permintaan -->
-        <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-8">
+        <div class="bg-white rounded-lg border border-gray-200 p-8">
             <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600">
+                <div class="w-9 h-9 rounded-md bg-brand-50 flex items-center justify-center text-brand-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-gray-900">Jenis Permintaan</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Jenis Permintaan</h3>
                     <p class="text-xs text-gray-500 font-medium">Pilih apakah ini kebutuhan darurat atau kegiatan donor darah terbuka.</p>
                 </div>
             </div>
@@ -81,24 +81,22 @@
         </div>
 
         <!-- Card 1: Medical Details -->
-        <div id="blood-spec-card" class="bg-white rounded-2xl shadow-card border border-gray-100 p-8 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-brand-50 rounded-bl-full -mr-16 -mt-16 z-0"></div>
-
+        <div id="blood-spec-card" class="bg-white rounded-lg border border-gray-200 p-8 relative">
             <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-8 pb-4 border-b border-gray-50">
-                    <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600">
+                <div class="flex items-center gap-3 mb-8 pb-4 border-b border-gray-100">
+                    <div class="w-9 h-9 rounded-md bg-brand-50 flex items-center justify-center text-brand-600">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                     </div>
                     <div>
-                        <h3 id="blood-spec-title" class="text-lg font-bold text-gray-900">Spesifikasi Darah</h3>
+                        <h3 id="blood-spec-title" class="text-lg font-semibold text-gray-900">Spesifikasi Darah</h3>
                         <p id="blood-spec-subtitle" class="text-xs text-gray-500 font-medium">Tentukan kebutuhan spesifik golongan darah pasien.</p>
                     </div>
                 </div>
 
                 <div id="blood-type-fields" class="grid grid-cols-2 gap-6 mb-6">
                     <!-- Golongan Darah -->
-                    <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
-                        <select name="blood_type" class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none appearance-none cursor-pointer peer" required>
+                    <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
+                        <select name="blood_type" class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none appearance-none cursor-pointer peer" required>
                             <option value="" disabled selected hidden></option>
                             <option value="A">Golongan A</option>
                             <option value="B">Golongan B</option>
@@ -112,8 +110,8 @@
                     </div>
 
                     <!-- Rhesus -->
-                    <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
-                        <select name="rhesus" class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none appearance-none cursor-pointer peer" required>
+                    <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
+                        <select name="rhesus" class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none appearance-none cursor-pointer peer" required>
                             <option value="" disabled selected hidden></option>
                             <option value="+">Positif (+)</option>
                             <option value="-">Negatif (-)</option>
@@ -127,17 +125,17 @@
 
                 <div class="grid grid-cols-2 gap-6 mb-6">
                     <!-- Jumlah Kantong -->
-                    <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
+                    <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
                         <input type="number" id="required_bags_input" name="required_bags" min="1" value="{{ old('required_bags', 1) }}" required placeholder=" "
-                            class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer">
+                            class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none placeholder-transparent peer">
                         <label id="required_bags_label" class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
                             Jumlah Kantong
                         </label>
                     </div>
 
                     <!-- Tingkat Urgensi -->
-                    <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
-                        <select name="urgency_level" class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none appearance-none cursor-pointer peer" required>
+                    <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
+                        <select name="urgency_level" class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none appearance-none cursor-pointer peer" required>
                             <option value="normal">Normal (Biasa)</option>
                             <option value="urgent">Penting (Mendesak)</option>
                             <option value="critical">Darurat (Kritis)</option>
@@ -151,9 +149,9 @@
 
                 <div id="event-schedule-fields" class="grid grid-cols-2 gap-6 mb-6" data-hidden="true">
                     <!-- Jadwal Mulai (event only) -->
-                    <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
+                    <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
                         <input type="datetime-local" id="event_starts_at_input" name="event_starts_at" value="{{ old('event_starts_at') }}" placeholder=" "
-                            class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer">
+                            class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none placeholder-transparent peer">
                         <label class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
                             Jadwal Mulai
                         </label>
@@ -161,9 +159,9 @@
                 </div>
 
                 <!-- Deadline -->
-                <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
+                <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
                     <input type="datetime-local" name="deadline" value="{{ old('deadline') }}" required placeholder=" "
-                        class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer">
+                        class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none placeholder-transparent peer">
                     <label id="deadline_label" class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left" style="transform: translateY(-130%) scale(0.85); color: #ef4444; font-weight: 700;">
                         Batas Waktu Terpenuhi
                     </label>
@@ -172,41 +170,41 @@
         </div>
 
         <!-- Card 2: Location Details -->
-        <div class="bg-white rounded-2xl shadow-card border border-gray-100 p-8">
-            <div class="flex items-center gap-3 mb-8 pb-4 border-b border-gray-50">
-                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+        <div class="bg-white rounded-lg border border-gray-200 p-8">
+            <div class="flex items-center gap-3 mb-8 pb-4 border-b border-gray-100">
+                <div class="w-9 h-9 rounded-md bg-sky-50 flex items-center justify-center text-sky-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-gray-900">Informasi Instansi</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Informasi Instansi</h3>
                     <p class="text-xs text-gray-500 font-medium">Lengkapi detail lokasi rumah sakit atau klinik yang membutuhkan.</p>
                 </div>
             </div>
 
             <div class="space-y-6">
                 <!-- Hospital Name -->
-                <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
+                <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
                     <input type="text" id="hospital_name" name="hospital_name" value="{{ old('hospital_name') }}" required placeholder=" " autocomplete="off"
-                        class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer">
+                        class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none placeholder-transparent peer">
                     <label class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
                         Nama Rumah Sakit / Instansi
                     </label>
-                    <div id="hospital-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-30 max-h-60 overflow-y-auto"></div>
+                    <div id="hospital-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-md z-30 max-h-60 overflow-y-auto"></div>
                 </div>
 
                 <!-- Address -->
-                <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
+                <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
                     <textarea id="hospital_address" name="hospital_address" rows="3" required placeholder=" "
-                        class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer resize-none">{{ old('hospital_address') }}</textarea>
+                        class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none placeholder-transparent peer resize-none">{{ old('hospital_address') }}</textarea>
                     <label class="float-label absolute left-4 top-6 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
                         Alamat Lengkap
                     </label>
                 </div>
 
                 <!-- Notes -->
-                <div class="relative float-input bg-gray-50 rounded-xl border border-gray-200 px-4 pt-6 pb-2">
+                <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
                     <textarea name="notes" rows="3" placeholder=" "
-                        class="w-full bg-transparent text-sm font-bold text-gray-900 focus:outline-none placeholder-transparent peer resize-none">{{ old('notes') }}</textarea>
+                        class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none placeholder-transparent peer resize-none">{{ old('notes') }}</textarea>
                     <label class="float-label absolute left-4 top-6 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left">
                         Catatan (Opsional)
                     </label>
@@ -217,9 +215,9 @@
 
     <!-- Right Column: Map & Action -->
     <div class="lg:col-span-5 space-y-6">
-        <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden flex flex-col h-[520px]">
-            <div class="p-6 border-b border-gray-50 bg-gray-50/50">
-                <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col h-[520px]">
+            <div class="p-6 border-b border-gray-100 bg-gray-50">
+                <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
                     <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     Titik Koordinat Lokasi
                 </h3>
@@ -236,11 +234,11 @@
                 </div>
             </div>
             
-            <div class="p-6 bg-gray-50/80 border-t border-gray-100">
+            <div class="p-6 bg-gray-50 border-t border-gray-100">
                 <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', config('donorconnect.default_lat')) }}">
                 <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', config('donorconnect.default_lng')) }}">
 
-                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-extrabold py-3.5 rounded-xl text-sm uppercase tracking-widest shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 rounded-md text-sm uppercase tracking-wide transition-colors flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                     <span id="submit-btn-text">Publikasikan Permintaan</span>
                 </button>
@@ -389,7 +387,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 suggestionsBox.innerHTML = results.map((item, index) => `
                     <button type="button" data-index="${index}" class="w-full text-left px-4 py-2.5 hover:bg-gray-50 border-b border-gray-50 last:border-0">
-                        <div class="text-xs font-bold text-gray-800">${(item.name || item.display_name.split(',')[0])}</div>
+                        <div class="text-xs font-semibold text-gray-800">${(item.name || item.display_name.split(',')[0])}</div>
                         <div class="text-[10px] text-gray-400 mt-0.5 line-clamp-1">${item.display_name}</div>
                     </button>
                 `).join('');

@@ -9,8 +9,8 @@
     </div>
     
     <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-        <form method="GET" action="{{ route('admin.reports.index') }}" class="flex bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-            <select name="month" class="pl-4 pr-8 py-2 bg-transparent text-sm font-medium text-gray-700 focus:outline-none border-r border-gray-100 cursor-pointer appearance-none">
+        <form method="GET" action="{{ route('admin.reports.index') }}" class="flex bg-white rounded-md border border-gray-200 overflow-hidden">
+            <select name="month" class="pl-4 pr-8 py-2 bg-transparent text-sm font-medium text-gray-700 focus:outline-none border-r border-gray-200 cursor-pointer appearance-none">
                 @for($m=1; $m<=12; $m++)
                     <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>{{ \Carbon\Carbon::create()->month($m)->format('F') }}</option>
                 @endfor
@@ -20,11 +20,11 @@
                     <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
                 @endfor
             </select>
-            <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 text-sm font-bold uppercase tracking-wider transition">
+            <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 text-sm font-semibold uppercase tracking-wide transition-colors">
                 Filter
             </button>
         </form>
-        <a href="{{ route('admin.reports.pdf', ['month' => $month, 'year' => $year]) }}" target="_blank" class="inline-flex items-center justify-center bg-gray-800 hover:bg-gray-900 text-white px-5 py-2 rounded-xl text-sm font-bold transition">
+        <a href="{{ route('admin.reports.pdf', ['month' => $month, 'year' => $year]) }}" target="_blank" class="inline-flex items-center justify-center bg-gray-800 hover:bg-gray-900 text-white px-5 py-2 rounded-md text-sm font-semibold transition-colors">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
             Export PDF
         </a>
@@ -33,93 +33,63 @@
 
 <!-- Section: Permintaan (Demand) -->
 <div class="mb-3 flex items-center gap-2">
-    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Permintaan Darah (Kebutuhan)</h2>
+    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Permintaan Darah (Kebutuhan)</h2>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
-        <div class="flex items-center space-x-3 mb-3">
-            <div class="p-2 bg-blue-100 text-blue-600 rounded-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-            </div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Permintaan Dibuat</span>
-        </div>
-        <div class="text-2xl font-bold text-gray-800">{{ $totalRequests }}</div>
+    <div class="bg-white rounded-lg p-6 border border-gray-200 border-l-2 border-l-sky-600">
+        <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Permintaan Dibuat</span>
+        <div class="text-2xl font-semibold text-gray-800 font-mono mt-2">{{ $totalRequests }}</div>
         <p class="text-[11px] text-gray-400 mt-1">Jumlah permintaan darah baru bulan ini</p>
     </div>
 
-    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
-        <div class="flex items-center space-x-3 mb-3">
-            <div class="p-2 bg-orange-100 text-orange-600 rounded-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-            </div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Kantong Diminta</span>
-        </div>
-        <div class="text-2xl font-bold text-gray-800">{{ $totalBagsRequested }}</div>
+    <div class="bg-white rounded-lg p-6 border border-gray-200 border-l-2 border-l-amber-600">
+        <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Kantong Diminta</span>
+        <div class="text-2xl font-semibold text-gray-800 font-mono mt-2">{{ $totalBagsRequested }}</div>
         <p class="text-[11px] text-gray-400 mt-1">Total kebutuhan kantong dari semua permintaan bulan ini</p>
     </div>
 
-    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
-        <div class="flex items-center space-x-3 mb-3">
-            <div class="p-2 bg-purple-100 text-purple-600 rounded-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Permintaan Fulfilled</span>
-        </div>
-        <div class="text-2xl font-bold text-gray-800">{{ $completedRequests }}</div>
+    <div class="bg-white rounded-lg p-6 border border-gray-200 border-l-2 border-l-violet-600">
+        <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Permintaan Fulfilled</span>
+        <div class="text-2xl font-semibold text-gray-800 font-mono mt-2">{{ $completedRequests }}</div>
         <p class="text-[11px] text-gray-400 mt-1">Permintaan (dibuat bulan ini) yang kuotanya sudah tercapai</p>
     </div>
 </div>
 
 <!-- Section: Realisasi (Supply) -->
 <div class="mb-3 flex items-center gap-2">
-    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Realisasi Donasi</h2>
+    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Realisasi Donasi</h2>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
-        <div class="flex items-center space-x-3 mb-3">
-            <div class="p-2 bg-brand-50 text-brand-600 rounded-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Donasi Terverifikasi</span>
-        </div>
-        <div class="text-2xl font-bold text-gray-800">{{ $totalSuccessfulDonors }}</div>
+    <div class="bg-white rounded-lg p-6 border border-gray-200 border-l-2 border-l-brand-600">
+        <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Donasi Terverifikasi</span>
+        <div class="text-2xl font-semibold text-gray-800 font-mono mt-2">{{ $totalSuccessfulDonors }}</div>
         <p class="text-[11px] text-gray-400 mt-1">Jumlah pendonor yang hadir & diverifikasi bulan ini</p>
     </div>
 
-    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
-        <div class="flex items-center space-x-3 mb-3">
-            <div class="p-2 bg-green-100 text-green-600 rounded-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-            </div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Kantong Terpenuhi</span>
-        </div>
-        <div class="text-2xl font-bold text-gray-800">{{ $totalBagsFulfilled }}</div>
+    <div class="bg-white rounded-lg p-6 border border-gray-200 border-l-2 border-l-emerald-600">
+        <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Kantong Terpenuhi</span>
+        <div class="text-2xl font-semibold text-gray-800 font-mono mt-2">{{ $totalBagsFulfilled }}</div>
         <p class="text-[11px] text-gray-400 mt-1">1 donasi terverifikasi = 1 kantong (dari {{ $totalBagsRequested }} diminta)</p>
     </div>
 
-    <div class="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
-        <div class="flex items-center space-x-3 mb-3">
-            <div class="p-2 bg-red-100 text-red-600 rounded-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-            </div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Tingkat Pemenuhan</span>
-        </div>
-        <div class="text-2xl font-bold text-gray-800">{{ $fulfillmentRate }}%</div>
+    <div class="bg-white rounded-lg p-6 border border-gray-200 border-l-2 border-l-gray-400">
+        <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Tingkat Pemenuhan</span>
+        <div class="text-2xl font-semibold text-gray-800 font-mono mt-2">{{ $fulfillmentRate }}%</div>
         <p class="text-[11px] text-gray-400 mt-1">Kantong terpenuhi ÷ kantong diminta</p>
     </div>
 </div>
 
 <!-- Breakdown Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-    <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h3 class="text-xs font-bold text-gray-800 uppercase tracking-widest">Donasi per Golongan Darah</h3>
+            <h3 class="text-xs font-semibold text-gray-800 uppercase tracking-wide">Donasi per Golongan Darah</h3>
         </div>
         <div class="p-6 space-y-3">
             @forelse($bloodTypeBreakdown as $row)
             <div class="flex items-center justify-between">
-                <span class="text-sm font-bold text-gray-700">{{ $row->blood_type }}</span>
-                <span class="text-sm font-bold text-gray-800">{{ $row->count }}</span>
+                <span class="text-sm font-semibold text-gray-700">{{ $row->blood_type }}</span>
+                <span class="text-sm font-semibold text-gray-800 font-mono">{{ $row->count }}</span>
             </div>
             @empty
             <p class="text-xs text-gray-400 text-center py-4">Belum ada data bulan ini</p>
@@ -127,15 +97,15 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h3 class="text-xs font-bold text-gray-800 uppercase tracking-widest">Permintaan per Tingkat Urgensi</h3>
+            <h3 class="text-xs font-semibold text-gray-800 uppercase tracking-wide">Permintaan per Tingkat Urgensi</h3>
         </div>
         <div class="p-6 space-y-3">
             @forelse($urgencyBreakdown as $row)
             <div class="flex items-center justify-between">
-                <span class="text-sm font-bold text-gray-700 uppercase">{{ $row->urgency_level }}</span>
-                <span class="text-sm font-bold text-gray-800">{{ $row->count }}</span>
+                <span class="text-sm font-semibold text-gray-700 uppercase">{{ $row->urgency_level }}</span>
+                <span class="text-sm font-semibold text-gray-800 font-mono">{{ $row->count }}</span>
             </div>
             @empty
             <p class="text-xs text-gray-400 text-center py-4">Belum ada data bulan ini</p>
@@ -145,14 +115,14 @@
 </div>
 
 <!-- History Table -->
-<div class="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-        <h3 class="text-xs font-bold text-gray-800 uppercase tracking-widest">Riwayat Verifikasi Donasi</h3>
+        <h3 class="text-xs font-semibold text-gray-800 uppercase tracking-wide">Riwayat Verifikasi Donasi</h3>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-left">
             <thead>
-                <tr class="bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                <tr class="bg-gray-50 text-[10px] font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-200">
                     <th class="px-6 py-4">Tanggal</th>
                     <th class="px-6 py-4">Pendonor</th>
                     <th class="px-6 py-4 text-center">Golongan</th>
@@ -167,11 +137,11 @@
                         {{ \Carbon\Carbon::parse($history->donor_date)->format('d/m/Y') }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-bold text-gray-800">{{ $history->user->name }}</div>
-                        <div class="text-[11px] text-gray-400">{{ $history->user->phone }}</div>
+                        <div class="font-semibold text-gray-800">{{ $history->user->name }}</div>
+                        <div class="text-[11px] text-gray-400 font-mono">{{ $history->user->phone }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
-                        <span class="px-2 py-0.5 bg-brand-50 text-brand-700 text-[10px] font-bold rounded border border-brand-100">
+                        <span class="px-2 py-0.5 bg-brand-50 text-brand-700 text-[10px] font-semibold rounded border border-brand-100">
                             {{ $history->user->blood_type }}{{ $history->user->rhesus }}
                         </span>
                     </td>
@@ -189,7 +159,7 @@
                     <td colspan="5" class="px-6 py-16 text-center text-gray-400 opacity-60">
                         <div class="flex flex-col items-center">
                             <svg class="w-10 h-10 mb-2 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <p class="text-[11px] font-bold uppercase tracking-widest">Belum ada riwayat donor bulan ini</p>
+                            <p class="text-[11px] font-semibold uppercase tracking-wide">Belum ada riwayat donor bulan ini</p>
                         </div>
                     </td>
                 </tr>

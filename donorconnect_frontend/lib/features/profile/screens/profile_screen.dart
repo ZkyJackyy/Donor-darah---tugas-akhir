@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/session_cleanup.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -45,7 +46,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
               await context.read<AuthProvider>().logout();
-              if (context.mounted) context.go('/login');
+              if (!context.mounted) return;
+              resetUserScopedProviders(context);
+              context.go('/login');
             },
           )
         ],
@@ -73,6 +76,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _buildInfoRow(Icons.email_outlined, 'Email', user.email),
                       _buildInfoRow(Icons.phone_outlined, 'Nomor HP', user.phone ?? '-'),
                       _buildInfoRow(Icons.calendar_today_outlined, 'Tanggal Lahir', user.birthDate ?? '-'),
+                      _buildInfoRow(
+                        Icons.wc_outlined,
+                        'Jenis Kelamin',
+                        user.gender == 'male'
+                            ? 'Laki-laki'
+                            : user.gender == 'female'
+                                ? 'Perempuan'
+                                : '-',
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -118,6 +130,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   CustomButton(
                     text: 'Edit Profil',
                     onPressed: () => context.push('/profile/edit'),
+                  ),
+                  const SizedBox(height: 12),
+                  CustomButton(
+                    text: 'Ajukan Permintaan Darah',
+                    isOutlined: true,
+                    onPressed: () => context.push('/permintaan/ajukan'),
+                  ),
+                  const SizedBox(height: 12),
+                  CustomButton(
+                    text: 'Permintaan Saya',
+                    isOutlined: true,
+                    onPressed: () => context.push('/permintaan/saya'),
                   ),
                   const SizedBox(height: 100),
                 ],

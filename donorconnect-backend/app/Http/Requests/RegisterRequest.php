@@ -19,9 +19,10 @@ class RegisterRequest extends FormRequest
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'required|string',
             'birth_date' => ['required', 'date', 'before_or_equal:' . now()->subYears(17)->toDateString()],
-            'weight' => 'required|numeric|min:45',
+            'weight' => 'required|numeric|min:1',
             'blood_type' => 'required|in:A,B,AB,O',
             'rhesus' => 'required|in:+,-',
+            'gender' => 'required|in:male,female',
         ];
     }
 

@@ -23,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('layouts.admin', function ($view) {
             $view->with('openRequestsCount', BloodRequest::where('status', 'open')->count());
+            $view->with('pendingReviewCount', BloodRequest::where('status', 'pending_review')->count());
         });
     }
 }

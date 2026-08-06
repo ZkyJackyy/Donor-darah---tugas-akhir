@@ -27,6 +27,8 @@ import 'features/auth/screens/verify_email_screen.dart';
 import 'features/permintaan/screens/permintaan_list_screen.dart';
 import 'features/permintaan/screens/permintaan_detail_screen.dart';
 import 'features/permintaan/screens/permintaan_all_screen.dart';
+import 'features/permintaan/screens/ajukan_permintaan_screen.dart';
+import 'features/permintaan/screens/permintaan_saya_screen.dart';
 import 'features/konfirmasi/screens/tiket_digital_screen.dart';
 import 'shared/models/ticket_data.dart';
 import 'features/riwayat/screens/riwayat_screen.dart';
@@ -193,6 +195,14 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
       GoRoute(
         path: '/profile/edit',
         builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/permintaan/ajukan',
+        builder: (context, state) => const AjukanPermintaanScreen(),
+      ),
+      GoRoute(
+        path: '/permintaan/saya',
+        builder: (context, state) => const PermintaanSayaScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => Scaffold(

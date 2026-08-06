@@ -38,47 +38,21 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
 
   // Dipanggil saat status 'notified' → buka skrining dulu
   void _handleKonfirmasi(int donorCandidateId) async {
-    final isScreeningPassed = await Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => SkriningScreen(donorCandidateId: donorCandidateId),
       ),
     );
 
-    if (isScreeningPassed == true) {
-      if (!mounted) return;
-      // Setelah skrining berhasil, status sudah jadi 'screening_passed' di backend.
-      // Refresh data agar tombol berubah ke 'Konfirmasi Kesediaan'
-      context.read<PermintaanProvider>().fetchPermintaanDetail(widget.requestId);
+    // Baik lolos maupun tidak, status kandidat di backend sudah berubah
+    // ('screening_passed' atau 'screening_failed') — refresh agar UI ikut update.
+    if (result == null || !mounted) return;
+
+    context.read<PermintaanProvider>().fetchPermintaanDetail(widget.requestId);
+
+    if (result == true) {
       AppSnackbar.showSuccess(context, 'Skrining selesai! Tekan "Konfirmasi Kesediaan" untuk lanjut.');
-    }
-  }
-
-  // Dipanggil untuk permintaan tipe 'event' (donor darah terbuka) —
-  // user mendaftar sendiri, langsung dapat tiket tanpa skrining.
-  void _handleJoinEvent(int requestId) async {
-    final konfirmasi = context.read<KonfirmasiProvider>();
-    final success = await konfirmasi.joinEvent(requestId);
-
-    if (!mounted) return;
-
-    if (success) {
-      final user = context.read<AuthProvider>().user;
-      final item = context.read<PermintaanProvider>().selectedPermintaan;
-
-      context.push('/tiket', extra: TicketData.fromConfirmResult(
-        donorName: user?.name,
-        golonganDarah: user?.golonganDarah ?? item?.golonganDarah,
-        rhesus: user?.rhesus ?? item?.rhesus,
-        hospitalName: konfirmasi.hospitalName ?? item?.hospitalName,
-        requestId: requestId,
-        kodeVerifikasi: konfirmasi.kodeVerifikasi,
-        expiresAt: konfirmasi.expiresAt,
-      ));
-
-      context.read<PermintaanProvider>().fetchPermintaanDetail(requestId);
-    } else {
-      AppSnackbar.showError(context, konfirmasi.error ?? 'Gagal mendaftar sebagai pendonor');
     }
   }
 
@@ -183,31 +157,20 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
   Widget _buildActionSection(Map<String, dynamic>? userInfo, bool isLoading, BloodRequestModel item) {
     if (userInfo == null || userInfo['is_candidate'] != true) {
       if (item.type == 'event') {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-              ),
-              child: const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'Event donor darah ini terbuka untuk semua golongan darah. Daftar sekarang untuk mendapatkan tiket kehadiran.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                ),
-              ),
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Event donor darah ini terbuka untuk semua golongan darah. Silakan datang langsung ke lokasi pada jadwal yang tertera — tidak perlu mendaftar di aplikasi.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
-            const SizedBox(height: 16),
-            CustomButton(
-              text: 'Ikut Donor',
-              onPressed: () => _handleJoinEvent(item.id),
-              isLoading: isLoading,
-            ),
-          ],
+          ),
         );
       }
 
@@ -311,7 +274,34 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
             onPressed: () => _handleKonfirmasiLangsung(candidateId),
             isLoading: isLoading,
           )
-        else if (status == 'confirmed') ...[
+        else if (status == 'screening_failed') ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: AppColors.error),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Anda belum memenuhi syarat skrining mandiri untuk mengikuti donor ini.',
+                    style: TextStyle(color: AppColors.error, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          CustomButton(
+            text: 'Ulangi Skrining Mandiri',
+            onPressed: () => _handleKonfirmasi(candidateId),
+            isLoading: isLoading,
+          ),
+        ] else if (status == 'confirmed') ...[
           CustomButton(
             text: 'Lihat Tiket Digital',
             onPressed: () => context.push('/tiket', extra: _buildTicketData(

@@ -12,6 +12,7 @@ class UserModel {
   final String? tanggalDonorTerakhir;
   final String? role;
   final bool emailVerified;
+  final String? gender;
 
   UserModel({
     required this.id,
@@ -27,6 +28,7 @@ class UserModel {
     this.tanggalDonorTerakhir,
     this.role,
     this.emailVerified = false,
+    this.gender,
   });
 
   bool get isAdmin => role == 'admin';
@@ -46,6 +48,7 @@ class UserModel {
       tanggalDonorTerakhir: json['last_donor_date'],
       role: json['role'],
       emailVerified: json['email_verified'] == true,
+      gender: json['gender'],
     );
   }
 
@@ -64,6 +67,7 @@ class UserModel {
       'last_donor_date': tanggalDonorTerakhir,
       'role': role,
       'email_verified': emailVerified,
+      'gender': gender,
     };
   }
 }

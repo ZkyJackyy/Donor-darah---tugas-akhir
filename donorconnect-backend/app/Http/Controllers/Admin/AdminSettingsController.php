@@ -36,27 +36,31 @@ class AdminSettingsController extends Controller
         }
 
         try {
+            // GET /device only reports the connected device's status/quota
+            // for the given token — unlike POST /send, it never dispatches
+            // an actual WhatsApp message, so this is safe to call on every
+            // "Tes Koneksi" click without side effects.
             $response = Http::withHeaders([
                 'Authorization' => $token,
-            ])->post('https://api.fonnte.com/send', [
-                'target' => '081234567890',
-                'message' => 'Test koneksi Fonnte API dari Sahabat Donor. Pesan ini tidak akan terkirim.',
-                'countryCode' => '62',
-            ]);
+            ])->post('https://api.fonnte.com/device');
 
             $data = $response->json();
 
-            // Fonnte returns status:true even for invalid numbers if token is valid
-            if (isset($data['status'])) {
+            if ($response->successful() && isset($data['status']) && $data['status'] === true) {
+                $deviceStatus = $data['device_status'] ?? null;
+                $message = $deviceStatus
+                    ? "Koneksi Fonnte API berhasil. Token valid, status perangkat: {$deviceStatus}."
+                    : 'Koneksi Fonnte API berhasil. Token valid.';
+
                 return response()->json([
                     'success' => true,
-                    'message' => 'Koneksi Fonnte API berhasil. Token valid.',
+                    'message' => $message,
                 ]);
             }
 
             return response()->json([
                 'success' => false,
-                'message' => 'Respons tidak terduga: ' . $response->body(),
+                'message' => 'Token tidak valid atau respons tidak terduga: ' . $response->body(),
             ]);
         } catch (\Exception $e) {
             return response()->json([

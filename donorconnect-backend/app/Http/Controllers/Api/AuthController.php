@@ -9,6 +9,7 @@ use App\Http\Requests\ResendVerificationRequest;
 use App\Http\Requests\VerifyEmailRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Notifications\ResetPasswordToken;
 use App\Notifications\VerifyEmailCode;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -108,7 +109,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Forgot password: generate reset token and send via WA (simplified).
+     * Forgot password: generate reset token and send via email.
      * Token valid for 15 menit.
      */
     public function forgotPassword(Request $request)
@@ -129,11 +130,9 @@ class AuthController extends Controller
             ]
         );
 
-        // Dalam produksi, kirim via WA. Untuk sekarang, return token langsung.
-        return $this->success([
-            'message' => 'Reset token telah dikirim ke nomor WhatsApp Anda',
-            'token_hint' => substr($token, 0, 8) . '...',
-        ], 'Reset token generated');
+        $user->notify(new ResetPasswordToken($token));
+
+        return $this->success(null, 'Token reset password telah dikirim ke email Anda');
     }
 
     /**
@@ -165,6 +164,11 @@ class AuthController extends Controller
         // Hapus token setelah digunakan
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
+        // Cabut semua sesi/token lama — request ini tidak membawa token aktif
+        // (alur lupa password), jadi setiap access token yang beredar
+        // sebelumnya (misal token yang dicuri) harus langsung tidak berlaku.
+        $user->tokens()->delete();
+
         return $this->success(null, 'Password berhasil diubah');
     }
 
@@ -185,6 +189,12 @@ class AuthController extends Controller
         }
 
         $user->update(['password' => Hash::make($request->password)]);
+
+        // Cabut token lain (perangkat/sesi lain), tapi biarkan sesi yang
+        // sedang dipakai untuk request ini tetap aktif agar user tidak
+        // langsung ter-logout setelah berhasil ganti password.
+        $currentTokenId = $user->currentAccessToken()?->id;
+        $user->tokens()->when($currentTokenId, fn ($query) => $query->where('id', '!=', $currentTokenId))->delete();
 
         return $this->success(null, 'Password berhasil diubah');
     }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/session_cleanup.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
@@ -74,6 +75,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   void _cancelVerification() async {
     await context.read<AuthProvider>().logout();
     if (!mounted) return;
+    resetUserScopedProviders(context);
     context.go('/login');
   }
 

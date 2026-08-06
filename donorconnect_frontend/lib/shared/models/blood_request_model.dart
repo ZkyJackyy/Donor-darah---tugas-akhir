@@ -16,6 +16,10 @@ class BloodRequestModel {
   double? distance;
   final String? userCandidateStatus;
   final DateTime? verifiedAt;
+  final String? status;
+  final String? patientName;
+  final String? patientRelationship;
+  final String? rejectionReason;
 
   BloodRequestModel({
     required this.id,
@@ -33,6 +37,10 @@ class BloodRequestModel {
     this.distance,
     this.userCandidateStatus,
     this.verifiedAt,
+    this.status,
+    this.patientName,
+    this.patientRelationship,
+    this.rejectionReason,
   });
 
   String get verifiedAtFormatted => formatIndonesianDate(verifiedAt?.toIso8601String());
@@ -56,6 +64,10 @@ class BloodRequestModel {
       verifiedAt: json['user_candidate_info'] != null && json['user_candidate_info']['verified_at'] != null
           ? DateTime.parse(json['user_candidate_info']['verified_at']).toLocal()
           : null,
+      status: json['status'],
+      patientName: json['patient_name'],
+      patientRelationship: json['patient_relationship'],
+      rejectionReason: json['rejection_reason'],
     );
   }
 

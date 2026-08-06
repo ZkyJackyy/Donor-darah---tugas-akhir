@@ -71,6 +71,7 @@ class AuthProvider with ChangeNotifier {
     required double weight,
     required String bloodType,
     required String rhesus,
+    required String gender,
   }) async {
     _setLoading(true);
     try {
@@ -84,6 +85,7 @@ class AuthProvider with ChangeNotifier {
         'weight': weight,
         'blood_type': bloodType,
         'rhesus': rhesus,
+        'gender': gender,
       });
 
       if (response.data['status'] == true) {
@@ -92,9 +94,6 @@ class AuthProvider with ChangeNotifier {
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token);
-
-        // Update location after successful registration
-        updateLocation();
 
         return true;
       } else {
@@ -131,6 +130,11 @@ class AuthProvider with ChangeNotifier {
 
       if (response.data['status'] == true) {
         _user = UserModel.fromJson(response.data['data']);
+
+        // Location update is gated by 'verified.email' middleware on the
+        // backend, so it can only succeed now that the email is verified.
+        updateLocation();
+
         return true;
       } else {
         _error = response.data['message'];
@@ -255,6 +259,7 @@ class AuthProvider with ChangeNotifier {
     double? weight,
     String? birthDate,
     bool? isAvailable,
+    String? gender,
   }) async {
     _setLoading(true);
     try {
@@ -264,6 +269,7 @@ class AuthProvider with ChangeNotifier {
         if (weight != null) 'weight': weight,
         if (birthDate != null) 'birth_date': birthDate,
         if (isAvailable != null) 'is_available': isAvailable,
+        if (gender != null) 'gender': gender,
       });
 
       if (response.data['status'] == true) {

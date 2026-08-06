@@ -30,8 +30,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/blood-requests', [AdminBloodRequestWebController::class, 'index'])->name('blood-requests.index');
     Route::get('/blood-requests/create', [AdminBloodRequestWebController::class, 'create'])->name('blood-requests.create');
     Route::post('/blood-requests', [AdminBloodRequestWebController::class, 'store'])->name('blood-requests.store');
+    Route::get('/blood-requests/pending', [AdminBloodRequestWebController::class, 'pendingIndex'])->name('blood-requests.pending');
     Route::get('/blood-requests/{id}', [AdminBloodRequestWebController::class, 'show'])->name('blood-requests.show');
-    
+
+    Route::post('/blood-requests/{id}/approve', [AdminBloodRequestWebController::class, 'approve'])->name('blood-requests.approve');
+    Route::post('/blood-requests/{id}/reject', [AdminBloodRequestWebController::class, 'reject'])->name('blood-requests.reject');
     Route::post('/blood-requests/{id}/notify', [AdminBloodRequestWebController::class, 'notifyWeb'])->middleware('throttle:5,1')->name('blood-requests.notify');
     Route::post('/blood-requests/verify/{id}', [AdminBloodRequestWebController::class, 'verifyWeb'])->name('blood-requests.verify');
     Route::patch('/blood-requests/{id}/status', [AdminBloodRequestWebController::class, 'updateStatus'])->name('blood-requests.update-status');

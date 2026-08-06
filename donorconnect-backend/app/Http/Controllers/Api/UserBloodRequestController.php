@@ -104,82 +104,53 @@ class UserBloodRequestController extends Controller
     }
 
     /**
-     * Self-registration donor untuk permintaan tipe 'event' (donor darah
-     * terbuka) — tidak lewat wave/filter golongan darah seperti permintaan
-     * 'emergency'. Langsung jadi kandidat 'confirmed' dengan kode verifikasi,
-     * tanpa skrining mandiri. Verifikasi kehadiran tetap oleh admin di lokasi.
+     * User mengajukan permintaan donor pengganti untuk keluarga.
+     * Masuk sebagai 'pending_review' — belum trigger pencarian pendonor
+     * sampai admin PMI memvalidasi (approve) lewat panel admin.
      */
-    public function join(BloodRequest $bloodRequest, Request $request)
+    public function store(Request $request)
     {
-        if (!$bloodRequest->isEvent()) {
-            return $this->error('Permintaan ini bukan event donor terbuka.', 403);
-        }
-
-        if ($bloodRequest->status !== 'open') {
-            return $this->error("Permintaan ini berstatus '{$bloodRequest->status}' — tidak bisa didaftarkan lagi.", 400);
-        }
-
-        $user = $request->user();
-
-        $alreadyCandidate = DonorCandidate::where('blood_request_id', $bloodRequest->id)
-            ->where('user_id', $user->id)
-            ->exists();
-
-        if ($alreadyCandidate) {
-            return $this->error('Anda sudah terdaftar sebagai kandidat pendonor untuk permintaan ini.', 400);
-        }
-
-        if (!$this->isMedicallyEligible($user)) {
-            return $this->error('Anda belum memenuhi syarat kesehatan dasar untuk mendonor saat ini (usia, berat badan, atau masa jeda donor terakhir).', 400);
-        }
-
-        $confirmedAt = now();
-        $expiresAt = $confirmedAt->copy()->addMinutes(config('donorconnect.confirmation_expiry_minutes', 120));
-        $kodeVerifikasi = DonorCandidate::generateVerificationCode();
-
-        $candidate = DonorCandidate::create([
-            'blood_request_id' => $bloodRequest->id,
-            'user_id' => $user->id,
-            'distance_km' => null,
-            'status' => 'confirmed',
-            'notified_at' => $confirmedAt,
-            'confirmed_at' => $confirmedAt,
-            'kode_verifikasi' => $kodeVerifikasi,
+        $validated = $request->validate([
+            'blood_type' => 'required|in:A,B,AB,O',
+            'rhesus' => 'required|in:+,-',
+            'required_bags' => 'required|integer|min:1',
+            'patient_name' => 'required|string|max:255',
+            'patient_relationship' => 'required|string|max:100',
+            'hospital_name' => 'required|string|max:255',
+            'hospital_address' => 'required|string|max:255',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'urgency_level' => 'required|in:normal,urgent,critical',
+            'deadline' => 'required|date|after:now',
+            'notes' => 'nullable|string',
         ]);
 
-        return $this->success([
-            'candidate_id' => $candidate->id,
-            'status' => $candidate->status,
-            'kode_verifikasi' => $kodeVerifikasi,
-            'hospital_name' => $bloodRequest->hospital_name,
-            'expires_at' => $expiresAt->toIso8601String(),
-        ], 'Berhasil mendaftar sebagai pendonor. Tunjukkan kode verifikasi di lokasi.');
+        if (empty($validated['latitude']) || empty($validated['longitude'])) {
+            $validated['latitude'] = config('donorconnect.default_lat');
+            $validated['longitude'] = config('donorconnect.default_lng');
+        }
+
+        $bloodRequest = BloodRequest::create([
+            ...$validated,
+            'type' => 'emergency',
+            'status' => 'pending_review',
+            'requested_by_user_id' => $request->user()->id,
+            'admin_id' => null,
+        ]);
+
+        return $this->success($bloodRequest, 'Pengajuan berhasil dikirim, menunggu persetujuan admin PMI', 201);
     }
 
     /**
-     * Syarat medis dasar (bukan pencocokan golongan darah/jarak) — sama
-     * dengan kondisi non-blood-type di DonorFilterService, dicek langsung
-     * di PHP karena ini untuk satu user, bukan query massal.
+     * Daftar pengajuan permintaan donor pengganti milik user (semua status).
      */
-    private function isMedicallyEligible(\App\Models\User $user): bool
+    public function mySubmissions(Request $request)
     {
-        if (!$user->is_available || $user->weight === null || $user->weight < 45 || $user->birth_date === null) {
-            return false;
-        }
+        $submissions = BloodRequest::where('requested_by_user_id', $request->user()->id)
+            ->orderByDesc('id')
+            ->get();
 
-        $age = $user->birth_date->age;
-        if ($age < 17 || $age > 60) {
-            return false;
-        }
-
-        if ($user->last_donor_date !== null) {
-            $cooldownDays = config('donorconnect.donation_cooldown_days', 56);
-            if (now()->diffInDays($user->last_donor_date) < $cooldownDays) {
-                return false;
-            }
-        }
-
-        return true;
+        return $this->success($submissions, 'Daftar pengajuan berhasil diambil');
     }
 
     /**

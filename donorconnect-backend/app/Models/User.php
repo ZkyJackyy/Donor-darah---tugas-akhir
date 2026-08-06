@@ -28,6 +28,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'weight',
         'blood_type',
         'rhesus',
+        'gender',
         'last_donor_date',
         'latitude',
         'longitude',

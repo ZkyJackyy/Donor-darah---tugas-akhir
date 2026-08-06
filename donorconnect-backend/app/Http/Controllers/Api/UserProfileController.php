@@ -29,6 +29,7 @@ class UserProfileController extends Controller
             'is_available' => 'sometimes|boolean',
             'blood_type' => 'sometimes|in:A,B,AB,O',
             'rhesus' => 'sometimes|in:+,-',
+            'gender' => 'sometimes|in:male,female',
         ]);
 
         $user = $request->user();

@@ -54,7 +54,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (response.data['status'] == true) {
         setState(() {
           _tokenSent = true;
-          _success = 'Token reset telah dikirim. Silakan cek WhatsApp Anda.';
+          _success = 'Token reset telah dikirim. Silakan cek email Anda.';
         });
       } else {
         _error = response.data['message'];
@@ -155,6 +155,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 label: 'Email',
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: Icons.email_outlined,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) return 'Email wajib diisi';
+                  if (!value.contains('@')) return 'Masukkan email yang valid';
+                  return null;
+                },
               ),
 
               if (_tokenSent) ...[
@@ -163,6 +168,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   controller: _tokenController,
                   label: 'Token Reset',
                   prefixIcon: Icons.vpn_key,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return 'Token wajib diisi';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
@@ -170,6 +179,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   label: 'Password Baru',
                   isPassword: true,
                   prefixIcon: Icons.lock_outline,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Password wajib diisi';
+                    if (value.length < 8) return 'Password minimal 8 karakter';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
@@ -177,6 +191,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   label: 'Konfirmasi Password',
                   isPassword: true,
                   prefixIcon: Icons.lock_outline,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Konfirmasi password wajib diisi';
+                    if (value != _passwordController.text) return 'Konfirmasi password tidak cocok';
+                    return null;
+                  },
                 ),
               ],
 
