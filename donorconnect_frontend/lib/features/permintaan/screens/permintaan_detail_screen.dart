@@ -433,9 +433,20 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
                             ),
                             const _InfoDivider(),
                             _InfoRow(label: 'Lokasi', value: item.hospitalName ?? '-'),
+                            if (item.hospitalAddress != null && item.hospitalAddress!.isNotEmpty) ...[
+                              const _InfoDivider(),
+                              _InfoRow(label: 'Alamat', value: item.hospitalAddress!),
+                            ],
                             if (item.type == 'event' && item.eventStartsAt != null) ...[
                               const _InfoDivider(),
                               _InfoRow(label: 'Jadwal Mulai', value: item.eventStartsAtFormatted),
+                            ],
+                            if (item.quotaRequired != null) ...[
+                              const _InfoDivider(),
+                              _InfoRow(
+                                label: 'Kuota Terisi',
+                                value: '${item.quotaConfirmed ?? 0} dari ${item.quotaRequired} kantong',
+                              ),
                             ],
                             const _InfoDivider(),
                             _InfoRow(
@@ -446,6 +457,28 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
                           ],
                         ),
                       ),
+
+                      if (item.notes != null && item.notes!.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Catatan dari Admin',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Text(
+                            item.notes!,
+                            style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                          ),
+                        ),
+                      ],
 
                       if (item.latitude != 0.0) ...[
                         const SizedBox(height: 24),

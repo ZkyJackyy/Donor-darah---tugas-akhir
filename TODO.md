@@ -24,11 +24,6 @@ Catatan perbaikan/fitur yang belum dikerjakan. Tandai `[x]` kalau selesai, pinda
 
 ## Mobile — Menu & Data
 
-- [ ] **Lengkapi data permintaan darah yang ditampilkan** — `hospital_address`, `notes`, dan info kuota (`quota.required/confirmed/is_full`) sudah dikirim backend (`UserBloodRequestController::show()`) tapi tidak pernah di-parse `BloodRequestModel` maupun ditampilkan; `urgency_level` sudah ada di model tapi cuma tampil di layar detail, tidak di daftar.
-  - Tambah field `hospitalAddress`, `notes`, `quotaRequired`, `quotaConfirmed`, `quotaIsFull` ke `BloodRequestModel` (parsing null-safe dari `json['quota']`).
-  - Tampilkan baris "Alamat" & "Kuota Terisi" + section "Catatan dari Admin" (kondisional) di `permintaan_detail_screen.dart`.
-  - Tambah badge urgensi (KRITIS/MENDESAK, pakai `StatusBadge` yang sudah ada) di daftar `permintaan_list_screen.dart` & `permintaan_all_screen.dart`, bukan cuma di detail.
-
 - [ ] **Menu ganti password** — backend `POST /auth/change-password` & `ApiConstants.changePassword` sudah ada, belum ada UI-nya.
   - Tambah `AuthProvider.changePassword()` (pola sama seperti `updateProfile()`).
   - Buat `change_password_screen.dart` (pola sama seperti `edit_profile_screen.dart`) + route `/profile/change-password` di `main.dart`.

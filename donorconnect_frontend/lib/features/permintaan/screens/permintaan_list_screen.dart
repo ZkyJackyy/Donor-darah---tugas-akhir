@@ -7,6 +7,7 @@ import '../../../shared/widgets/app_snackbar.dart';
 import '../providers/permintaan_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../shared/models/blood_request_model.dart';
+import '../../../shared/widgets/status_badge.dart';
 
 class PermintaanListScreen extends StatefulWidget {
   const PermintaanListScreen({super.key});
@@ -336,9 +337,23 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                                             ),
                                     ),
                                   ),
-                                  title: Text(
-                                    item.type == 'event' ? 'Event Donor Darah Terbuka' : 'Dibutuhkan ${item.jumlahKantong} Kantong',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  title: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item.type == 'event' ? 'Event Donor Darah Terbuka' : 'Dibutuhkan ${item.jumlahKantong} Kantong',
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (item.type != 'event' && item.urgencyLevel == 'critical') ...[
+                                        const SizedBox(width: 6),
+                                        const StatusBadge(label: 'KRITIS', color: AppColors.error),
+                                      ] else if (item.type != 'event' && item.urgencyLevel == 'urgent') ...[
+                                        const SizedBox(width: 6),
+                                        const StatusBadge(label: 'MENDESAK', color: Colors.orange),
+                                      ],
+                                    ],
                                   ),
                                   subtitle: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,

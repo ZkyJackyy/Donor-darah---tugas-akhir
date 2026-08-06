@@ -123,9 +123,23 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
                                       ),
                           ),
                         ),
-                        title: Text(
-                          item.type == 'event' ? 'Event Donor Darah Terbuka' : 'Dibutuhkan ${item.jumlahKantong} Kantong',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.type == 'event' ? 'Event Donor Darah Terbuka' : 'Dibutuhkan ${item.jumlahKantong} Kantong',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (!isDone && item.type != 'event' && item.urgencyLevel == 'critical') ...[
+                              const SizedBox(width: 6),
+                              const StatusBadge(label: 'KRITIS', color: AppColors.error),
+                            ] else if (!isDone && item.type != 'event' && item.urgencyLevel == 'urgent') ...[
+                              const SizedBox(width: 6),
+                              const StatusBadge(label: 'MENDESAK', color: Colors.orange),
+                            ],
+                          ],
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

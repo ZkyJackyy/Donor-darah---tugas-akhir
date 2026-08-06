@@ -20,6 +20,11 @@ class BloodRequestModel {
   final String? patientName;
   final String? patientRelationship;
   final String? rejectionReason;
+  final String? hospitalAddress;
+  final String? notes;
+  final int? quotaRequired;
+  final int? quotaConfirmed;
+  final bool? quotaIsFull;
 
   BloodRequestModel({
     required this.id,
@@ -41,6 +46,11 @@ class BloodRequestModel {
     this.patientName,
     this.patientRelationship,
     this.rejectionReason,
+    this.hospitalAddress,
+    this.notes,
+    this.quotaRequired,
+    this.quotaConfirmed,
+    this.quotaIsFull,
   });
 
   String get verifiedAtFormatted => formatIndonesianDate(verifiedAt?.toIso8601String());
@@ -68,6 +78,11 @@ class BloodRequestModel {
       patientName: json['patient_name'],
       patientRelationship: json['patient_relationship'],
       rejectionReason: json['rejection_reason'],
+      hospitalAddress: json['hospital_address'],
+      notes: json['notes'],
+      quotaRequired: json['quota']?['required'],
+      quotaConfirmed: json['quota']?['confirmed'],
+      quotaIsFull: json['quota']?['is_full'],
     );
   }
 
