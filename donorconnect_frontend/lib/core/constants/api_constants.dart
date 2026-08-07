@@ -44,4 +44,8 @@ class ApiConstants {
 
   // Verification (admin only)
   static const String verifyKode = '/verify/code';
+
+  // Places (hospital autocomplete / reverse-geocode proxy)
+  static const String placesAutocomplete = '/places/autocomplete';
+  static const String placesReverseGeocode = '/places/reverse-geocode';
 }

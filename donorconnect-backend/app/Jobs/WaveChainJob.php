@@ -52,7 +52,7 @@ class WaveChainJob implements ShouldQueue
 
         // Cek kuota saat ini
         $confirmedCount = DonorCandidate::where('blood_request_id', $this->bloodRequestId)
-            ->where('status', 'confirmed')
+            ->whereIn('status', ['confirmed', 'verified'])
             ->count();
 
         if ($confirmedCount >= $request->required_bags) {

@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/services/api_service.dart';
 import '../../../shared/models/blood_request_model.dart';
+import '../../../shared/models/place_prediction.dart';
 import '../../../core/utils/api_error_handler.dart';
 
 class PermintaanProvider with ChangeNotifier {
@@ -128,6 +129,8 @@ class PermintaanProvider with ChangeNotifier {
     required String urgencyLevel,
     required String deadline,
     String? notes,
+    double? latitude,
+    double? longitude,
   }) async {
     _isSubmitting = true;
     _error = null;
@@ -145,6 +148,8 @@ class PermintaanProvider with ChangeNotifier {
         'urgency_level': urgencyLevel,
         'deadline': deadline,
         if (notes != null && notes.isNotEmpty) 'notes': notes,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
       });
 
       if (response.data['status'] == true) {
@@ -194,6 +199,39 @@ class PermintaanProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<List<PlacePrediction>> searchHospitalPlaces(String query) async {
+    if (query.trim().length < 3) return [];
+
+    try {
+      final response = await _apiService.get(
+        ApiConstants.placesAutocomplete,
+        queryParameters: {'input': query.trim()},
+      );
+      if (response.data['status'] == true) {
+        final List data = response.data['data'];
+        return data.map((json) => PlacePrediction.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<PlaceDetail?> reverseGeocode(double latitude, double longitude) async {
+    try {
+      final response = await _apiService.get(
+        ApiConstants.placesReverseGeocode,
+        queryParameters: {'latitude': latitude, 'longitude': longitude},
+      );
+      if (response.data['status'] == true) {
+        return PlaceDetail.fromJson(response.data['data']);
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 

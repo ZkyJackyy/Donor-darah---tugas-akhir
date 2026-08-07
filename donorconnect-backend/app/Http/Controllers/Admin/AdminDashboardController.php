@@ -69,4 +69,16 @@ class AdminDashboardController extends Controller
             'totalHospitals'
         ));
     }
+
+    // Lightweight snapshot polled by the dashboard to detect changes worth a refresh.
+    public function pollStats()
+    {
+        return response()->json([
+            'active_requests' => BloodRequest::where('status', 'open')->count(),
+            'total_donors' => User::where('role', 'user')->count(),
+            'total_donations' => DonorHistory::count(),
+            'total_hospitals' => BloodRequest::distinct('hospital_name')->count('hospital_name'),
+            'latest_request_id' => BloodRequest::max('id'),
+        ]);
+    }
 }

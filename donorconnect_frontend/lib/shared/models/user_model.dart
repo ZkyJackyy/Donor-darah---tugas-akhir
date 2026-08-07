@@ -1,6 +1,7 @@
 class UserModel {
   final int id;
   final String name;
+  final String? nik;
   final String email;
   final String? phone;
   final String? photoUrl;
@@ -17,6 +18,7 @@ class UserModel {
   UserModel({
     required this.id,
     required this.name,
+    this.nik,
     required this.email,
     this.phone,
     this.photoUrl,
@@ -37,6 +39,7 @@ class UserModel {
     return UserModel(
       id: json['id'],
       name: json['name'],
+      nik: json['nik'],
       email: json['email'],
       phone: json['phone'],
       photoUrl: json['photo_url'],
@@ -56,6 +59,7 @@ class UserModel {
     return {
       'id': id,
       'name': name,
+      'nik': nik,
       'email': email,
       'phone': phone,
       'photo_url': photoUrl,

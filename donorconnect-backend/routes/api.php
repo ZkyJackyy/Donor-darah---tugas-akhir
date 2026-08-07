@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AdminBloodRequestController;
 use App\Http\Controllers\Api\UserBloodRequestController;
 use App\Http\Controllers\Api\UserNotificationController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\PlacesController;
 
 // Auth Routes
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:60,1');
@@ -47,6 +48,12 @@ Route::middleware(['auth:sanctum', 'verified.email'])->group(function () {
     // User Notifications (Mobile App)
     Route::get('/user/notifications', [UserNotificationController::class, 'index']);
     Route::get('/user/notifications/unread-count', [UserNotificationController::class, 'unreadCount']);
+
+    // Places (hospital autocomplete/reverse-geocode proxy for the family request form)
+    Route::middleware('throttle:30,1')->group(function () {
+        Route::get('/places/autocomplete', [PlacesController::class, 'autocomplete']);
+        Route::get('/places/reverse-geocode', [PlacesController::class, 'reverseGeocode']);
+    });
 });
 
 // Admin Routes — staff accounts aren't created through the public

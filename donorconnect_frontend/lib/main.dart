@@ -171,6 +171,14 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         builder: (context, state) => VerifyEmailScreen(email: state.extra as String?),
       ),
       GoRoute(
+        path: '/permintaan/ajukan',
+        builder: (context, state) => const AjukanPermintaanScreen(),
+      ),
+      GoRoute(
+        path: '/permintaan/saya',
+        builder: (context, state) => const PermintaanSayaScreen(),
+      ),
+      GoRoute(
         path: '/permintaan/:id',
         builder: (context, state) {
           final id = int.tryParse(state.pathParameters['id'] ?? '');
@@ -195,14 +203,6 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
       GoRoute(
         path: '/profile/edit',
         builder: (context, state) => const EditProfileScreen(),
-      ),
-      GoRoute(
-        path: '/permintaan/ajukan',
-        builder: (context, state) => const AjukanPermintaanScreen(),
-      ),
-      GoRoute(
-        path: '/permintaan/saya',
-        builder: (context, state) => const PermintaanSayaScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => Scaffold(

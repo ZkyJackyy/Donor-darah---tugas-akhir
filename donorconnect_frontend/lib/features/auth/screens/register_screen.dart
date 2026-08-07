@@ -18,6 +18,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _nikController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -32,6 +33,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _nikController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -75,6 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       final success = await context.read<AuthProvider>().register(
             name: _nameController.text,
+            nik: _nikController.text,
             email: _emailController.text,
             password: _passwordController.text,
             passwordConfirmation: _confirmPasswordController.text,
@@ -148,6 +151,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _nameController,
                     prefixIcon: Icons.person_outline,
                     validator: (value) => value == null || value.isEmpty ? 'Name is required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    label: 'NIK',
+                    hintText: 'Nomor Induk Kependudukan (16 digit)',
+                    controller: _nikController,
+                    prefixIcon: Icons.badge_outlined,
+                    keyboardType: TextInputType.number,
+                    maxLength: 16,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'NIK is required';
+                      if (!RegExp(r'^\d{16}$').hasMatch(value)) return 'NIK must be 16 digits';
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   CustomTextField(

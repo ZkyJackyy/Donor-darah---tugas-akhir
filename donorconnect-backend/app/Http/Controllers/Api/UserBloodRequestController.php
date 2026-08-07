@@ -79,7 +79,7 @@ class UserBloodRequestController extends Controller
 
         // Count how many are currently confirmed to give the frontend an idea of the quota
         $confirmedCount = \App\Models\DonorCandidate::where('blood_request_id', $id)
-            ->where('status', 'confirmed')
+            ->whereIn('status', ['confirmed', 'verified'])
             ->count();
 
         $data = $bloodRequest->toArray();

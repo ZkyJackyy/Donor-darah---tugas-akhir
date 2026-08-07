@@ -99,6 +99,10 @@ class DonorActionController extends Controller
 
             $kodeVerifikasi = $result;
         } else {
+            if ($candidate->status === 'verified') {
+                return $this->error('Donor ini sudah diverifikasi selesai mendonor dan tidak dapat dibatalkan lagi.', 400);
+            }
+
             $candidate->update(['status' => $request->status, 'confirmed_at' => null, 'kode_verifikasi' => null]);
         }
 
@@ -111,7 +115,7 @@ class DonorActionController extends Controller
                 ->whereIn('status', ['notified', 'screening_passed'])
                 ->count();
             $confirmedCount = DonorCandidate::where('blood_request_id', $candidate->blood_request_id)
-                ->where('status', 'confirmed')->count();
+                ->whereIn('status', ['confirmed', 'verified'])->count();
             $declinedCount = DonorCandidate::where('blood_request_id', $candidate->blood_request_id)
                 ->where('status', 'declined')->count();
 

@@ -3,7 +3,7 @@
 @section('page_title', 'Permintaan Darah')
 
 @section('content')
-<div class="space-y-6" x-data='statusWatcher(@json($bloodRequests->pluck("status", "id")))'>
+<div class="space-y-6" x-data='statusWatcher(@json($bloodRequests->pluck("status", "id")), {{ $bloodRequests->total() }}, @json(request()->only(["search", "status"])))'>
     <!-- Header & Actions -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -145,20 +145,30 @@
 @push('scripts')
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('statusWatcher', (initialStatuses) => ({
+    Alpine.data('statusWatcher', (initialStatuses, initialTotal, filters) => ({
         init() {
             const ids = Object.keys(initialStatuses);
-            if (ids.length === 0) return;
+            const filterQuery = new URLSearchParams(filters).toString();
 
             setInterval(async () => {
                 try {
-                    const res = await fetch(`/api/admin-poll/blood-requests/statuses?ids=${ids.join(',')}`);
-                    if (!res.ok) return;
-                    const current = await res.json();
-                    const changed = ids.some(id => current[id] !== initialStatuses[id]);
-                    if (changed) window.location.reload();
+                    if (ids.length > 0) {
+                        const statusRes = await fetch(`/api/admin-poll/blood-requests/statuses?ids=${ids.join(',')}`);
+                        if (statusRes.ok) {
+                            const current = await statusRes.json();
+                            if (ids.some(id => current[id] !== initialStatuses[id])) {
+                                window.location.reload();
+                                return;
+                            }
+                        }
+                    }
+
+                    const countRes = await fetch(`/api/admin-poll/blood-requests/index-count?${filterQuery}`);
+                    if (!countRes.ok) return;
+                    const { count } = await countRes.json();
+                    if (count !== initialTotal) window.location.reload();
                 } catch (e) {}
-            }, 30000);
+            }, 15000);
         }
     }));
 });

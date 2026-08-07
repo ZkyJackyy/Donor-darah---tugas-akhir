@@ -63,6 +63,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> register({
     required String name,
+    required String nik,
     required String email,
     required String password,
     required String passwordConfirmation,
@@ -77,6 +78,7 @@ class AuthProvider with ChangeNotifier {
     try {
       final response = await _apiService.post(ApiConstants.register, data: {
         'name': name,
+        'nik': nik,
         'email': email,
         'password': password,
         'password_confirmation': passwordConfirmation,

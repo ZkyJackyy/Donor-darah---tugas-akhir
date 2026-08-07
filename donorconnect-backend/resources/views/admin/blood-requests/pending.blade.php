@@ -3,7 +3,7 @@
 @section('page_title', 'Pengajuan Keluarga')
 
 @section('content')
-<div class="space-y-6" x-data="{ rejectModal: false, rejectId: null }">
+<div class="space-y-6" x-data="pendingWatcher({{ $bloodRequests->total() }})">
     <div>
         <p class="text-sm text-gray-500 font-medium">Pengajuan permintaan donor pengganti dari user untuk keluarga — validasi sebelum masuk alur pencarian pendonor.</p>
     </div>
@@ -101,4 +101,25 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('pendingWatcher', (initialTotal) => ({
+        rejectModal: false,
+        rejectId: null,
+        init() {
+            setInterval(async () => {
+                try {
+                    const res = await fetch('/api/admin-poll/blood-requests/pending-count');
+                    if (!res.ok) return;
+                    const { count } = await res.json();
+                    if (count !== initialTotal) window.location.reload();
+                } catch (e) {}
+            }, 15000);
+        }
+    }));
+});
+</script>
+@endpush
 @endsection

@@ -15,6 +15,7 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
+            'nik' => 'required|string|digits:16|unique:users,nik',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'required|string',
@@ -30,6 +31,8 @@ class RegisterRequest extends FormRequest
     {
         return [
             'birth_date.before_or_equal' => 'Usia minimum untuk mendaftar adalah 17 tahun.',
+            'nik.digits' => 'NIK harus terdiri dari 16 digit angka.',
+            'nik.unique' => 'NIK ini sudah terdaftar.',
         ];
     }
 }

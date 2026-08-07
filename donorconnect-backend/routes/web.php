@@ -65,7 +65,11 @@ Route::middleware(['auth', 'admin'])->prefix('api/admin-poll/blood-requests')->g
     Route::get('/{id}/candidates', [AdminBloodRequestWebController::class, 'pollCandidates']);
     Route::get('/{id}/status', [AdminBloodRequestWebController::class, 'pollStatus']);
     Route::get('/statuses', [AdminBloodRequestWebController::class, 'pollStatuses']);
+    Route::get('/index-count', [AdminBloodRequestWebController::class, 'pollIndexCount']);
+    Route::get('/pending-count', [AdminBloodRequestWebController::class, 'pollPendingCount']);
 });
+
+Route::middleware(['auth', 'admin'])->get('/api/admin-poll/dashboard', [AdminDashboardController::class, 'pollStats']);
 
 // Admin Map AJAX (donors JSON)
 Route::middleware(['auth', 'admin'])->prefix('admin/map')->name('admin.map.')->group(function () {

@@ -6,6 +6,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../providers/permintaan_provider.dart';
+import '../widgets/hospital_autocomplete_field.dart';
+import 'pilih_lokasi_screen.dart';
 
 class AjukanPermintaanScreen extends StatefulWidget {
   const AjukanPermintaanScreen({super.key});
@@ -27,6 +29,8 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
   String? _patientRelationship;
   String _urgencyLevel = 'normal';
   DateTime? _deadline;
+  double? _latitude;
+  double? _longitude;
 
   static const _bloodTypes = ['A', 'B', 'AB', 'O'];
   static const _rhesusOptions = ['+', '-'];
@@ -98,6 +102,28 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
     });
   }
 
+  Future<void> _openMapPicker() async {
+    final picked = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PilihLokasiScreen(
+          initialLatitude: _latitude,
+          initialLongitude: _longitude,
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() {
+      _latitude = picked.latitude;
+      _longitude = picked.longitude;
+    });
+
+    final detail = await context.read<PermintaanProvider>().reverseGeocode(picked.latitude, picked.longitude);
+    if (!mounted || detail?.address == null) return;
+    setState(() => _hospitalAddressController.text = detail!.address!);
+  }
+
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -117,6 +143,10 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
       AppSnackbar.showError(context, 'Batas waktu wajib diisi');
       return;
     }
+    if (_deadline!.isBefore(DateTime.now())) {
+      AppSnackbar.showError(context, 'Batas waktu harus di waktu yang akan datang');
+      return;
+    }
 
     final notes = _notesController.text.trim();
 
@@ -131,6 +161,8 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
           urgencyLevel: _urgencyLevel,
           deadline: DateFormat('yyyy-MM-dd HH:mm:ss').format(_deadline!),
           notes: notes.isNotEmpty ? notes : null,
+          latitude: _latitude,
+          longitude: _longitude,
         );
 
     if (!mounted) return;
@@ -298,24 +330,50 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
               const Text('Rumah Sakit Tujuan',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
               const SizedBox(height: 12),
-              TextFormField(
+              HospitalAutocompleteField(
                 controller: _hospitalNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Rumah Sakit',
-                  prefixIcon: Icon(Icons.local_hospital_outlined),
-                  border: OutlineInputBorder(),
-                  hintText: 'Kosongkan jika mengikuti lokasi PMI',
-                ),
+                labelText: 'Nama Rumah Sakit',
+                icon: Icons.local_hospital_outlined,
+                onSearch: context.read<PermintaanProvider>().searchHospitalPlaces,
+                onPlaceSelected: (prediction) {
+                  setState(() {
+                    _latitude = prediction.latitude;
+                    _longitude = prediction.longitude;
+                    _hospitalAddressController.text = prediction.description;
+                  });
+                },
+                validator: (val) => val == null || val.trim().isEmpty ? 'Nama rumah sakit tidak boleh kosong' : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              HospitalAutocompleteField(
                 controller: _hospitalAddressController,
-                decoration: const InputDecoration(
-                  labelText: 'Alamat Rumah Sakit',
-                  prefixIcon: Icon(Icons.location_on_outlined),
-                  border: OutlineInputBorder(),
-                ),
+                labelText: 'Alamat Rumah Sakit',
+                icon: Icons.location_on_outlined,
                 maxLines: 2,
+                fillAddressOnSelect: true,
+                onSearch: context.read<PermintaanProvider>().searchHospitalPlaces,
+                onPlaceSelected: (prediction) {
+                  setState(() {
+                    _latitude = prediction.latitude;
+                    _longitude = prediction.longitude;
+                    if (prediction.name != null && _hospitalNameController.text.trim().isEmpty) {
+                      _hospitalNameController.text = prediction.name!;
+                    }
+                  });
+                },
+                validator: (val) => val == null || val.trim().isEmpty ? 'Alamat rumah sakit tidak boleh kosong' : null,
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _openMapPicker,
+                icon: const Icon(Icons.map_outlined, size: 18),
+                label: Text(_latitude != null ? 'Ubah Lokasi di Peta' : 'Pilih Lokasi di Peta'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
               ),
               const SizedBox(height: 24),
               const Text('Catatan Tambahan',

@@ -170,6 +170,35 @@ class AdminBloodRequestWebController extends Controller
         return response()->json(BloodRequest::whereIn('id', $ids)->pluck('status', 'id'));
     }
 
+    // Total count for the current index filters — used to detect newly
+    // created requests that wouldn't show up in a per-id status poll.
+    public function pollIndexCount(Request $request)
+    {
+        $query = BloodRequest::query();
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('hospital_name', 'like', '%' . $request->search . '%')
+                  ->orWhere('blood_type', 'like', '%' . $request->search . '%')
+                  ->orWhere('status', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        } else {
+            $query->whereNotIn('status', ['pending_review', 'rejected']);
+        }
+
+        return response()->json(['count' => $query->count()]);
+    }
+
+    // Count of pending_review submissions — polled by the "Pengajuan Keluarga" page.
+    public function pollPendingCount()
+    {
+        return response()->json(['count' => BloodRequest::where('status', 'pending_review')->count()]);
+    }
+
     public function notifyWeb($id, DonorFilterService $filterService, WhatsAppService $waService)
     {
         $bloodRequest = BloodRequest::findOrFail($id);
@@ -206,7 +235,7 @@ class AdminBloodRequestWebController extends Controller
         // Chain wave 2/3 otomatis: jika kuota belum terpenuhi, wave berikutnya jalan
         // beberapa menit kemudian (durasi tergantung urgency_level permintaan)
         $confirmedCount = DonorCandidate::where('blood_request_id', $bloodRequest->id)
-            ->where('status', 'confirmed')
+            ->whereIn('status', ['confirmed', 'verified'])
             ->count();
 
         $delayMinutes = config('donorconnect.wave_delay_minutes')[$bloodRequest->urgency_level]

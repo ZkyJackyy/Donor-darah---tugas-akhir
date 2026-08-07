@@ -28,7 +28,12 @@ class ApiService {
         return handler.next(options);
       },
       onError: (DioException e, handler) {
-        if (e.response?.statusCode == 401) {
+        final path = e.requestOptions.path;
+        final isAuthEndpoint = path.contains(ApiConstants.login) || path.contains(ApiConstants.register);
+
+        // 401 on login/register just means wrong credentials, not an expired
+        // session — there is no session to invalidate in that case.
+        if (e.response?.statusCode == 401 && !isAuthEndpoint) {
           SharedPreferences.getInstance().then((prefs) => prefs.remove('auth_token'));
           if (onUnauthorized != null) {
             onUnauthorized!();

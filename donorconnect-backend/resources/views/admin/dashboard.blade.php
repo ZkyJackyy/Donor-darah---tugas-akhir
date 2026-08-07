@@ -3,7 +3,13 @@
 @section('page_title', 'Overview Dashboard')
 
 @section('content')
-<div class="space-y-8">
+<div class="space-y-8" x-data='dashboardWatcher({
+        active_requests: {{ $activeRequestsCount ?? 0 }},
+        total_donors: {{ $totalDonors ?? 0 }},
+        total_donations: {{ $totalDonationsCount ?? 0 }},
+        total_hospitals: {{ $totalHospitals ?? 0 }},
+        latest_request_id: {{ optional($recentRequests->first())->id ?? 0 }}
+    })'>
     <!-- Header/Greeting Area -->
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white p-6 rounded-lg border border-gray-200">
         <div>
@@ -100,6 +106,22 @@
 
 @push('scripts')
 <script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('dashboardWatcher', (initialStats) => ({
+        init() {
+            setInterval(async () => {
+                try {
+                    const res = await fetch('/api/admin-poll/dashboard');
+                    if (!res.ok) return;
+                    const current = await res.json();
+                    const changed = Object.keys(initialStats).some(key => current[key] !== initialStats[key]);
+                    if (changed) window.location.reload();
+                } catch (e) {}
+            }, 15000);
+        }
+    }));
+});
+
     document.addEventListener('DOMContentLoaded', function() {
         if(!document.getElementById('trendsChart')) return;
         

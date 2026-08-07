@@ -73,6 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     title: 'Informasi Pribadi',
                     children: [
                       _buildInfoRow(Icons.person_outline, 'Nama', user.name),
+                      _buildInfoRow(Icons.badge_outlined, 'NIK', user.nik ?? '-'),
                       _buildInfoRow(Icons.email_outlined, 'Email', user.email),
                       _buildInfoRow(Icons.phone_outlined, 'Nomor HP', user.phone ?? '-'),
                       _buildInfoRow(Icons.calendar_today_outlined, 'Tanggal Lahir', user.birthDate ?? '-'),
