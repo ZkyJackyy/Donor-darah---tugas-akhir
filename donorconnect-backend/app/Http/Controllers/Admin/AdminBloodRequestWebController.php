@@ -11,6 +11,8 @@ use App\Services\DonorFilterService;
 use App\Services\WhatsAppService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class AdminBloodRequestWebController extends Controller
 {
@@ -251,52 +253,59 @@ class AdminBloodRequestWebController extends Controller
 
     public function verifyWeb($id, Request $request)
     {
-        $candidate = DonorCandidate::with('user', 'bloodRequest')->findOrFail($id);
+        // Check-then-write must happen inside the same row lock — two
+        // near-simultaneous verify attempts on the same candidate (e.g. this
+        // button and the separate "Verifikasi Kode" page) could otherwise
+        // both pass the status check before either wrote, producing two
+        // DonorHistory rows for one donation.
+        $error = DB::transaction(function () use ($id, $request) {
+            $candidate = DonorCandidate::with('user', 'bloodRequest')
+                ->lockForUpdate()
+                ->findOrFail($id);
 
-        if ($candidate->status === 'verified') {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['message' => 'Candidate is already verified.'], 400);
+            if ($candidate->status === 'verified') {
+                return 'Candidate is already verified.';
             }
-            return back()->with('error', 'Candidate is already verified.');
-        }
 
-        if ($candidate->status !== 'confirmed') {
-            $message = "Status kandidat '{$candidate->status}' — belum bisa diverifikasi. Kandidat harus mengkonfirmasi kehadiran terlebih dahulu.";
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['message' => $message], 400);
+            if ($candidate->status !== 'confirmed') {
+                return "Status kandidat '{$candidate->status}' — belum bisa diverifikasi. Kandidat harus mengkonfirmasi kehadiran terlebih dahulu.";
             }
-            return back()->with('error', $message);
-        }
 
-        if ($candidate->bloodRequest->status !== 'open') {
-            $message = "Permintaan ini berstatus '{$candidate->bloodRequest->status}' — kandidat tidak bisa diverifikasi lagi.";
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['message' => $message], 400);
+            if ($candidate->bloodRequest->status !== 'open') {
+                return "Permintaan ini berstatus '{$candidate->bloodRequest->status}' — kandidat tidak bisa diverifikasi lagi.";
             }
-            return back()->with('error', $message);
+
+            $candidate->update([
+                'status' => 'verified',
+                'verified_at' => now(),
+                'verification_method' => 'manual'
+            ]);
+
+            DonorHistory::create([
+                'user_id' => $candidate->user_id,
+                'blood_request_id' => $candidate->blood_request_id,
+                'donor_date' => now()->toDateString(),
+                'location_name' => $candidate->bloodRequest->hospital_name,
+                'verified_by' => auth()->id()
+            ]);
+
+            $candidate->user->update([
+                'last_donor_date' => now()->toDateString(),
+                'is_available' => false
+            ]);
+
+            // Auto-transition to fulfilled if quota of verified candidates met
+            $candidate->bloodRequest->checkAndAutoFulfill();
+
+            return null;
+        });
+
+        if ($error !== null) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $error], 400);
+            }
+            return back()->with('error', $error);
         }
-
-        $candidate->update([
-            'status' => 'verified',
-            'verified_at' => now(),
-            'verification_method' => 'manual'
-        ]);
-
-        DonorHistory::create([
-            'user_id' => $candidate->user_id,
-            'blood_request_id' => $candidate->blood_request_id,
-            'donor_date' => now()->toDateString(),
-            'location_name' => $candidate->bloodRequest->hospital_name,
-            'verified_by' => auth()->id()
-        ]);
-
-        $candidate->user->update([
-            'last_donor_date' => now()->toDateString(),
-            'is_available' => false
-        ]);
-
-        // Auto-transition to fulfilled if quota of verified candidates met
-        $candidate->bloodRequest->checkAndAutoFulfill();
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['message' => 'Candidate manually verified successfully.', 'status' => 'verified']);
@@ -331,5 +340,21 @@ class AdminBloodRequestWebController extends Controller
         $bloodRequest = BloodRequest::with('donorCandidates.user', 'donorCandidates.screening')->findOrFail($id);
         $pdf = Pdf::loadView('admin.blood-requests.pdf', compact('bloodRequest'));
         return $pdf->download("blood-request-{$bloodRequest->id}-candidates.pdf");
+    }
+
+    /**
+     * Tampilkan foto surat rujukan RS — disimpan di disk 'local' (privat),
+     * cuma bisa diakses lewat route ini yang sudah di-guard middleware
+     * 'auth'+'admin', bukan link storage publik langsung.
+     */
+    public function referralLetter($id)
+    {
+        $bloodRequest = BloodRequest::findOrFail($id);
+
+        if (!$bloodRequest->referral_letter_path || !Storage::disk('local')->exists($bloodRequest->referral_letter_path)) {
+            abort(404, 'Surat rujukan tidak ditemukan.');
+        }
+
+        return Storage::disk('local')->response($bloodRequest->referral_letter_path);
     }
 }

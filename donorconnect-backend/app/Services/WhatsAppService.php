@@ -22,11 +22,20 @@ class WhatsAppService
         $distance = round($distanceKm, 2);
         $waveInfo = $wave > 1 ? " (Gelombang {$wave})" : "";
 
+        // Pendonor selalu donor di PMI (skrining/lab cuma ada di sana, darah
+        // wajib diproses dulu sebelum dipakai) — bukan di rumah sakit pasien.
+        // hospital_name/hospital_address pada $request tetap dipakai sebagai
+        // info konteks pasien untuk pengajuan keluarga, bukan tujuan datang.
+        $patientInfo = $request->requested_by_user_id
+            ? "Untuk pasien di: {$request->hospital_name}\n"
+            : "";
+
         $message = "*Permohonan Donor Darah - {$urgencyLabel}{$waveInfo}*\n\n"
                  . "Halo {$user->name}, kami mohon kesediaan Anda sebagai calon pendonor "
                  . "golongan darah {$request->blood_type}{$request->rhesus} terdekat ({$distance} km dari lokasi).\n\n"
-                 . "Lokasi     : {$request->hospital_name}\n"
-                 . "Alamat     : {$request->hospital_address}\n"
+                 . "Lokasi     : " . config('donorconnect.default_hospital_name') . "\n"
+                 . "Alamat     : " . config('donorconnect.default_hospital_address') . "\n"
+                 . $patientInfo
                  . "Kebutuhan  : {$request->required_bags} kantong\n"
                  . "Batas waktu: {$request->deadline->format('d M Y, H:i')} WIB\n\n"
                  . "Apakah Anda bersedia membantu? Silakan buka aplikasi untuk konfirmasi kesediaan Anda:\n"

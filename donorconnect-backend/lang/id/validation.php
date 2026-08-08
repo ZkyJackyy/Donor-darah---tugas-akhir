@@ -137,5 +137,8 @@ return [
         'deadline' => 'batas waktu',
         'type' => 'tipe',
         'method' => 'metode',
+        'patient_name' => 'nama pasien',
+        'patient_relationship' => 'hubungan dengan pasien',
+        'referral_letter' => 'surat rujukan rumah sakit',
     ],
 ];

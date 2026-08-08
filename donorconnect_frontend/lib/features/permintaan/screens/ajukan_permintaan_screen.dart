@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -31,6 +33,7 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
   DateTime? _deadline;
   double? _latitude;
   double? _longitude;
+  File? _referralLetter;
 
   static const _bloodTypes = ['A', 'B', 'AB', 'O'];
   static const _rhesusOptions = ['+', '-'];
@@ -102,6 +105,38 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
     });
   }
 
+  Future<void> _pickReferralLetter() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Ambil Foto'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Pilih dari Galeri'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    final picked = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 1600,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() => _referralLetter = File(picked.path));
+  }
+
   Future<void> _openMapPicker() async {
     final picked = await Navigator.push(
       context,
@@ -147,6 +182,10 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
       AppSnackbar.showError(context, 'Batas waktu harus di waktu yang akan datang');
       return;
     }
+    if (_referralLetter == null) {
+      AppSnackbar.showError(context, 'Surat rujukan dari rumah sakit wajib dilampirkan');
+      return;
+    }
 
     final notes = _notesController.text.trim();
 
@@ -160,6 +199,7 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
           hospitalAddress: _hospitalAddressController.text.trim(),
           urgencyLevel: _urgencyLevel,
           deadline: DateFormat('yyyy-MM-dd HH:mm:ss').format(_deadline!),
+          referralLetter: _referralLetter!,
           notes: notes.isNotEmpty ? notes : null,
           latitude: _latitude,
           longitude: _longitude,
@@ -373,6 +413,47 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
                   side: const BorderSide(color: AppColors.primary),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text('Surat Rujukan Rumah Sakit',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+              const SizedBox(height: 4),
+              const Text(
+                'Wajib dilampirkan sebagai bukti bahwa stok darah rumah sakit kosong untuk golongan darah ini.',
+                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: _pickReferralLetter,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: _referralLetter == null ? Colors.grey.shade400 : AppColors.primary,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: _referralLetter == null
+                      ? const Column(
+                          children: [
+                            Icon(Icons.upload_file_outlined, size: 32, color: AppColors.textSecondary),
+                            SizedBox(height: 8),
+                            Text('Ketuk untuk foto/unggah surat rujukan', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.file(_referralLetter!, height: 160, width: double.infinity, fit: BoxFit.cover),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text('Ketuk untuk mengganti foto', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                          ],
+                        ),
                 ),
               ),
               const SizedBox(height: 24),

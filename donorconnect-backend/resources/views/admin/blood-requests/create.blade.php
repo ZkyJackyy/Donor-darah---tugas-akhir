@@ -56,14 +56,9 @@
     <div class="lg:col-span-7 space-y-6">
         <!-- Card 0: Jenis Permintaan -->
         <div class="bg-white rounded-lg border border-gray-200 p-8">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="w-9 h-9 rounded-md bg-brand-50 flex items-center justify-center text-brand-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Jenis Permintaan</h3>
-                    <p class="text-xs text-gray-500 font-medium">Pilih apakah ini kebutuhan darurat atau kegiatan donor darah terbuka.</p>
-                </div>
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">Jenis Permintaan</h3>
+                <p class="text-xs text-gray-500 font-medium">Pilih apakah ini kebutuhan darurat atau kegiatan donor darah terbuka.</p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -83,14 +78,9 @@
         <!-- Card 1: Medical Details -->
         <div id="blood-spec-card" class="bg-white rounded-lg border border-gray-200 p-8 relative">
             <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-8 pb-4 border-b border-gray-100">
-                    <div class="w-9 h-9 rounded-md bg-brand-50 flex items-center justify-center text-brand-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                    </div>
-                    <div>
-                        <h3 id="blood-spec-title" class="text-lg font-semibold text-gray-900">Spesifikasi Darah</h3>
-                        <p id="blood-spec-subtitle" class="text-xs text-gray-500 font-medium">Tentukan kebutuhan spesifik golongan darah pasien.</p>
-                    </div>
+                <div class="mb-8 pb-4 border-b border-gray-100">
+                    <h3 id="blood-spec-title" class="text-lg font-semibold text-gray-900">Spesifikasi Darah</h3>
+                    <p id="blood-spec-subtitle" class="text-xs text-gray-500 font-medium">Tentukan kebutuhan spesifik golongan darah pasien.</p>
                 </div>
 
                 <div id="blood-type-fields" class="grid grid-cols-2 gap-6 mb-6">
@@ -171,14 +161,9 @@
 
         <!-- Card 2: Location Details -->
         <div class="bg-white rounded-lg border border-gray-200 p-8">
-            <div class="flex items-center gap-3 mb-8 pb-4 border-b border-gray-100">
-                <div class="w-9 h-9 rounded-md bg-sky-50 flex items-center justify-center text-sky-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Informasi Instansi</h3>
-                    <p class="text-xs text-gray-500 font-medium">Lengkapi detail lokasi rumah sakit atau klinik yang membutuhkan.</p>
-                </div>
+            <div class="mb-8 pb-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-900">Informasi Instansi</h3>
+                <p class="text-xs text-gray-500 font-medium">Lengkapi detail lokasi rumah sakit atau klinik yang membutuhkan.</p>
             </div>
 
             <div class="space-y-6">
@@ -217,10 +202,7 @@
     <div class="lg:col-span-5 space-y-6">
         <div class="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col h-[520px]">
             <div class="p-6 border-b border-gray-100 bg-gray-50">
-                <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    Titik Koordinat Lokasi
-                </h3>
+                <h3 class="text-sm font-semibold text-gray-900">Titik Koordinat Lokasi</h3>
                 <p class="text-[11px] text-gray-500 font-medium mt-1 leading-relaxed">
                     Geser pin merah pada peta di bawah ini untuk menentukan titik kordinat pasti rumah sakit. Sistem radius 5KM bergantung pada akurasi titik ini.
                 </p>

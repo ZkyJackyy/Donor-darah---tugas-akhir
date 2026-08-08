@@ -29,16 +29,6 @@ Catatan perbaikan/fitur yang belum dikerjakan. Tandai `[x]` kalau selesai, pinda
   - Buat `change_password_screen.dart` (pola sama seperti `edit_profile_screen.dart`) + route `/profile/change-password` di `main.dart`.
   - Tambah tombol "Ganti Password" di `profile_screen.dart` di bawah tombol "Edit Profil".
 
-> Rencana implementasi detail (file/baris spesifik) sudah disusun lengkap — lihat plan tersimpan di `polymorphic-petting-blum.md`, tinggal dieksekusi kapan siap.
-
-## Mobile — Fitur Baru (butuh diskusi lebih lanjut)
-
-- [ ] **User mengajukan permintaan donor pengganti (untuk keluarga)** — saat ini hanya admin PMI yang bisa membuat `BloodRequest`. Ide: user bisa mengajukan permintaan dari app untuk keluarga yang butuh darah.
-  - Catatan penting: ini berlawanan dengan keputusan scope TA sebelumnya (lihat plan `langkah-dari-pihak-rumah-temporal-kurzweil.md`) yang sengaja memposisikan sistem sebagai modul internal PMI, bukan alat submit permintaan dari keluarga pasien — karena butuh verifikasi administratif (cek BDRS, surat pengantar) yang tidak bisa divalidasi otomatis dari input user awam.
-  - Kalau jadi dikerjakan: JANGAN biarkan pengajuan user langsung jadi `BloodRequest` berstatus `open` yang otomatis trigger broadcast WA (rawan disalahgunakan/spam kuota donor). Perlu status baru `pending_review`, alur approval admin PMI dulu sebelum `DonorFilterService`/WA broadcast jalan.
-  - Perlu: form pengajuan di mobile, endpoint API baru, halaman review/approval di admin panel, migration status baru di `blood_requests`.
-  - Scope cukup besar — perlu dipikirkan/didiskusikan lagi sebelum masuk perencanaan detail.
-
 ## Backend — Perlu diverifikasi
 
 - [ ] **`AdminSettingsController::testFonnte()`** (`app/Http/Controllers/Admin/AdminSettingsController.php`) — endpoint tes koneksi diganti ke `https://api.fonnte.com/device` tapi masih pakai method `POST`. Perlu dites langsung lewat tombol "Tes Koneksi" di panel admin untuk pastikan Fonnte menerima POST di endpoint itu (atau seharusnya GET).
@@ -46,4 +36,7 @@ Catatan perbaikan/fitur yang belum dikerjakan. Tandai `[x]` kalau selesai, pinda
 ---
 
 ## Selesai
-_(kosong — pindahkan item di atas ke sini kalau sudah dikerjakan & diverifikasi)_
+
+- [x] **Pendonor pengganti selalu diarahkan & difilter ke lokasi PMI, bukan rumah sakit pasien** — `DonorFilterService::filterEligibleDonors()` sekarang memusatkan radius Haversine di `config('donorconnect.default_lat'/'default_lng')`, dan `WhatsAppService::sendDonorRequest()` selalu menyebut alamat PMI sebagai tujuan datang (RS pasien cuma info tambahan). Alasan: alur nyata donor pengganti — donor selalu donor di PMI, bukan di RS pasien (butuh alat skrining/lab yang cuma ada di PMI, darah juga wajib diproses dulu sebelum dipakai).
+- [x] **Upload surat rujukan RS wajib saat pengajuan keluarga** — `UserBloodRequestController::store()` sekarang mewajibkan `referral_letter` (foto), disimpan via `Storage::disk('public')`, ditampilkan sebagai thumbnail di halaman admin "Pengajuan Keluarga" (`pending.blade.php`) sebelum admin approve. Menutup celah administratif: sebelumnya admin approve pengajuan keluarga tanpa bukti dokumen sama sekali.
+- [x] **Pesan validasi `patient_name`/`patient_relationship` diterjemahkan** — ditambahkan ke array `attributes` di `lang/id/validation.php`.

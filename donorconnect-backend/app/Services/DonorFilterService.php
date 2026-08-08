@@ -35,8 +35,13 @@ class DonorFilterService
      */
     public function filterEligibleDonors(BloodRequest $request, ?int $wave = 1): Collection
     {
-        $lat = $request->latitude;
-        $lon = $request->longitude;
+        // Radius selalu dipusatkan di lokasi PMI, bukan koordinat permintaan —
+        // pendonor pengganti selalu donor di PMI (butuh alat skrining/lab yang
+        // cuma ada di sana), tidak pernah datang ke rumah sakit pasien. Untuk
+        // permintaan buatan admin yang lokasinya dikosongkan, ini sudah default
+        // ke koordinat PMI juga sehingga perilakunya tidak berubah.
+        $lat = config('donorconnect.default_lat');
+        $lon = config('donorconnect.default_lng');
         $bloodType = $request->blood_type;
         $rhesus = $request->rhesus;
 
@@ -81,6 +86,7 @@ class DonorFilterService
               AND id NOT IN (
                   SELECT user_id FROM donor_candidates WHERE blood_request_id = :existing_request_id
               )
+              AND (:requester_id_check IS NULL OR id != :requester_id)
             HAVING distance_km >= :min_distance AND distance_km <= :max_distance
             ORDER BY distance_km ASC
         ";
@@ -92,6 +98,10 @@ class DonorFilterService
             'blood_type' => $bloodType,
             'rhesus' => $rhesus,
             'existing_request_id' => $request->id,
+            // Pengaju permintaan keluarga tidak boleh jadi kandidat donor
+            // untuk permintaannya sendiri.
+            'requester_id_check' => $request->requested_by_user_id,
+            'requester_id' => $request->requested_by_user_id,
             'cooldown_days' => config('donorconnect.donation_cooldown_days', 56),
             'min_distance' => $distanceRange['min'],
             'max_distance' => $distanceRange['max'],

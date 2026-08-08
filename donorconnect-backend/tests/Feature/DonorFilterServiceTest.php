@@ -17,9 +17,11 @@ class DonorFilterServiceTest extends TestCase
     private DonorFilterService $service;
     private BloodRequest $request;
     
-    // Test base coordinates (Jakarta Monas)
-    private float $baseLat = -6.175392;
-    private float $baseLon = 106.827153;
+    // Radius selalu dipusatkan di lokasi PMI (bukan lokasi request) — pakai
+    // koordinat PMI yang sama dengan config('donorconnect.default_lat'/'default_lng')
+    // sebagai basis, supaya test tetap merepresentasikan perilaku nyata.
+    private float $baseLat;
+    private float $baseLon;
 
     protected function setUp(): void
     {
@@ -32,13 +34,17 @@ class DonorFilterServiceTest extends TestCase
         }
 
         $this->service = new DonorFilterService();
+        $this->baseLat = (float) config('donorconnect.default_lat');
+        $this->baseLon = (float) config('donorconnect.default_lng');
 
-        // Setup a baseline request
+        // Request's own latitude/longitude is deliberately set far away (Jakarta
+        // Monas) from PMI (Padang) to prove the filter ignores it — radius must
+        // still be centered on PMI, not on this value.
         $this->request = BloodRequest::factory()->create([
             'blood_type' => 'O',
             'rhesus' => '+',
-            'latitude' => $this->baseLat,
-            'longitude' => $this->baseLon,
+            'latitude' => -6.175392,
+            'longitude' => 106.827153,
         ]);
     }
 
@@ -169,6 +175,39 @@ class DonorFilterServiceTest extends TestCase
 
         $this->assertCount(1, $results);
         $this->assertEquals('Inside Radius', $results->first()->name);
+    }
+
+    public function test_radius_is_centered_on_pmi_not_on_request_location()
+    {
+        // Donor near PMI (the request's stored lat/lng is Jakarta, ~900km away)
+        User::factory()->create([
+            'name' => 'Near PMI',
+            'birth_date' => '1990-01-01',
+            'weight' => 70,
+            'blood_type' => 'O',
+            'rhesus' => '+',
+            'is_available' => true,
+            'latitude' => $this->baseLat + 0.01,
+            'longitude' => $this->baseLon + 0.01,
+        ]);
+
+        // Donor near the request's own (patient hospital) coordinates — must
+        // NOT be picked up, since donors never travel to the patient's hospital.
+        User::factory()->create([
+            'name' => 'Near Request Location',
+            'birth_date' => '1990-01-01',
+            'weight' => 70,
+            'blood_type' => 'O',
+            'rhesus' => '+',
+            'is_available' => true,
+            'latitude' => -6.175392 + 0.01,
+            'longitude' => 106.827153 + 0.01,
+        ]);
+
+        $results = $this->service->filterEligibleDonors($this->request);
+
+        $this->assertCount(1, $results);
+        $this->assertEquals('Near PMI', $results->first()->name);
     }
 
     public function test_sorting_and_return_structure()

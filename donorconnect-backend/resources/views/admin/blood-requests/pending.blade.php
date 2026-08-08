@@ -18,6 +18,7 @@
                         <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">Pasien</th>
                         <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">Kebutuhan</th>
                         <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">RS Tujuan</th>
+                        <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">Surat Rujukan</th>
                         <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">Diajukan</th>
                         <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200 text-right">Aksi</th>
                     </tr>
@@ -44,6 +45,15 @@
                             <div class="text-[11px] text-gray-400 mt-0.5 line-clamp-1 max-w-[200px]" title="{{ $req->hospital_address }}">{{ $req->hospital_address }}</div>
                         </td>
                         <td class="px-6 py-4">
+                            @if($req->referral_letter_url)
+                            <a href="{{ $req->referral_letter_url }}" target="_blank" rel="noopener">
+                                <img src="{{ $req->referral_letter_url }}" alt="Surat rujukan" class="w-12 h-12 object-cover rounded-md border border-gray-200 hover:opacity-80 transition-opacity">
+                            </a>
+                            @else
+                            <span class="text-[11px] text-gray-400 italic">Tidak ada</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
                             <div class="text-xs font-medium text-gray-700 font-mono">{{ $req->created_at->format('d/m/Y') }}</div>
                             <div class="text-[10px] text-gray-400 mt-0.5 font-mono">{{ $req->created_at->format('H:i') }} WIB</div>
                         </td>
@@ -63,7 +73,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-20 text-center">
+                        <td colspan="7" class="px-6 py-20 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                                     <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

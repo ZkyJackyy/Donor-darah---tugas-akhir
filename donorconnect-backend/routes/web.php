@@ -39,6 +39,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/blood-requests/verify/{id}', [AdminBloodRequestWebController::class, 'verifyWeb'])->name('blood-requests.verify');
     Route::patch('/blood-requests/{id}/status', [AdminBloodRequestWebController::class, 'updateStatus'])->name('blood-requests.update-status');
     Route::get('/blood-requests/{id}/pdf', [AdminBloodRequestWebController::class, 'exportPdf'])->name('blood-requests.pdf');
+    Route::get('/blood-requests/{id}/referral-letter', [AdminBloodRequestWebController::class, 'referralLetter'])->name('blood-requests.referral-letter');
 
     // Verify by Code
     Route::get('/verify', [AdminVerifyController::class, 'index'])->name('verify.index');

@@ -123,6 +123,7 @@ class UserBloodRequestController extends Controller
             'urgency_level' => 'required|in:normal,urgent,critical',
             'deadline' => 'required|date|after:now',
             'notes' => 'nullable|string',
+            'referral_letter' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         if (empty($validated['latitude']) || empty($validated['longitude'])) {
@@ -130,12 +131,19 @@ class UserBloodRequestController extends Controller
             $validated['longitude'] = config('donorconnect.default_lng');
         }
 
+        // Disimpan di disk 'local' (bukan 'public') — surat rujukan berisi info
+        // pasien, tidak boleh punya URL yang bisa diakses publik tanpa login.
+        // Hanya bisa dilihat admin lewat route admin.blood-requests.referral-letter.
+        $referralLetterPath = $request->file('referral_letter')->store('referral-letters', 'local');
+        unset($validated['referral_letter']);
+
         $bloodRequest = BloodRequest::create([
             ...$validated,
             'type' => 'emergency',
             'status' => 'pending_review',
             'requested_by_user_id' => $request->user()->id,
             'admin_id' => null,
+            'referral_letter_path' => $referralLetterPath,
         ]);
 
         return $this->success($bloodRequest, 'Pengajuan berhasil dikirim, menunggu persetujuan admin PMI', 201);

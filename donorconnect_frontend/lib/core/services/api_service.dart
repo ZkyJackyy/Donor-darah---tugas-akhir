@@ -61,13 +61,15 @@ class ApiService {
     return await _dio.put(path, data: data);
   }
 
-  // Multipart POST request wrapper (file upload)
+  // Multipart POST request wrapper (file upload, optionally with extra fields)
   Future<Response> postMultipart(
     String path, {
     required String fieldName,
     required File file,
+    Map<String, dynamic> data = const {},
   }) async {
     final formData = FormData.fromMap({
+      ...data,
       fieldName: await MultipartFile.fromFile(file.path),
     });
     return await _dio.post(path, data: formData);

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart';
@@ -128,6 +129,7 @@ class PermintaanProvider with ChangeNotifier {
     required String hospitalAddress,
     required String urgencyLevel,
     required String deadline,
+    required File referralLetter,
     String? notes,
     double? latitude,
     double? longitude,
@@ -137,20 +139,25 @@ class PermintaanProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.post(ApiConstants.bloodRequests, data: {
-        'blood_type': bloodType,
-        'rhesus': rhesus,
-        'required_bags': requiredBags,
-        'patient_name': patientName,
-        'patient_relationship': patientRelationship,
-        'hospital_name': hospitalName,
-        'hospital_address': hospitalAddress,
-        'urgency_level': urgencyLevel,
-        'deadline': deadline,
-        if (notes != null && notes.isNotEmpty) 'notes': notes,
-        if (latitude != null) 'latitude': latitude,
-        if (longitude != null) 'longitude': longitude,
-      });
+      final response = await _apiService.postMultipart(
+        ApiConstants.bloodRequests,
+        fieldName: 'referral_letter',
+        file: referralLetter,
+        data: {
+          'blood_type': bloodType,
+          'rhesus': rhesus,
+          'required_bags': requiredBags.toString(),
+          'patient_name': patientName,
+          'patient_relationship': patientRelationship,
+          'hospital_name': hospitalName,
+          'hospital_address': hospitalAddress,
+          'urgency_level': urgencyLevel,
+          'deadline': deadline,
+          if (notes != null && notes.isNotEmpty) 'notes': notes,
+          if (latitude != null) 'latitude': latitude.toString(),
+          if (longitude != null) 'longitude': longitude.toString(),
+        },
+      );
 
       if (response.data['status'] == true) {
         return true;

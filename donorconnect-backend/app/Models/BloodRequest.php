@@ -29,12 +29,28 @@ class BloodRequest extends Model
         'patient_name',
         'patient_relationship',
         'rejection_reason',
+        'referral_letter_path',
     ];
 
     protected $casts = [
         'deadline' => 'datetime',
         'event_starts_at' => 'datetime',
     ];
+
+    protected $appends = ['referral_letter_url'];
+    protected $hidden = ['referral_letter_path'];
+
+    /**
+     * URL yang di-generate SELALU mengarah ke route admin ber-autentikasi
+     * (bukan link storage publik langsung) — surat rujukan berisi info pasien,
+     * cuma admin PMI yang login yang boleh melihatnya.
+     */
+    public function getReferralLetterUrlAttribute(): ?string
+    {
+        return $this->referral_letter_path
+            ? route('admin.blood-requests.referral-letter', $this->id)
+            : null;
+    }
 
     public function admin()
     {
