@@ -157,7 +157,7 @@
                                                   'bg-amber-50 text-amber-700 border-amber-100': candidate.status === 'notified',
                                                   'bg-sky-50 text-sky-700 border-sky-100': candidate.status === 'confirmed',
                                                   'bg-emerald-50 text-emerald-700 border-emerald-100': candidate.status === 'verified',
-                                                  'bg-red-50 text-red-700 border-red-100': candidate.status === 'declined' || candidate.status === 'screening_failed',
+                                                  'bg-red-50 text-red-700 border-red-100': candidate.status === 'declined' || candidate.status === 'screening_failed' || candidate.status === 'expired',
                                                   'bg-violet-50 text-violet-700 border-violet-100': candidate.status === 'screening_passed',
                                                   'bg-gray-50 text-gray-500 border-gray-200': candidate.status === 'pending' || candidate.status === 'no_response'
                                               }">

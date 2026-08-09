@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminVerifyController;
 
 use App\Http\Controllers\Admin\AdminBroadcastController;
+use App\Http\Controllers\Admin\AdminAlertController;
 
 Route::get('/', function () {
     return redirect()->route('admin.login');
@@ -58,6 +59,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Broadcast
     Route::get('/broadcast', [AdminBroadcastController::class, 'index'])->name('broadcast.index');
+
+    // Alerts (peringatan sistem, mis. seluruh kandidat menolak)
+    Route::get('/alerts', [AdminAlertController::class, 'index'])->name('alerts.index');
+    Route::post('/alerts/{alert}/read', [AdminAlertController::class, 'markRead'])->name('alerts.read');
+    Route::post('/alerts/read-all', [AdminAlertController::class, 'markAllRead'])->name('alerts.read-all');
 });
 
 // Admin AJAX Polling Routes (using Web middleware for seamless session auth bypassing Sanctum headers)

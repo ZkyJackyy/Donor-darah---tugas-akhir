@@ -212,6 +212,24 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
       );
     }
 
+    if (status == 'expired') {
+      return Container(
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+        ),
+        child: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Kode verifikasi Anda sudah kadaluarsa karena tidak digunakan tepat waktu. Silakan tunggu gelombang notifikasi berikutnya jika masih ingin mendonor.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.warning),
+          ),
+        ),
+      );
+    }
+
     if (status == 'verified') {
       final verifiedAtFormatted = formatIndonesianDate(userInfo['verified_at'] as String?);
 

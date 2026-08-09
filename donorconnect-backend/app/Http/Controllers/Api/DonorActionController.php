@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfirmCandidateRequest;
 use App\Http\Requests\ScreeningRequest;
 use App\Http\Resources\DonorHistoryResource;
+use App\Models\AdminAlert;
 use App\Models\DonorCandidate;
 use App\Models\DonorHistory;
 use App\Models\DonorScreening;
 use App\Models\BloodRequest;
 use App\Traits\ApiResponse;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
@@ -121,7 +123,20 @@ class DonorActionController extends Controller
 
             if ($pendingCount === 0 && $confirmedCount === 0 && $declinedCount > 0) {
                 $candidate->load('bloodRequest');
-                app(\App\Services\WhatsAppService::class)->notifyAdminAllDeclined($candidate->bloodRequest);
+
+                // Two donors declining near-simultaneously can both reach this
+                // point before either insert commits — the unique index on
+                // (blood_request_id, type) makes the second attempt fail
+                // cleanly instead of producing a duplicate alert.
+                try {
+                    AdminAlert::create([
+                        'type' => 'all_declined',
+                        'message' => "Seluruh kandidat pendonor untuk permintaan #{$candidate->blood_request_id} di {$candidate->bloodRequest->hospital_name} telah menolak. Mohon segera melakukan tindak lanjut atau verifikasi manual.",
+                        'blood_request_id' => $candidate->blood_request_id,
+                    ]);
+                } catch (UniqueConstraintViolationException $e) {
+                    // Already alerted for this request — nothing to do.
+                }
             }
         }
 

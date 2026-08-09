@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\AdminAlert;
 use App\Models\BloodRequest;
 use App\Models\DonorCandidate;
 use App\Models\User;
@@ -9,6 +10,7 @@ use App\Services\DonorFilterService;
 use App\Services\WhatsAppService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -62,6 +64,7 @@ class WaveChainJob implements ShouldQueue
 
         // Filter donor untuk gelombang ini
         $eligibleDonors = $filterService->filterEligibleDonors($request, $this->currentWave);
+        $notifiedCount = 0;
 
         if ($eligibleDonors->isEmpty()) {
             Log::info("WaveChain: Tidak ada donor eligible di gelombang {$this->currentWave} untuk request #{$this->bloodRequestId}");
@@ -90,9 +93,31 @@ class WaveChainJob implements ShouldQueue
 
             if ($candidates->isNotEmpty()) {
                 $waService->notifyAllCandidates($candidates, $request, $this->currentWave);
-                Log::info("WaveChain: Gelombang {$this->currentWave} → {$candidates->count()} notifikasi dikirim untuk request #{$this->bloodRequestId}");
+                $notifiedCount = $candidates->count();
+                Log::info("WaveChain: Gelombang {$this->currentWave} → {$notifiedCount} notifikasi dikirim untuk request #{$this->bloodRequestId}");
             } else {
                 Log::info("WaveChain: Gelombang {$this->currentWave} untuk request #{$this->bloodRequestId} — semua kandidat sudah pernah dinotifikasi, skip.");
+            }
+        }
+
+        // Wave 1 dipicu manual oleh admin (tombol "Kirim Notifikasi WA") dan
+        // langsung dapat flash message di halaman yang sama — hanya wave 2/3
+        // yang jalan sendiri di background lewat scheduler/delay tanpa ada
+        // admin yang menunggu, jadi cuma wave itu yang perlu dicatat di sini
+        // supaya admin tahu itu sudah terjadi tanpa harus buka halaman detail.
+        if ($this->currentWave > 1) {
+            $message = $notifiedCount > 0
+                ? "Gelombang {$this->currentWave} untuk permintaan #{$this->bloodRequestId} telah dikirim ke {$notifiedCount} pendonor baru."
+                : "Gelombang {$this->currentWave} untuk permintaan #{$this->bloodRequestId} sudah berjalan, tapi tidak ada pendonor baru yang eligible di radius ini.";
+
+            try {
+                AdminAlert::create([
+                    'type' => "wave_{$this->currentWave}_sent_{$this->bloodRequestId}",
+                    'message' => $message,
+                    'blood_request_id' => $this->bloodRequestId,
+                ]);
+            } catch (UniqueConstraintViolationException $e) {
+                // Already alerted for this wave/request — nothing to do.
             }
         }
 

@@ -100,16 +100,4 @@ class WhatsAppService
             SendDonorNotificationJob::dispatch($donor, $message, $request->id);
         }
     }
-
-    public function notifyAdminAllDeclined(BloodRequest $request): void
-    {
-        $admins = User::where('role', 'admin')->get();
-        foreach($admins as $admin) {
-            $message = "*Peringatan: Seluruh Kandidat Menolak*\n\n"
-             . "Seluruh kandidat pendonor untuk permintaan #{$request->id} di {$request->hospital_name} telah menolak.\n\n"
-             . "Mohon segera melakukan tindak lanjut atau verifikasi manual.";
-
-            SendDonorNotificationJob::dispatch($admin, $message, $request->id);
-        }
-    }
 }
