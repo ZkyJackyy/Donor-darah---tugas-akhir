@@ -121,6 +121,25 @@ class AdminBloodRequestWebController extends Controller
             $validated['longitude'] = config('donorconnect.default_lng');
         }
 
+        // Guard against double-submit (double-click on a slow connection, or
+        // a browser retry) producing two identical requests a few seconds
+        // apart — same admin, same core fields, created moments ago.
+        $duplicate = BloodRequest::where('admin_id', auth()->id())
+            ->where('hospital_name', $validated['hospital_name'])
+            ->where('blood_type', $validated['blood_type'] ?? null)
+            ->where('rhesus', $validated['rhesus'] ?? null)
+            ->where('required_bags', $validated['required_bags'] ?? null)
+            ->where('urgency_level', $validated['urgency_level'])
+            ->where('type', $validated['type'])
+            ->where('created_at', '>=', now()->subSeconds(10))
+            ->latest()
+            ->first();
+
+        if ($duplicate) {
+            return redirect()->route('admin.blood-requests.show', $duplicate->id)
+                ->with('success', 'Blood request created successfully at UDD PMI Kota Padang!');
+        }
+
         $bloodRequest = BloodRequest::create([
             ...$validated,
             'admin_id' => auth()->id(),

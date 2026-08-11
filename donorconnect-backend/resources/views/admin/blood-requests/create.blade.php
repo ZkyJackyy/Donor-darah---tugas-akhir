@@ -49,7 +49,7 @@
 </div>
 @endif
 
-<form action="{{ route('admin.blood-requests.store') }}" method="POST" class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+<form id="create-blood-request-form" action="{{ route('admin.blood-requests.store') }}" method="POST" class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
     @csrf
     
     <!-- Left Column: Form Details -->
@@ -220,7 +220,7 @@
                 <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', config('donorconnect.default_lat')) }}">
                 <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', config('donorconnect.default_lng')) }}">
 
-                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 rounded-md text-sm uppercase tracking-wide transition-colors flex items-center justify-center gap-2">
+                <button type="submit" id="submit-btn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 rounded-md text-sm uppercase tracking-wide transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                     <span id="submit-btn-text">Publikasikan Permintaan</span>
                 </button>
@@ -404,6 +404,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     hospitalNameInput.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') hideSuggestions();
+    });
+
+    // Cegah submit dobel (mis. tombol diklik dua kali karena terasa lambat)
+    // yang bisa bikin dua BloodRequest identik — disable begitu form submit
+    // diterima, jangan block submit itu sendiri.
+    const createForm = document.getElementById('create-blood-request-form');
+    const submitBtn = document.getElementById('submit-btn');
+    createForm.addEventListener('submit', function () {
+        submitBtn.disabled = true;
+        submitBtnText.textContent = 'Menyimpan...';
     });
 });
 </script>

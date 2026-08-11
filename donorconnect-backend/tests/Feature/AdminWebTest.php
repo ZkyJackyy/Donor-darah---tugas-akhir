@@ -100,6 +100,34 @@ class AdminWebTest extends TestCase
         ]);
     }
 
+    public function test_double_submit_does_not_create_duplicate_blood_request()
+    {
+        $this->actingAs($this->admin);
+
+        $payload = [
+            'type' => 'emergency',
+            'blood_type' => 'AB',
+            'rhesus' => '+',
+            'required_bags' => 3,
+            'urgency_level' => 'critical',
+            'hospital_name' => 'RS Cipto',
+            'hospital_address' => 'Jakarta',
+            'latitude' => -6.12345,
+            'longitude' => 106.12345,
+            'deadline' => now()->addDays(3)->format('Y-m-d H:i:s'),
+            'notes' => 'Emergency surgery',
+        ];
+
+        $first = $this->post('/admin/blood-requests', $payload);
+        $second = $this->post('/admin/blood-requests', $payload);
+
+        $first->assertRedirect();
+        $second->assertRedirect();
+        $this->assertEquals($first->headers->get('Location'), $second->headers->get('Location'));
+
+        $this->assertDatabaseCount('blood_requests', 1);
+    }
+
     public function test_admin_can_view_donor_directory()
     {
         $this->actingAs($this->admin);
