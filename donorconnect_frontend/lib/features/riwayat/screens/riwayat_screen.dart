@@ -34,11 +34,23 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : provider.error != null
-              ? Center(child: Text(provider.error!))
-              : provider.riwayatList.isEmpty
-                  ? const Center(child: Text('Belum ada riwayat donor.'))
-                  : ListView.builder(
+          : RefreshIndicator(
+              onRefresh: () => context.read<RiwayatProvider>().fetchRiwayatList(),
+              child: provider.error != null
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [Center(child: Text(provider.error!))],
+                    )
+                  : provider.riwayatList.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: const [
+                            SizedBox(height: 200),
+                            Center(child: Text('Belum ada riwayat donor.')),
+                          ],
+                        )
+                      : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(16),
                       itemCount: provider.riwayatList.length,
                       itemBuilder: (context, index) {
@@ -120,6 +132,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                         );
                       },
                     ),
+            ),
     );
   }
 }

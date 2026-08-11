@@ -368,8 +368,20 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : item == null
-              ? Center(child: Text(provider.error ?? 'Data tidak ditemukan'))
-              : SingleChildScrollView(
+              ? RefreshIndicator(
+                  onRefresh: () => context.read<PermintaanProvider>().fetchPermintaanDetail(widget.requestId),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      const SizedBox(height: 200),
+                      Center(child: Text(provider.error ?? 'Data tidak ditemukan')),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                onRefresh: () => context.read<PermintaanProvider>().fetchPermintaanDetail(widget.requestId),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -549,6 +561,7 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
                     ],
                   ),
                 ),
+              ),
     );
   }
 }

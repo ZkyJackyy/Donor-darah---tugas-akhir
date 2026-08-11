@@ -72,9 +72,18 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : provider.permintaanList.isEmpty
-              ? const Center(child: Text('Tidak ada permintaan saat ini'))
-              : ListView.builder(
+          : RefreshIndicator(
+              onRefresh: () => context.read<PermintaanProvider>().fetchPermintaanList(),
+              child: provider.permintaanList.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        SizedBox(height: 200),
+                        Center(child: Text('Tidak ada permintaan saat ini')),
+                      ],
+                    )
+                  : ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   itemCount: sortedList.length,
                   itemBuilder: (context, index) {
@@ -229,6 +238,7 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
                     return isDone ? Opacity(opacity: 0.7, child: card) : card;
                 },
                 ),
+            ),
     );
   }
 }

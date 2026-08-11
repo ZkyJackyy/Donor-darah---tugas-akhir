@@ -55,7 +55,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: user == null
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+          : RefreshIndicator(
+              onRefresh: () => context.read<AuthProvider>().getProfile(),
+              child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -134,6 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 100),
                 ],
+              ),
               ),
             ),
     );

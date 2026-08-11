@@ -56,58 +56,66 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : provider.error != null
-              ? Center(child: Text(provider.error!))
-              : provider.notifications.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.notifications_off, size: 64, color: AppColors.textSecondary),
-                          SizedBox(height: 16),
-                          Text('Belum ada notifikasi', style: TextStyle(color: AppColors.textSecondary)),
-                        ],
-                      ),
+          : RefreshIndicator(
+              onRefresh: () => context.read<NotifikasiProvider>().fetchNotifications(),
+              child: provider.error != null
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [Center(child: Text(provider.error!))],
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: provider.notifications.length,
-                      itemBuilder: (context, index) {
-                        final item = provider.notifications[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(_statusIcon(item.status), color: _statusColor(item.status), size: 24),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.message,
-                                        style: const TextStyle(fontSize: 14),
-                                        maxLines: 4,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(item.createdAt.toLocal()),
-                                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                  : provider.notifications.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: const [
+                            SizedBox(height: 120),
+                            Icon(Icons.notifications_off, size: 64, color: AppColors.textSecondary),
+                            SizedBox(height: 16),
+                            Center(
+                              child: Text('Belum ada notifikasi', style: TextStyle(color: AppColors.textSecondary)),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          ],
+                        )
+                      : ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          itemCount: provider.notifications.length,
+                          itemBuilder: (context, index) {
+                            final item = provider.notifications[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(_statusIcon(item.status), color: _statusColor(item.status), size: 24),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.message,
+                                            style: const TextStyle(fontSize: 14),
+                                            maxLines: 4,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(item.createdAt.toLocal()),
+                                            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: -1,
         type: BottomNavigationBarType.fixed,
