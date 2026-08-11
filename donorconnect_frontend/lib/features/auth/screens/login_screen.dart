@@ -68,10 +68,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(
-                    Icons.bloodtype,
-                    size: 80,
-                    color: AppColors.primary,
+                  Image.asset(
+                    'assets/images/logo_apk.png',
+                    height: 80,
                   ),
                   const SizedBox(height: 24),
                   const Text(

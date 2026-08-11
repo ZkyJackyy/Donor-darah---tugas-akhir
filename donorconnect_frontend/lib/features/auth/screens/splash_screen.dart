@@ -46,15 +46,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.bloodtype, size: 100, color: AppColors.primary),
-            SizedBox(height: 24),
-            Text(
+            Image.asset('assets/images/logo_apk.png', height: 100),
+            const SizedBox(height: 24),
+            const Text(
               'Sahabat Donor',
               style: TextStyle(
                 fontSize: 28,
@@ -62,8 +62,8 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: AppColors.primary,
               ),
             ),
-            SizedBox(height: 48),
-            CircularProgressIndicator(color: AppColors.primary),
+            const SizedBox(height: 48),
+            const CircularProgressIndicator(color: AppColors.primary),
           ],
         ),
       ),

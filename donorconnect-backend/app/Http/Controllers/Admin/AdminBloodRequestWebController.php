@@ -10,7 +10,10 @@ use App\Jobs\WaveChainJob;
 use App\Services\DonorFilterService;
 use App\Services\WhatsAppService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -121,30 +124,70 @@ class AdminBloodRequestWebController extends Controller
             $validated['longitude'] = config('donorconnect.default_lng');
         }
 
-        // Guard against double-submit (double-click on a slow connection, or
-        // a browser retry) producing two identical requests a few seconds
-        // apart — same admin, same core fields, created moments ago.
-        $duplicate = BloodRequest::where('admin_id', auth()->id())
-            ->where('hospital_name', $validated['hospital_name'])
-            ->where('blood_type', $validated['blood_type'] ?? null)
-            ->where('rhesus', $validated['rhesus'] ?? null)
-            ->where('required_bags', $validated['required_bags'] ?? null)
-            ->where('urgency_level', $validated['urgency_level'])
-            ->where('type', $validated['type'])
-            ->where('created_at', '>=', now()->subSeconds(10))
-            ->latest()
-            ->first();
+        // Guard against double-submit (double-click on a slow connection, two
+        // open tabs, or a browser retry) producing two identical requests a
+        // few seconds apart — same admin, same fields, created moments ago.
+        // The check-then-create runs inside an atomic cache lock keyed on
+        // every field that distinguishes one request from another, so two
+        // concurrent submissions of the *same* request serialize instead of
+        // both racing past the SELECT before either INSERT commits, while
+        // two genuinely different requests (e.g. different deadline/notes)
+        // never share a lock key and are never collapsed together.
+        //
+        // deadline/event_starts_at come from <input type="datetime-local">
+        // as "2026-08-14T15:30", but BloodRequest casts them to `datetime`
+        // and stores "2026-08-14 15:30:00". Normalize to that same DB
+        // format here so the WHERE comparison below (and the lock key) can
+        // actually match the row Eloquent is about to write.
+        $duplicateWindowSeconds = config('donorconnect.blood_request_duplicate_window_seconds');
 
-        if ($duplicate) {
-            return redirect()->route('admin.blood-requests.show', $duplicate->id)
-                ->with('success', 'Blood request created successfully at UDD PMI Kota Padang!');
+        $deadlineForMatch = Carbon::parse($validated['deadline'])->format('Y-m-d H:i:s');
+        $eventStartsAtForMatch = !empty($validated['event_starts_at'])
+            ? Carbon::parse($validated['event_starts_at'])->format('Y-m-d H:i:s')
+            : null;
+
+        $duplicateKey = 'blood_request_duplicate:' . auth()->id() . ':' . md5(implode("\x1f", [
+            $validated['hospital_name'],
+            $validated['blood_type'] ?? '',
+            $validated['rhesus'] ?? '',
+            $validated['required_bags'] ?? '',
+            $validated['urgency_level'],
+            $validated['type'],
+            $deadlineForMatch,
+            $eventStartsAtForMatch ?? '',
+            $validated['notes'] ?? '',
+        ]));
+
+        try {
+            $bloodRequest = Cache::lock($duplicateKey, 15)->block(5, function () use ($validated, $deadlineForMatch, $eventStartsAtForMatch, $duplicateWindowSeconds) {
+                $duplicate = BloodRequest::where('admin_id', auth()->id())
+                    ->where('hospital_name', $validated['hospital_name'])
+                    ->where('blood_type', $validated['blood_type'] ?? null)
+                    ->where('rhesus', $validated['rhesus'] ?? null)
+                    ->where('required_bags', $validated['required_bags'] ?? null)
+                    ->where('urgency_level', $validated['urgency_level'])
+                    ->where('type', $validated['type'])
+                    ->where('deadline', $deadlineForMatch)
+                    ->where('event_starts_at', $eventStartsAtForMatch)
+                    ->where('notes', $validated['notes'] ?? null)
+                    ->where('created_at', '>=', now()->subSeconds($duplicateWindowSeconds))
+                    ->latest()
+                    ->first();
+
+                if ($duplicate) {
+                    return $duplicate;
+                }
+
+                return BloodRequest::create([
+                    ...$validated,
+                    'admin_id' => auth()->id(),
+                    'status' => 'open'
+                ]);
+            });
+        } catch (LockTimeoutException) {
+            return back()->withInput()
+                ->with('error', 'Permintaan sedang diproses, silakan coba lagi.');
         }
-
-        $bloodRequest = BloodRequest::create([
-            ...$validated,
-            'admin_id' => auth()->id(),
-            'status' => 'open'
-        ]);
 
         // "On save: immediately run filter preview"
         return redirect()->route('admin.blood-requests.show', $bloodRequest->id)

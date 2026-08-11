@@ -64,6 +64,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Blood Request Double-Submit Guard
+    |--------------------------------------------------------------------------
+    |
+    | Jendela waktu (detik) untuk menganggap dua submission form permintaan
+    | darah yang identik sebagai double-submit, bukan permintaan baru.
+    |
+    */
+
+    'blood_request_duplicate_window_seconds' => (int) env('DONORCONNECT_BLOOD_REQUEST_DUPLICATE_WINDOW_SECONDS', 10),
+
+    /*
+    |--------------------------------------------------------------------------
+    | User Blood Request Submission Guard
+    |--------------------------------------------------------------------------
+    |
+    | Jendela waktu (detik) untuk menganggap dua pengajuan donor pengganti
+    | dari user (mobile app) yang identik sebagai retry, bukan pengajuan
+    | baru. Lebih lama dari guard admin karena retry di sini dipicu oleh
+    | koneksi buruk — jeda sampai user menekan ulang tombol kirim bisa lebih
+    | lama daripada double-click di panel admin.
+    |
+    */
+
+    'user_blood_request_duplicate_window_seconds' => (int) env('DONORCONNECT_USER_BLOOD_REQUEST_DUPLICATE_WINDOW_SECONDS', 60),
+
+    /*
+    |--------------------------------------------------------------------------
     | Confirmation Expiry
     |--------------------------------------------------------------------------
     |

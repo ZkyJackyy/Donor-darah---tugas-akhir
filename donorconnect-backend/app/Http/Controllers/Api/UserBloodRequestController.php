@@ -7,7 +7,10 @@ use App\Models\BloodRequest;
 use App\Models\DonorCandidate;
 use App\Models\DonorHistory;
 use App\Traits\ApiResponse;
+use Carbon\Carbon;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class UserBloodRequestController extends Controller
 {
@@ -131,20 +134,72 @@ class UserBloodRequestController extends Controller
             $validated['longitude'] = config('donorconnect.default_lng');
         }
 
-        // Disimpan di disk 'local' (bukan 'public') — surat rujukan berisi info
-        // pasien, tidak boleh punya URL yang bisa diakses publik tanpa login.
-        // Hanya bisa dilihat admin lewat route admin.blood-requests.referral-letter.
-        $referralLetterPath = $request->file('referral_letter')->store('referral-letters', 'local');
-        unset($validated['referral_letter']);
+        $userId = $request->user()->id;
 
-        $bloodRequest = BloodRequest::create([
-            ...$validated,
-            'type' => 'emergency',
-            'status' => 'pending_review',
-            'requested_by_user_id' => $request->user()->id,
-            'admin_id' => null,
-            'referral_letter_path' => $referralLetterPath,
-        ]);
+        // Guard against the request actually succeeding server-side while a
+        // flaky mobile connection drops the response before it reaches the
+        // app — the app shows an error and the user taps "Kirim" again,
+        // otherwise producing two pending_review submissions for the same
+        // patient. Check-then-create runs inside an atomic cache lock keyed
+        // on every field that distinguishes one submission from another, so
+        // a genuine retry serializes behind the in-flight/just-committed
+        // original instead of racing past the SELECT before it commits.
+        $deadlineForMatch = Carbon::parse($validated['deadline'])->format('Y-m-d H:i:s');
+
+        $duplicateKey = 'user_blood_request_duplicate:' . $userId . ':' . md5(implode("\x1f", [
+            $validated['blood_type'],
+            $validated['rhesus'],
+            $validated['required_bags'],
+            $validated['patient_name'],
+            $validated['patient_relationship'],
+            $validated['hospital_name'],
+            $validated['hospital_address'],
+            $validated['urgency_level'],
+            $deadlineForMatch,
+            $validated['notes'] ?? '',
+        ]));
+
+        $duplicateWindowSeconds = config('donorconnect.user_blood_request_duplicate_window_seconds');
+
+        try {
+            $bloodRequest = Cache::lock($duplicateKey, 15)->block(5, function () use ($request, $validated, $userId, $deadlineForMatch, $duplicateWindowSeconds) {
+                $duplicate = BloodRequest::where('requested_by_user_id', $userId)
+                    ->where('blood_type', $validated['blood_type'])
+                    ->where('rhesus', $validated['rhesus'])
+                    ->where('required_bags', $validated['required_bags'])
+                    ->where('patient_name', $validated['patient_name'])
+                    ->where('patient_relationship', $validated['patient_relationship'])
+                    ->where('hospital_name', $validated['hospital_name'])
+                    ->where('hospital_address', $validated['hospital_address'])
+                    ->where('urgency_level', $validated['urgency_level'])
+                    ->where('deadline', $deadlineForMatch)
+                    ->where('notes', $validated['notes'] ?? null)
+                    ->where('created_at', '>=', now()->subSeconds($duplicateWindowSeconds))
+                    ->latest()
+                    ->first();
+
+                if ($duplicate) {
+                    return $duplicate;
+                }
+
+                // Disimpan di disk 'local' (bukan 'public') — surat rujukan berisi
+                // info pasien, tidak boleh punya URL yang bisa diakses publik
+                // tanpa login. Hanya bisa dilihat admin lewat route
+                // admin.blood-requests.referral-letter.
+                $referralLetterPath = $request->file('referral_letter')->store('referral-letters', 'local');
+
+                return BloodRequest::create([
+                    ...collect($validated)->except('referral_letter')->all(),
+                    'type' => 'emergency',
+                    'status' => 'pending_review',
+                    'requested_by_user_id' => $userId,
+                    'admin_id' => null,
+                    'referral_letter_path' => $referralLetterPath,
+                ]);
+            });
+        } catch (LockTimeoutException) {
+            return $this->error('Pengajuan sedang diproses, silakan coba lagi.', 429);
+        }
 
         return $this->success($bloodRequest, 'Pengajuan berhasil dikirim, menunggu persetujuan admin PMI', 201);
     }

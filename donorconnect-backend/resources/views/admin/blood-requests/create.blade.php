@@ -415,6 +415,18 @@ document.addEventListener("DOMContentLoaded", function () {
         submitBtn.disabled = true;
         submitBtnText.textContent = 'Menyimpan...';
     });
+
+    // Saat halaman dipulihkan dari bfcache (mis. admin menekan tombol Back
+    // setelah submit sukses), browser mengembalikan DOM persis seperti saat
+    // unload — tombol masih disabled & teksnya masih "Menyimpan...". Pulihkan
+    // supaya admin bisa submit ulang tanpa harus reload manual.
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) {
+            submitBtn.disabled = false;
+            const checkedType = createForm.querySelector('input[name="type"]:checked');
+            applyTypeUI(checkedType ? checkedType.value : 'emergency');
+        }
+    });
 });
 </script>
 @endpush

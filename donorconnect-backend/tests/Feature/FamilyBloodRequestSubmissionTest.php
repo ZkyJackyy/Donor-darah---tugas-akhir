@@ -101,6 +101,53 @@ class FamilyBloodRequestSubmissionTest extends TestCase
             ->assertStatus(200);
     }
 
+    public function test_retrying_after_a_dropped_response_does_not_create_duplicate_submission()
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+
+        $payload = $this->validPayload();
+        $payload['referral_letter'] = UploadedFile::fake()->image('surat-rujukan.jpg');
+
+        $first = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/user/blood-requests', $payload);
+
+        // Simulates the app never seeing the first response (connection
+        // drops after the server already committed) and the user tapping
+        // "Kirim Pengajuan" again with the same form data.
+        $payload['referral_letter'] = UploadedFile::fake()->image('surat-rujukan.jpg');
+        $second = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/user/blood-requests', $payload);
+
+        $first->assertStatus(201);
+        $second->assertStatus(201);
+        $this->assertEquals($first->json('data.id'), $second->json('data.id'));
+
+        $this->assertDatabaseCount('blood_requests', 1);
+    }
+
+    public function test_distinct_family_submissions_within_duplicate_window_are_not_collapsed()
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+
+        $payload = $this->validPayload(['patient_name' => 'Budi Santoso']);
+        $payload['referral_letter'] = UploadedFile::fake()->image('surat-rujukan.jpg');
+        $first = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/user/blood-requests', $payload);
+
+        $payload = $this->validPayload(['patient_name' => 'Siti Aminah']);
+        $payload['referral_letter'] = UploadedFile::fake()->image('surat-rujukan-2.jpg');
+        $second = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/user/blood-requests', $payload);
+
+        $first->assertStatus(201);
+        $second->assertStatus(201);
+        $this->assertNotEquals($first->json('data.id'), $second->json('data.id'));
+
+        $this->assertDatabaseCount('blood_requests', 2);
+    }
+
     public function test_family_submission_rejects_non_image_referral_letter()
     {
         Storage::fake('local');
