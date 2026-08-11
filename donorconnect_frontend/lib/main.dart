@@ -274,6 +274,7 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
           scaffoldBackgroundColor: AppColors.background,
+          cardTheme: const CardThemeData(color: Colors.white),
           textTheme: GoogleFonts.interTextTheme(
             Theme.of(context).textTheme,
           ),

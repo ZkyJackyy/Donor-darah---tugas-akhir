@@ -132,18 +132,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     text: 'Edit Profil',
                     onPressed: () => context.push('/profile/edit'),
                   ),
-                  const SizedBox(height: 12),
-                  CustomButton(
-                    text: 'Ajukan Permintaan Darah',
-                    isOutlined: true,
-                    onPressed: () => context.push('/permintaan/ajukan'),
-                  ),
-                  const SizedBox(height: 12),
-                  CustomButton(
-                    text: 'Permintaan Saya',
-                    isOutlined: true,
-                    onPressed: () => context.push('/permintaan/saya'),
-                  ),
                   const SizedBox(height: 100),
                 ],
               ),

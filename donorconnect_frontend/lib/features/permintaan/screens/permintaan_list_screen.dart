@@ -265,10 +265,38 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                   ),
                 ),
                 
+                // Quick Actions (Ajukan Permintaan Darah / Permintaan Saya)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildQuickActionCard(
+                            context,
+                            icon: Icons.add_circle_outline,
+                            label: 'Ajukan Permintaan Darah',
+                            onTap: () => context.push('/permintaan/ajukan'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildQuickActionCard(
+                            context,
+                            icon: Icons.assignment_outlined,
+                            label: 'Permintaan Saya',
+                            onTap: () => context.push('/permintaan/saya'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 // Section Title
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
                     child: Wrap(
                       alignment: WrapAlignment.spaceBetween,
                       crossAxisAlignment: WrapCrossAlignment.center,
@@ -449,6 +477,54 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
               ],
             ),
           ),
+    );
+  }
+
+  Widget _buildQuickActionCard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: AppColors.primary, size: 24),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
