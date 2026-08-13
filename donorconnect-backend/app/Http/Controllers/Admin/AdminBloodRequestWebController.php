@@ -71,12 +71,12 @@ class AdminBloodRequestWebController extends Controller
         }
 
         $bloodRequest->update([
-            'status' => 'open',
+            'status' => 'approved',
             'admin_id' => auth()->id(),
         ]);
 
         return redirect()->route('admin.blood-requests.show', $bloodRequest->id)
-            ->with('success', 'Pengajuan disetujui dan masuk alur pencarian pendonor.');
+            ->with('success', 'Pengajuan disetujui — pilih lanjut cari pendonor atau tandai terpenuhi dari stok.');
     }
 
     public function reject($id, Request $request)
@@ -267,8 +267,12 @@ class AdminBloodRequestWebController extends Controller
     {
         $bloodRequest = BloodRequest::findOrFail($id);
 
-        if ($bloodRequest->status !== 'open') {
+        if (!in_array($bloodRequest->status, ['approved', 'open'], true)) {
             return back()->with('error', "Permintaan ini berstatus '{$bloodRequest->status}' — tidak bisa mengirim broadcast WA lagi.");
+        }
+
+        if ($bloodRequest->status === 'approved') {
+            $bloodRequest->update(['status' => 'open']);
         }
 
         if ($bloodRequest->isEvent()) {
@@ -383,6 +387,14 @@ class AdminBloodRequestWebController extends Controller
         $validated = $request->validate([
             'status' => 'required|in:fulfilled,cancelled',
         ]);
+
+        if (!in_array($bloodRequest->status, ['approved', 'open'], true)) {
+            $error = "Permintaan ini berstatus '{$bloodRequest->status}' — status tidak bisa diubah lagi.";
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $error], 400);
+            }
+            return back()->with('error', $error);
+        }
 
         $oldStatus = $bloodRequest->status;
         $bloodRequest->update(['status' => $validated['status']]);

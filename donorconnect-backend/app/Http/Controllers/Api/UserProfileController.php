@@ -35,14 +35,24 @@ class UserProfileController extends Controller
         $user = $request->user();
         $user->fill($validated);
 
-        if ($user->weight && $user->weight < 45) {
+        $isUnderweight = $user->weight && $user->weight < 45;
+        $isUnderage = $user->birth_date && \Carbon\Carbon::parse($user->birth_date)->age < 17;
+
+        if ($isUnderweight || $isUnderage) {
+            // Hard lock: overrides any explicit is_available=true in this
+            // same request, since medical eligibility always wins.
             $user->is_available = false;
-        }
-        
-        if ($user->birth_date) {
-            $age = \Carbon\Carbon::parse($user->birth_date)->age;
-            if ($age < 17) {
-                $user->is_available = false;
+        } elseif (!array_key_exists('is_available', $validated)) {
+            // Weight/age are valid again (e.g. user corrected a bad input
+            // that previously locked them out) — re-open self-service,
+            // but only if they didn't explicitly set is_available in this
+            // same call, and only if they're not still in post-donation
+            // cooldown (that lock is managed separately by UnlockDonorsJob).
+            $isInCooldown = $user->last_donor_date
+                && \Carbon\Carbon::parse($user->last_donor_date)->diffInDays(now()) < config('donorconnect.donation_cooldown_days', 56);
+
+            if (!$isInCooldown) {
+                $user->is_available = true;
             }
         }
 

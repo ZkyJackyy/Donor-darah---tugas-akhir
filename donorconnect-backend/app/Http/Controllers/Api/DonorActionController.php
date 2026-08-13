@@ -131,7 +131,7 @@ class DonorActionController extends Controller
                 try {
                     AdminAlert::create([
                         'type' => 'all_declined',
-                        'message' => "Seluruh kandidat pendonor untuk permintaan #{$candidate->blood_request_id} di {$candidate->bloodRequest->hospital_name} telah menolak. Mohon segera melakukan tindak lanjut atau verifikasi manual.",
+                        'message' => "Seluruh kandidat pendonor untuk permintaan darah di {$candidate->bloodRequest->hospital_name} telah menolak. Mohon segera melakukan tindak lanjut atau verifikasi manual.",
                         'blood_request_id' => $candidate->blood_request_id,
                     ]);
                 } catch (UniqueConstraintViolationException $e) {

@@ -14,7 +14,7 @@ class AdminDashboardController extends Controller
     {
         // Compute stats for admin dash
         $totalDonors = User::where('role', 'user')->count();
-        $activeRequestsCount = BloodRequest::where('status', 'open')->count();
+        $activeRequestsCount = BloodRequest::whereIn('status', ['approved', 'open'])->count();
         $donorsTodayCount = DonorHistory::whereDate('donor_date', Carbon::today())->count();
 
         // Data for Charts
@@ -74,7 +74,7 @@ class AdminDashboardController extends Controller
     public function pollStats()
     {
         return response()->json([
-            'active_requests' => BloodRequest::where('status', 'open')->count(),
+            'active_requests' => BloodRequest::whereIn('status', ['approved', 'open'])->count(),
             'total_donors' => User::where('role', 'user')->count(),
             'total_donations' => DonorHistory::count(),
             'total_hospitals' => BloodRequest::distinct('hospital_name')->count('hospital_name'),

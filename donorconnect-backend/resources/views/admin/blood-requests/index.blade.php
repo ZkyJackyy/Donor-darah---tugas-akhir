@@ -104,6 +104,12 @@
                                   <div class="bg-sky-500 h-1.5 rounded-full" style="width: 100%"></div>
                                 </div>
                                 <div class="text-[9px] font-medium text-gray-400 uppercase tracking-wide mt-1 text-right">Kebutuhan Terpenuhi</div>
+                            @elseif($req->status === 'approved')
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                    <span class="text-xs font-semibold text-gray-700 uppercase tracking-wide">Disetujui</span>
+                                </div>
+                                <div class="text-[9px] font-medium text-gray-400 uppercase tracking-wide mt-1 text-right">Belum Dicari Pendonor</div>
                             @else
                                 <div class="flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-full bg-gray-400"></span>

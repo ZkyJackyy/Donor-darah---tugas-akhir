@@ -8,6 +8,7 @@ import '../providers/permintaan_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../shared/models/blood_request_model.dart';
 import '../../../shared/widgets/status_badge.dart';
+import '../../notifikasi/providers/notifikasi_provider.dart';
 
 class PermintaanListScreen extends StatefulWidget {
   const PermintaanListScreen({super.key});
@@ -27,6 +28,7 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
       if (context.read<AuthProvider>().user == null) {
         context.read<AuthProvider>().getProfile();
       }
+      context.read<NotifikasiProvider>().fetchUnreadCount();
       _showLocationWarningIfAny();
     });
   }
@@ -45,6 +47,7 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<PermintaanProvider>();
     final user = context.watch<AuthProvider>().user;
+    final unreadCount = context.watch<NotifikasiProvider>().unreadCount;
 
     // Calculate donor eligibility
     int daysRemaining = 0;
@@ -73,7 +76,10 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
       bool isEligibleForUser = false;
       if (item.type == 'event') {
         isEligibleForUser = daysRemaining <= 0;
-      } else if (user != null && item.golonganDarah == user.golonganDarah && daysRemaining <= 0) {
+      } else if (user != null &&
+          item.golonganDarah == user.golonganDarah &&
+          item.rhesus == user.rhesus &&
+          daysRemaining <= 0) {
          isEligibleForUser = true;
       }
       if (item.userCandidateStatus == 'notified' || isEligibleForUser) {
@@ -101,6 +107,30 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
         backgroundColor: AppColors.primary,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.notifications_outlined, color: Colors.white),
+                if (unreadCount > 0)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                      decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+                      child: Text(
+                        unreadCount > 9 ? '9+' : '$unreadCount',
+                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: () => context.push('/notifikasi'),
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {

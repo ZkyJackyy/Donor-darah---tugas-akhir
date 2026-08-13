@@ -35,17 +35,20 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
       if (item.userCandidateStatus == 'verified') {
         return 2;
       }
+      bool isDueToDonate() {
+        if (user == null || user.tanggalDonorTerakhir == null) return true;
+        final lastDate = DateTime.parse(user.tanggalDonorTerakhir!);
+        final eligibleDate = lastDate.add(const Duration(days: 56));
+        return eligibleDate.difference(DateTime.now()).inDays <= 0;
+      }
+
       bool isEligibleForUser = false;
-      if (user != null && item.golonganDarah == user.golonganDarah) {
-         if (user.tanggalDonorTerakhir == null) {
-            isEligibleForUser = true;
-         } else {
-            final lastDate = DateTime.parse(user.tanggalDonorTerakhir!);
-            final eligibleDate = lastDate.add(const Duration(days: 56));
-            if (eligibleDate.difference(DateTime.now()).inDays <= 0) {
-               isEligibleForUser = true;
-            }
-         }
+      if (item.type == 'event') {
+        isEligibleForUser = isDueToDonate();
+      } else if (user != null &&
+          item.golonganDarah == user.golonganDarah &&
+          item.rhesus == user.rhesus) {
+        isEligibleForUser = isDueToDonate();
       }
       if (item.userCandidateStatus == 'notified' || isEligibleForUser) {
         return 0;

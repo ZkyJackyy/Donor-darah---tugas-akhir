@@ -107,8 +107,8 @@ class WaveChainJob implements ShouldQueue
         // supaya admin tahu itu sudah terjadi tanpa harus buka halaman detail.
         if ($this->currentWave > 1) {
             $message = $notifiedCount > 0
-                ? "Gelombang {$this->currentWave} untuk permintaan #{$this->bloodRequestId} telah dikirim ke {$notifiedCount} pendonor baru."
-                : "Gelombang {$this->currentWave} untuk permintaan #{$this->bloodRequestId} sudah berjalan, tapi tidak ada pendonor baru yang eligible di radius ini.";
+                ? "Gelombang {$this->currentWave} untuk permintaan darah di {$request->hospital_name} telah dikirim ke {$notifiedCount} pendonor baru."
+                : "Gelombang {$this->currentWave} untuk permintaan darah di {$request->hospital_name} sudah berjalan, tapi tidak ada pendonor baru yang eligible di radius ini.";
 
             try {
                 AdminAlert::create([

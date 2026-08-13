@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../providers/notifikasi_provider.dart';
@@ -116,24 +115,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                           },
                         ),
             ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: -1,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
-        onTap: (index) {
-          if (index == 0) context.go('/home');
-          if (index == 1) context.go('/permintaan-all');
-          if (index == 2) context.go('/riwayat');
-          if (index == 3) context.go('/profile');
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Permintaan'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
-        ],
-      ),
     );
   }
 }
