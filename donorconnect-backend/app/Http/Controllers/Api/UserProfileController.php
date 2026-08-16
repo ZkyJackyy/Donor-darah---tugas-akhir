@@ -23,7 +23,7 @@ class UserProfileController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'phone' => 'sometimes|string',
+            'phone' => 'sometimes|string|unique:users,phone,' . $request->user()->id,
             'weight' => 'sometimes|numeric',
             'birth_date' => 'sometimes|date',
             'is_available' => 'sometimes|boolean',

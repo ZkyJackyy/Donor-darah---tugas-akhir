@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // Constants & Services
 import 'core/constants/app_colors.dart';
-import 'core/services/deep_link_service.dart';
 import 'core/services/api_service.dart';
 
 // Providers
@@ -35,6 +34,7 @@ import 'features/riwayat/screens/riwayat_screen.dart';
 import 'features/notifikasi/screens/notifikasi_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/edit_profile_screen.dart';
+import 'features/profile/screens/change_password_screen.dart';
 
 
 void main() async {
@@ -104,7 +104,6 @@ class DonorConnectApp extends StatefulWidget {
 }
 
 class _DonorConnectAppState extends State<DonorConnectApp> {
-  late DeepLinkService _deepLinkService;
 
   @override
   void initState() {
@@ -113,35 +112,10 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
     ApiService.onUnauthorized = () {
       _router.go('/login');
     };
-
-    _deepLinkService = DeepLinkService(
-      onDeepLinkReceived: (uri) async {
-        debugPrint("Received DeepLink: $uri");
-        
-        String path = '';
-        if (uri.host == 'permintaan' && uri.pathSegments.isNotEmpty) {
-           path = '/permintaan/${uri.pathSegments.first}';
-        }
-
-        if (path.isEmpty) return;
-
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('auth_token');
-        
-        if (token != null && token.isNotEmpty) {
-           // Sudah login, langsung navigasi
-           _router.push(path);
-        } else {
-           // Belum login, simpan untuk dibuka nanti setelah login
-           await prefs.setString('pending_deep_link', path);
-        }
-      },
-    );
   }
 
   @override
   void dispose() {
-    _deepLinkService.dispose();
     super.dispose();
   }
 
@@ -203,6 +177,10 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
       GoRoute(
         path: '/profile/edit',
         builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/change-password',
+        builder: (context, state) => const ChangePasswordScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => Scaffold(

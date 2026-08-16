@@ -29,10 +29,17 @@ class ApiService {
       },
       onError: (DioException e, handler) {
         final path = e.requestOptions.path;
-        final isAuthEndpoint = path.contains(ApiConstants.login) || path.contains(ApiConstants.register);
+        final isAuthEndpoint = path.contains(ApiConstants.login) ||
+            path.contains(ApiConstants.register) ||
+            path.contains(ApiConstants.verifyEmail) ||
+            path.contains(ApiConstants.resendVerification) ||
+            path.contains(ApiConstants.forgotPassword) ||
+            path.contains(ApiConstants.resetPassword);
 
-        // 401 on login/register just means wrong credentials, not an expired
-        // session — there is no session to invalidate in that case.
+        // 401 on these endpoints just means bad credentials/code, not an
+        // expired session — there is no valid session yet (login/register)
+        // or the user still holds a legitimate pre-verification token that
+        // must not be wiped by a mismatched-code/expired-reset response.
         if (e.response?.statusCode == 401 && !isAuthEndpoint) {
           SharedPreferences.getInstance().then((prefs) => prefs.remove('auth_token'));
           if (onUnauthorized != null) {

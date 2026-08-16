@@ -10,6 +10,8 @@ use Carbon\Carbon;
 
 class AdminDashboardController extends Controller
 {
+    use \App\Traits\ApiResponse;
+
     public function index()
     {
         // Compute stats for admin dash
@@ -73,12 +75,12 @@ class AdminDashboardController extends Controller
     // Lightweight snapshot polled by the dashboard to detect changes worth a refresh.
     public function pollStats()
     {
-        return response()->json([
+        return $this->success([
             'active_requests' => BloodRequest::whereIn('status', ['approved', 'open'])->count(),
             'total_donors' => User::where('role', 'user')->count(),
             'total_donations' => DonorHistory::count(),
             'total_hospitals' => BloodRequest::distinct('hospital_name')->count('hospital_name'),
             'latest_request_id' => BloodRequest::max('id'),
-        ]);
+        ], 'Stats retrieved successfully');
     }
 }

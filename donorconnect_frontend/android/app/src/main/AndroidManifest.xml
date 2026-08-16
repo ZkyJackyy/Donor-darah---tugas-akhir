@@ -29,13 +29,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Deep link: donorpmi://permintaan/{id} -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="donorpmi" android:host="permintaan" />
-            </intent-filter>
+
         </activity>
         <!-- Google Maps API Key — loaded from local.properties (gitignored) -->
         <meta-data android:name="com.google.android.geo.API_KEY"

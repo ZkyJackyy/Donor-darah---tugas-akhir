@@ -52,7 +52,7 @@ class _PermintaanSayaScreenState extends State<PermintaanSayaScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () => context.read<PermintaanProvider>().fetchMySubmissions(),
-        child: provider.isLoading && provider.mySubmissions.isEmpty
+        child: provider.isLoadingMySubmissions && provider.mySubmissions.isEmpty
             ? const Center(child: CircularProgressIndicator())
             : provider.mySubmissions.isEmpty
                 ? ListView(

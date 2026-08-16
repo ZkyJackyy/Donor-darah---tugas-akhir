@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -5,13 +6,38 @@ import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/models/ticket_data.dart';
 
-class TiketDigitalScreen extends StatelessWidget {
+class TiketDigitalScreen extends StatefulWidget {
   final TicketData ticket;
 
   const TiketDigitalScreen({super.key, required this.ticket});
 
   @override
+  State<TiketDigitalScreen> createState() => _TiketDigitalScreenState();
+}
+
+class _TiketDigitalScreenState extends State<TiketDigitalScreen> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    final expiresAt = widget.ticket.expiresAt;
+    if (expiresAt != null) {
+      _timer = Timer(expiresAt.difference(DateTime.now()), () {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final ticket = widget.ticket;
     final now = DateTime.now();
     final isExpired = ticket.expiresAt != null && now.isAfter(ticket.expiresAt!);
     final isInactive = ticket.isUsed || isExpired;

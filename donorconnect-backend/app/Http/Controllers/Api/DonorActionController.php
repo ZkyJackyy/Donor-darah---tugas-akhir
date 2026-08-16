@@ -42,7 +42,7 @@ class DonorActionController extends Controller
             // lock: doing the count and the status write in separate
             // transactions let two concurrent confirmations both pass the
             // check before either wrote, over-filling required_bags.
-            $result = DB::transaction(function () use ($candidate, $confirmedAt) {
+            $result = DB::transaction(function () use ($candidate, $confirmedAt, $expiresAt) {
                 // Lock the blood request row for update
                 $bloodRequest = BloodRequest::where('id', $candidate->blood_request_id)
                     ->lockForUpdate()
@@ -76,6 +76,7 @@ class DonorActionController extends Controller
                         $candidate->update([
                             'status' => 'confirmed',
                             'confirmed_at' => $confirmedAt,
+                            'expires_at' => $expiresAt,
                             'kode_verifikasi' => $kode,
                         ]);
                         break;
@@ -105,7 +106,7 @@ class DonorActionController extends Controller
                 return $this->error('Donor ini sudah diverifikasi selesai mendonor dan tidak dapat dibatalkan lagi.', 400);
             }
 
-            $candidate->update(['status' => $request->status, 'confirmed_at' => null, 'kode_verifikasi' => null]);
+            $candidate->update(['status' => $request->status, 'confirmed_at' => null, 'expires_at' => null, 'kode_verifikasi' => null]);
         }
 
         if ($request->status === 'declined') {
@@ -140,8 +141,11 @@ class DonorActionController extends Controller
             }
         }
 
-        // Auto-transition to fulfilled if quota of verified candidates met
-        $candidate->bloodRequest->checkAndAutoFulfill();
+        // Auto-transition to fulfilled if quota of verified candidates met;
+        // notify family requester via WA if this confirms their request as fulfilled.
+        if ($candidate->bloodRequest->checkAndAutoFulfill()) {
+            app(\App\Services\WhatsAppService::class)->notifyRequesterFulfilled($candidate->bloodRequest);
+        }
 
         return $this->success([
             'status' => $candidate->status,
@@ -158,7 +162,15 @@ class DonorActionController extends Controller
             ->orderByDesc('donor_date')
             ->get();
 
-        return $this->success(DonorHistoryResource::collection($histories), 'Donor history fetched successfully');
+        // Menggunakan ->resolve() bukan ::collection() supaya tidak terjadi
+        // double-wrap: ResourceCollection membungkus ke {"data":[...]},
+        // sementara ApiResponse::success() membungkus ulang ke
+        // {"data":{"data":[...]}}. Flutter membaca ['data'] sebagai List
+        // langsung, sehingga lapisan extra menyebabkan TypeError → error.
+        return $this->success(
+            DonorHistoryResource::collection($histories)->resolve(),
+            'Donor history fetched successfully'
+        );
     }
 
     public function screening(ScreeningRequest $request)
@@ -167,9 +179,13 @@ class DonorActionController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        // Only allow (re-)screening while notified/pending, or after a previous failed attempt
-        // (kondisi seperti obat/kehamilan bisa berubah, jadi user boleh mengulang skrining)
-        if (!in_array($candidate->status, ['notified', 'pending', 'screening_failed'])) {
+        // Only allow (re-)screening while notified/pending, after a previous
+        // failed attempt (kondisi seperti obat/kehamilan bisa berubah), or
+        // after their confirmation window expired unused (no-show) — without
+        // 'expired' here, ExpireStaleConfirmationsJob permanently locks a
+        // still-willing donor out even though the request's quota may still
+        // be open.
+        if (!in_array($candidate->status, ['notified', 'pending', 'screening_failed', 'expired'])) {
             return $this->error('Kandidat tidak dapat melakukan skrining dengan status saat ini', 400);
         }
 

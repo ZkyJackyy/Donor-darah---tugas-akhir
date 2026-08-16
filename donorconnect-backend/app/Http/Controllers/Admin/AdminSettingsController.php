@@ -36,13 +36,10 @@ class AdminSettingsController extends Controller
         }
 
         try {
-            // GET /device only reports the connected device's status/quota
-            // for the given token — unlike POST /send, it never dispatches
-            // an actual WhatsApp message, so this is safe to call on every
-            // "Tes Koneksi" click without side effects.
+            // GET /device only reports the connected device's status, it doesn't send messages
             $response = Http::withHeaders([
                 'Authorization' => $token,
-            ])->post('https://api.fonnte.com/device');
+            ])->get('https://api.fonnte.com/device');
 
             $data = $response->json();
 

@@ -129,7 +129,11 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                   ),
               ],
             ),
-            onPressed: () => context.push('/notifikasi'),
+            onPressed: () async {
+              await context.push('/notifikasi');
+              if (!context.mounted) return;
+              context.read<NotifikasiProvider>().fetchUnreadCount();
+            },
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
@@ -142,7 +146,7 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
           )
         ],
       ),
-      body: provider.isLoading
+      body: provider.isLoadingList
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: () async {
@@ -345,8 +349,8 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
                 ),
 
                 // List of requests (Limited to 5)
-                provider.error != null
-                    ? SliverToBoxAdapter(child: Center(child: Text(provider.error!)))
+                provider.errorList != null
+                    ? SliverToBoxAdapter(child: Center(child: Text(provider.errorList!)))
                     : SliverPadding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         sliver: SliverList(

@@ -9,6 +9,7 @@ import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../providers/permintaan_provider.dart';
 import '../../konfirmasi/providers/konfirmasi_provider.dart';
+import '../../riwayat/providers/riwayat_provider.dart';
 import '../../skrining/screens/skrining_screen.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../shared/models/blood_request_model.dart';
@@ -56,6 +57,17 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     }
   }
 
+  // Setelah status kandidat berubah di backend (confirm/decline), semua
+  // state yang menampilkan status lama harus disegarkan: layar ini sendiri
+  // (supaya tombol aksi tidak nyangkut di status sebelumnya kalau user
+  // kembali dari layar lain), list Beranda, dan tab "Semua Aktivitas" di
+  // Riwayat. Fire-and-forget — tidak perlu ditunggu sebelum navigasi.
+  void _refreshAfterStatusChange() {
+    context.read<PermintaanProvider>().fetchPermintaanDetail(widget.requestId);
+    context.read<PermintaanProvider>().fetchPermintaanList();
+    context.read<RiwayatProvider>().fetchPartisipasiList();
+  }
+
   // Dipanggil saat status 'screening_passed' → langsung konfirmasi ke API
   void _handleKonfirmasiLangsung(int donorCandidateId) async {
     final success = await context.read<KonfirmasiProvider>().confirmDonor(
@@ -66,6 +78,8 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     if (!mounted) return;
 
     if (success) {
+      _refreshAfterStatusChange();
+
       final konfirmasi = context.read<KonfirmasiProvider>();
       final user = context.read<AuthProvider>().user;
       final item = context.read<PermintaanProvider>().selectedPermintaan;
@@ -139,6 +153,7 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
 
       if (!mounted) return;
       if (success) {
+        _refreshAfterStatusChange();
         AppSnackbar.showSuccess(context, 'Penolakan berhasil dicatat');
         context.pop(); // Kembali ke halaman sebelumnya
       } else {
@@ -356,7 +371,7 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
     final provider = context.watch<PermintaanProvider>();
     final item = provider.selectedPermintaan;
     final userInfo = provider.userCandidateInfo;
-    final isLoading = provider.isLoading || context.watch<KonfirmasiProvider>().isLoading;
+    final isLoading = provider.isLoadingDetail || context.watch<KonfirmasiProvider>().isLoading;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -365,7 +380,7 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
         backgroundColor: AppColors.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: provider.isLoading
+      body: provider.isLoadingDetail
           ? const Center(child: CircularProgressIndicator())
           : item == null
               ? RefreshIndicator(
@@ -374,7 +389,7 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     children: [
                       const SizedBox(height: 200),
-                      Center(child: Text(provider.error ?? 'Data tidak ditemukan')),
+                      Center(child: Text(provider.errorDetail ?? 'Data tidak ditemukan')),
                     ],
                   ),
                 )

@@ -31,12 +31,11 @@ class ExpireStaleConfirmationsJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $expiryMinutes = config('donorconnect.confirmation_expiry_minutes', 120);
-        $cutoff = now()->subMinutes($expiryMinutes);
-
+        // Gunakan kolom expires_at langsung alih-alih menghitung ulang dari confirmed_at
+        // Ini memastikan konsistensi jika nilai durasi expiry (confirmation_expiry_minutes)
+        // di config berubah di kemudian hari.
         $staleCandidates = DonorCandidate::where('status', 'confirmed')
-            ->whereNotNull('confirmed_at')
-            ->where('confirmed_at', '<=', $cutoff)
+            ->where('expires_at', '<=', now())
             ->get();
 
         if ($staleCandidates->isEmpty()) {

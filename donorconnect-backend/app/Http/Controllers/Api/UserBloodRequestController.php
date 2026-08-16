@@ -64,11 +64,25 @@ class UserBloodRequestController extends Controller
             $query->where('user_id', $userId);
         }])->findOrFail($id);
 
+        // Only the submitter, an actual candidate, or anyone (once it's
+        // publicly open) may view this — otherwise a donor could enumerate
+        // /user/blood-requests/{id} to read other families' pending_review
+        // or rejected submissions (patient name, rejection reason, referral
+        // letter URL).
+        $isCandidate = $bloodRequest->donorCandidates->isNotEmpty();
+        $isSubmitter = $bloodRequest->requested_by_user_id === $userId;
+        $isPubliclyVisible = $bloodRequest->status === 'open';
+
+        if (!$isPubliclyVisible && !$isCandidate && !$isSubmitter) {
+            return $this->notFound('Permintaan darah tidak ditemukan');
+        }
+
         // Inject specific candidate data for convenience in the mobile app
         $candidateStatus = null;
         $candidateId = null;
         $verifiedAt = null;
         $confirmedAt = null;
+        $expiresAt = null;
         $kodeVerifikasi = null;
 
         if ($bloodRequest->donorCandidates->isNotEmpty()) {
@@ -77,6 +91,7 @@ class UserBloodRequestController extends Controller
             $candidateId = $candidate->id;
             $verifiedAt = $candidate->verified_at?->toIso8601String();
             $confirmedAt = $candidate->confirmed_at?->toIso8601String();
+            $expiresAt = $candidate->expires_at?->toIso8601String();
             $kodeVerifikasi = $candidate->kode_verifikasi;
         }
 
@@ -94,6 +109,7 @@ class UserBloodRequestController extends Controller
             'status' => $candidateStatus,
             'verified_at' => $verifiedAt,
             'confirmed_at' => $confirmedAt,
+            'expires_at' => $expiresAt,
             'kode_verifikasi' => $kodeVerifikasi,
         ];
         

@@ -26,6 +26,7 @@ class ExpireStaleConfirmationsJobTest extends TestCase
             'user_id' => $donor->id,
             'status' => 'confirmed',
             'confirmed_at' => now()->subMinutes(config('donorconnect.confirmation_expiry_minutes', 120) + 1),
+            'expires_at' => now()->subMinutes(1),
             'kode_verifikasi' => 'EXP001',
             'distance_km' => 2.5,
         ]);
@@ -45,6 +46,7 @@ class ExpireStaleConfirmationsJobTest extends TestCase
             'user_id' => $donor->id,
             'status' => 'confirmed',
             'confirmed_at' => now(),
+            'expires_at' => now()->addMinutes(config('donorconnect.confirmation_expiry_minutes', 120)),
             'kode_verifikasi' => 'EXP002',
             'distance_km' => 2.5,
         ]);
@@ -66,6 +68,7 @@ class ExpireStaleConfirmationsJobTest extends TestCase
             'user_id' => $donor->id,
             'status' => 'confirmed',
             'confirmed_at' => now()->subMinutes(config('donorconnect.confirmation_expiry_minutes', 120) + 1),
+            'expires_at' => now()->subMinutes(1),
             'kode_verifikasi' => 'EXP003',
             'distance_km' => 2.5,
         ]);
@@ -88,6 +91,7 @@ class ExpireStaleConfirmationsJobTest extends TestCase
             'user_id' => $donorA->id,
             'status' => 'confirmed',
             'confirmed_at' => now()->subMinutes(config('donorconnect.confirmation_expiry_minutes', 120) + 1),
+            'expires_at' => now()->subMinutes(1),
             'kode_verifikasi' => 'EXP004',
             'distance_km' => 2.5,
         ]);

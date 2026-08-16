@@ -51,18 +51,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         data: {'email': _emailController.text.trim()},
       );
 
+      if (!mounted) return;
+
       if (response.data['status'] == true) {
         setState(() {
           _tokenSent = true;
           _success = 'Token reset telah dikirim. Silakan cek email Anda.';
         });
       } else {
-        _error = response.data['message'];
+        setState(() => _error = response.data['message']);
       }
     } on DioException catch (e) {
-      _error = ApiErrorHandler.getMessage(e);
+      if (!mounted) return;
+      setState(() => _error = ApiErrorHandler.getMessage(e));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -86,17 +89,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         },
       );
 
+      if (!mounted) return;
+
       if (response.data['status'] == true) {
         setState(() => _success = 'Password berhasil diubah. Silakan login.');
         await Future.delayed(const Duration(seconds: 2));
         if (mounted) Navigator.of(context).pop();
       } else {
-        _error = response.data['message'];
+        setState(() => _error = response.data['message']);
       }
     } on DioException catch (e) {
-      _error = ApiErrorHandler.getMessage(e);
+      if (!mounted) return;
+      setState(() => _error = ApiErrorHandler.getMessage(e));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

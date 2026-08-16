@@ -82,9 +82,16 @@ class NotifikasiProvider with ChangeNotifier {
     try {
       final response = await _apiService.get(ApiConstants.notificationsUnreadCount);
       if (response.data['status'] == true) {
-        _unreadCount = response.data['data']['count'] ?? 0;
-        notifyListeners();
+        final data = response.data['data'];
+        if (data is Map) {
+          _unreadCount = data['count'] ?? 0;
+          notifyListeners();
+        }
       }
-    } on DioException catch (_) {}
+    } catch (_) {
+      // Fire-and-forget badge refresh — a malformed/unexpected response
+      // (e.g. a proxy/maintenance page) should just leave the badge
+      // unchanged, not crash the caller's post-frame callback.
+    }
   }
 }

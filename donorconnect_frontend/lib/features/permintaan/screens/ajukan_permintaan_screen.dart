@@ -213,7 +213,7 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
     } else {
       AppSnackbar.showError(
         context,
-        context.read<PermintaanProvider>().error ?? 'Gagal mengirim pengajuan',
+        context.read<PermintaanProvider>().submitError ?? 'Gagal mengirim pengajuan',
       );
     }
   }
@@ -382,6 +382,18 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
                     _hospitalAddressController.text = prediction.description;
                   });
                 },
+                // User mengetik manual setelah memilih saran — koordinat
+                // yang tersimpan sudah tidak mewakili RS yang sekarang
+                // diketik, jangan sampai request terkirim dengan lokasi RS
+                // yang salah.
+                onManualEdit: () {
+                  if (_latitude != null || _longitude != null) {
+                    setState(() {
+                      _latitude = null;
+                      _longitude = null;
+                    });
+                  }
+                },
                 validator: (val) => val == null || val.trim().isEmpty ? 'Nama rumah sakit tidak boleh kosong' : null,
               ),
               const SizedBox(height: 16),
@@ -400,6 +412,14 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
                       _hospitalNameController.text = prediction.name!;
                     }
                   });
+                },
+                onManualEdit: () {
+                  if (_latitude != null || _longitude != null) {
+                    setState(() {
+                      _latitude = null;
+                      _longitude = null;
+                    });
+                  }
                 },
                 validator: (val) => val == null || val.trim().isEmpty ? 'Alamat rumah sakit tidak boleh kosong' : null,
               ),

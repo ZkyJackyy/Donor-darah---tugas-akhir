@@ -20,14 +20,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _toggleAvailability(bool newValue) async {
     setState(() => _isUpdating = true);
     final success = await context.read<AuthProvider>().updateProfile(isAvailable: newValue);
+
+    if (!mounted) return;
     setState(() => _isUpdating = false);
-    
-    if (mounted) {
-      if (success) {
-        AppSnackbar.showSuccess(context, 'Status ketersediaan diperbarui');
-      } else {
-        AppSnackbar.showError(context, context.read<AuthProvider>().error ?? 'Gagal memperbarui status');
-      }
+
+    if (success) {
+      AppSnackbar.showSuccess(context, 'Status ketersediaan diperbarui');
+    } else {
+      AppSnackbar.showError(context, context.read<AuthProvider>().error ?? 'Gagal memperbarui status');
     }
   }
 
@@ -134,6 +134,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   CustomButton(
                     text: 'Edit Profil',
                     onPressed: () => context.push('/profile/edit'),
+                  ),
+                  const SizedBox(height: 12),
+                  CustomButton(
+                    text: 'Ubah Password',
+                    onPressed: () => context.push('/profile/change-password'),
                   ),
                   const SizedBox(height: 100),
                 ],

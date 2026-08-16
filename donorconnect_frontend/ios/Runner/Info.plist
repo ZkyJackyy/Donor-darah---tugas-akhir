@@ -48,17 +48,6 @@
 	<!-- Location permission description -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Sahabat Donor membutuhkan akses lokasi untuk menunjukkan lokasi PMI terdekat</string>
-	<!-- Deep link: donorpmi://permintaan/{id} -->
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>donorpmi</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>donorpmi</string>
-			</array>
-		</dict>
-	</array>
+
 </dict>
 </plist>

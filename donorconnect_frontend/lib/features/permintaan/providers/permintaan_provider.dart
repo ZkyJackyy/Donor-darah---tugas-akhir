@@ -15,21 +15,38 @@ class PermintaanProvider with ChangeNotifier {
   BloodRequestModel? _selectedPermintaan;
   Map<String, dynamic>? _userCandidateInfo;
   List<BloodRequestModel> _mySubmissions = [];
-  bool _isLoading = false;
+
+  // Each fetch keeps its own loading/error flag — sharing one pair across
+  // fetchPermintaanList/fetchPermintaanDetail/fetchMySubmissions meant an
+  // error on one screen (e.g. opening a detail while offline) overwrote the
+  // state every other screen reads, replacing an unrelated list with an
+  // error message until a manual refresh.
+  bool _isLoadingList = false;
+  String? _errorList;
+  bool _isLoadingDetail = false;
+  String? _errorDetail;
+  bool _isLoadingMySubmissions = false;
+  String? _errorMySubmissions;
   bool _isSubmitting = false;
-  String? _error;
+  String? _submitError;
 
   List<BloodRequestModel> get permintaanList => _permintaanList;
   BloodRequestModel? get selectedPermintaan => _selectedPermintaan;
   Map<String, dynamic>? get userCandidateInfo => _userCandidateInfo;
   List<BloodRequestModel> get mySubmissions => _mySubmissions;
-  bool get isLoading => _isLoading;
+
+  bool get isLoadingList => _isLoadingList;
+  String? get errorList => _errorList;
+  bool get isLoadingDetail => _isLoadingDetail;
+  String? get errorDetail => _errorDetail;
+  bool get isLoadingMySubmissions => _isLoadingMySubmissions;
+  String? get errorMySubmissions => _errorMySubmissions;
   bool get isSubmitting => _isSubmitting;
-  String? get error => _error;
+  String? get submitError => _submitError;
 
   Future<void> fetchPermintaanList() async {
-    _isLoading = true;
-    _error = null;
+    _isLoadingList = true;
+    _errorList = null;
     notifyListeners();
 
     try {
@@ -64,14 +81,14 @@ class PermintaanProvider with ChangeNotifier {
 
         _permintaanList = list;
       } else {
-        _error = response.data['message'];
+        _errorList = response.data['message'];
       }
     } on DioException catch (e) {
-      _error = ApiErrorHandler.getMessage(e);
+      _errorList = ApiErrorHandler.getMessage(e);
     } catch (e) {
-      _error = 'Terjadi kesalahan tidak terduga';
+      _errorList = 'Terjadi kesalahan tidak terduga';
     } finally {
-      _isLoading = false;
+      _isLoadingList = false;
       notifyListeners();
     }
   }
@@ -113,9 +130,14 @@ class PermintaanProvider with ChangeNotifier {
     _selectedPermintaan = null;
     _userCandidateInfo = null;
     _mySubmissions = [];
-    _isLoading = false;
+    _isLoadingList = false;
+    _errorList = null;
+    _isLoadingDetail = false;
+    _errorDetail = null;
+    _isLoadingMySubmissions = false;
+    _errorMySubmissions = null;
     _isSubmitting = false;
-    _error = null;
+    _submitError = null;
     notifyListeners();
   }
 
@@ -135,7 +157,7 @@ class PermintaanProvider with ChangeNotifier {
     double? longitude,
   }) async {
     _isSubmitting = true;
-    _error = null;
+    _submitError = null;
     notifyListeners();
 
     try {
@@ -162,23 +184,23 @@ class PermintaanProvider with ChangeNotifier {
       if (response.data['status'] == true) {
         return true;
       } else {
-        _error = response.data['message'];
+        _submitError = response.data['message'];
         return false;
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 422) {
         final errors = e.response?.data['errors'] as Map<String, dynamic>?;
         if (errors != null && errors.isNotEmpty) {
-          _error = errors.values.first[0].toString();
+          _submitError = errors.values.first[0].toString();
         } else {
-          _error = ApiErrorHandler.getMessage(e);
+          _submitError = ApiErrorHandler.getMessage(e);
         }
       } else {
-        _error = ApiErrorHandler.getMessage(e);
+        _submitError = ApiErrorHandler.getMessage(e);
       }
       return false;
     } catch (e) {
-      _error = 'Terjadi kesalahan tidak terduga';
+      _submitError = 'Terjadi kesalahan tidak terduga';
       return false;
     } finally {
       _isSubmitting = false;
@@ -187,8 +209,8 @@ class PermintaanProvider with ChangeNotifier {
   }
 
   Future<void> fetchMySubmissions() async {
-    _isLoading = true;
-    _error = null;
+    _isLoadingMySubmissions = true;
+    _errorMySubmissions = null;
     notifyListeners();
 
     try {
@@ -197,14 +219,14 @@ class PermintaanProvider with ChangeNotifier {
         final List data = response.data['data'];
         _mySubmissions = data.map((json) => BloodRequestModel.fromJson(json)).toList();
       } else {
-        _error = response.data['message'];
+        _errorMySubmissions = response.data['message'];
       }
     } on DioException catch (e) {
-      _error = ApiErrorHandler.getMessage(e);
+      _errorMySubmissions = ApiErrorHandler.getMessage(e);
     } catch (e) {
-      _error = 'Terjadi kesalahan tidak terduga';
+      _errorMySubmissions = 'Terjadi kesalahan tidak terduga';
     } finally {
-      _isLoading = false;
+      _isLoadingMySubmissions = false;
       notifyListeners();
     }
   }
@@ -243,8 +265,8 @@ class PermintaanProvider with ChangeNotifier {
   }
 
   Future<void> fetchPermintaanDetail(int id) async {
-    _isLoading = true;
-    _error = null;
+    _isLoadingDetail = true;
+    _errorDetail = null;
     _selectedPermintaan = null;
     _userCandidateInfo = null;
     notifyListeners();
@@ -256,14 +278,14 @@ class PermintaanProvider with ChangeNotifier {
         _selectedPermintaan = BloodRequestModel.fromJson(data);
         _userCandidateInfo = data['user_candidate_info'];
       } else {
-        _error = response.data['message'];
+        _errorDetail = response.data['message'];
       }
     } on DioException catch (e) {
-      _error = ApiErrorHandler.getMessage(e);
+      _errorDetail = ApiErrorHandler.getMessage(e);
     } catch (e) {
-      _error = 'Terjadi kesalahan tidak terduga';
+      _errorDetail = 'Terjadi kesalahan tidak terduga';
     } finally {
-      _isLoading = false;
+      _isLoadingDetail = false;
       notifyListeners();
     }
   }

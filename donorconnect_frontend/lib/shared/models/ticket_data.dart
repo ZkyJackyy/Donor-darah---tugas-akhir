@@ -60,14 +60,12 @@ class TicketData {
     bool includeExpiry = false,
     bool isUsed = false,
   }) {
-    // Backend tidak mengirim ulang expiry saat re-fetch, jadi dihitung ulang di sini.
-    // Harus tetap sinkron dengan config('donorconnect.confirmation_expiry_minutes') di backend.
     DateTime? expiresAt;
     if (includeExpiry) {
-      final confirmedAtRaw = userInfo['confirmed_at'] as String?;
-      if (confirmedAtRaw != null) {
+      final expiresAtRaw = userInfo['expires_at'] as String?;
+      if (expiresAtRaw != null) {
         try {
-          expiresAt = DateTime.parse(confirmedAtRaw).toLocal().add(const Duration(hours: 2));
+          expiresAt = DateTime.parse(expiresAtRaw).toLocal();
         } catch (_) {}
       }
     }

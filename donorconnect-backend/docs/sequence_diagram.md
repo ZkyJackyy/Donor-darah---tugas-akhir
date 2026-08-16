@@ -190,4 +190,4 @@ sequenceDiagram
     end
 
     Boundary-->>-Pendonor: Tampilkan halaman Tiket Digital (kode_verifikasi)
-ji```
+```

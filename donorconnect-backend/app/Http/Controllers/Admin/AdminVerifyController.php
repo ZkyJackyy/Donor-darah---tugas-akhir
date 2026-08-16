@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BloodRequest;
 use App\Models\DonorCandidate;
 use App\Models\DonorHistory;
+use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -76,11 +78,20 @@ class AdminVerifyController extends Controller
 
             $candidate->bloodRequest->checkAndAutoFulfill();
 
-            return ['success' => "Pendonor {$candidate->user->name} berhasil diverifikasi."];
+            return [
+                'success' => "Pendonor {$candidate->user->name} berhasil diverifikasi.",
+                'blood_request_id' => $candidate->blood_request_id,
+            ];
         });
 
         if (isset($result['error'])) {
             return back()->with('error', $result['error']);
+        }
+
+        // Notify family requester via WA if this verification triggered auto-fulfillment
+        $bloodRequest = BloodRequest::find($result['blood_request_id'] ?? null);
+        if ($bloodRequest && $bloodRequest->status === 'fulfilled') {
+            app(WhatsAppService::class)->notifyRequesterFulfilled($bloodRequest);
         }
 
         return back()->with('success', $result['success']);

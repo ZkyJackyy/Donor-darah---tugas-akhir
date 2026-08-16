@@ -73,7 +73,7 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
         backgroundColor: AppColors.primary,
         elevation: 0,
       ),
-      body: provider.isLoading
+      body: provider.isLoadingList
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: () => context.read<PermintaanProvider>().fetchPermintaanList(),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
@@ -37,15 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       
       if (success) {
-        final prefs = await SharedPreferences.getInstance();
-        final pendingLink = prefs.getString('pending_deep_link');
-        
-        if (pendingLink != null) {
-          await prefs.remove('pending_deep_link');
-          context.go(pendingLink);
-        } else {
-          context.go('/home');
-        }
+        context.go('/home');
       } else {
         AppSnackbar.showError(context, context.read<AuthProvider>().error ?? 'Login failed');
       }

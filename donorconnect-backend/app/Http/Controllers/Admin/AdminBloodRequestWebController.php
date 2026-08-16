@@ -96,6 +96,8 @@ class AdminBloodRequestWebController extends Controller
             'rejection_reason' => $validated['rejection_reason'],
         ]);
 
+        app(\App\Services\WhatsAppService::class)->notifyRequesterRejected($bloodRequest);
+
         return back()->with('success', 'Pengajuan ditolak.');
     }
 
@@ -373,6 +375,12 @@ class AdminBloodRequestWebController extends Controller
             return back()->with('error', $error);
         }
 
+        // Notify family requester via WA if this verification triggered auto-fulfillment
+        $candidate = DonorCandidate::with('bloodRequest')->find($id);
+        if ($candidate?->bloodRequest?->status === 'fulfilled') {
+            app(WhatsAppService::class)->notifyRequesterFulfilled($candidate->bloodRequest);
+        }
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['message' => 'Candidate manually verified successfully.', 'status' => 'verified']);
         }
@@ -398,6 +406,11 @@ class AdminBloodRequestWebController extends Controller
 
         $oldStatus = $bloodRequest->status;
         $bloodRequest->update(['status' => $validated['status']]);
+
+        // Notify the family member who submitted the request via WA
+        if ($validated['status'] === 'fulfilled') {
+            app(WhatsAppService::class)->notifyRequesterFulfilled($bloodRequest);
+        }
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([

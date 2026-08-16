@@ -83,17 +83,25 @@ class BloodRequest extends Model
      *
      * Event terbuka tidak punya kuota keras (required_bags cuma target
      * informatif), jadi tidak pernah auto-fulfilled — admin tutup manual.
+     *
+     * Mengembalikan true jika transisi baru saja terjadi pada pemanggilan ini,
+     * false jika tidak ada perubahan (sudah fulfilled, event, atau kuota belum
+     * terpenuhi). Caller dapat menggunakan nilai balik ini untuk memicu
+     * notifikasi WA ke pengaju tanpa perlu query ulang ke DB.
      */
-    public function checkAndAutoFulfill(): void
+    public function checkAndAutoFulfill(): bool
     {
         if ($this->status !== 'open' || $this->isEvent() || $this->required_bags === null) {
-            return;
+            return false;
         }
 
         $verifiedCount = $this->donorCandidates()->where('status', 'verified')->count();
 
         if ($verifiedCount >= $this->required_bags) {
             $this->update(['status' => 'fulfilled']);
+            return true;
         }
+
+        return false;
     }
 }

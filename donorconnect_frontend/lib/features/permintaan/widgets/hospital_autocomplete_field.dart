@@ -12,6 +12,11 @@ class HospitalAutocompleteField extends StatefulWidget {
   final String? Function(String?)? validator;
   final Future<List<PlacePrediction>> Function(String query) onSearch;
   final void Function(PlacePrediction prediction) onPlaceSelected;
+  // Fired only for genuine user keystrokes (never for the programmatic
+  // controller.text assignment a suggestion pick makes) — lets the parent
+  // know the field no longer reflects the picked suggestion, e.g. to clear
+  // coordinates that were captured for that pick.
+  final VoidCallback? onManualEdit;
 
   const HospitalAutocompleteField({
     super.key,
@@ -23,6 +28,7 @@ class HospitalAutocompleteField extends StatefulWidget {
     this.maxLines = 1,
     this.fillAddressOnSelect = false,
     this.validator,
+    this.onManualEdit,
   });
 
   @override
@@ -33,13 +39,9 @@ class _HospitalAutocompleteFieldState extends State<HospitalAutocompleteField> {
   Timer? _debounce;
   List<PlacePrediction> _suggestions = [];
   bool _isSearching = false;
-  bool _suppressNextSearch = false;
 
   void _onChanged(String value) {
-    if (_suppressNextSearch) {
-      _suppressNextSearch = false;
-      return;
-    }
+    widget.onManualEdit?.call();
     _debounce?.cancel();
     if (value.trim().length < 3) {
       setState(() => _suggestions = []);
@@ -59,7 +61,9 @@ class _HospitalAutocompleteFieldState extends State<HospitalAutocompleteField> {
   void _selectSuggestion(PlacePrediction prediction) {
     setState(() => _suggestions = []);
 
-    _suppressNextSearch = true;
+    // Programmatic controller.text assignment does not fire
+    // TextFormField.onChanged, so this never re-triggers a search or
+    // widget.onManualEdit — no suppression flag needed.
     widget.controller.text = widget.fillAddressOnSelect
         ? prediction.description
         : (prediction.name ?? prediction.description);

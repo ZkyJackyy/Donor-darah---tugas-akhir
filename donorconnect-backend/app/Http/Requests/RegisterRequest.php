@@ -18,7 +18,7 @@ class RegisterRequest extends FormRequest
             'nik' => 'required|string|digits:16|unique:users,nik',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'phone' => 'required|string',
+            'phone' => 'required|string|unique:users,phone',
             'birth_date' => ['required', 'date', 'before_or_equal:' . now()->subYears(17)->toDateString()],
             'weight' => 'required|numeric|min:1',
             'blood_type' => 'required|in:A,B,AB,O',

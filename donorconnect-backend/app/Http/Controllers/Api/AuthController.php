@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Notifications\ResetPasswordToken;
 use App\Notifications\VerifyEmailCode;
 use App\Traits\ApiResponse;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -154,7 +155,7 @@ class AuthController extends Controller
             return $this->error('Token reset tidak valid atau sudah kedaluwarsa', 400);
         }
 
-        if (now()->diffInMinutes($resetRecord->created_at) > 15) {
+        if (Carbon::parse($resetRecord->created_at)->addMinutes(15)->isPast()) {
             return $this->error('Token reset sudah kedaluwarsa', 400);
         }
 

@@ -29,10 +29,12 @@ class CheckRequestStatusJob implements ShouldQueue
         $openRequests = BloodRequest::where('status', 'open')->get();
 
         foreach ($openRequests as $request) {
-            $request->checkAndAutoFulfill();
-
-            if ($request->status === 'fulfilled') {
+            // checkAndAutoFulfill() returns true when the transition to
+            // 'fulfilled' actually happened on this call — use that to drive
+            // the log + WA notification without an extra status re-check.
+            if ($request->checkAndAutoFulfill()) {
                 Log::info("Request #{$request->id} AUTO-FULFILLED (quota of verified donors met)");
+                app(\App\Services\WhatsAppService::class)->notifyRequesterFulfilled($request);
                 continue;
             }
 

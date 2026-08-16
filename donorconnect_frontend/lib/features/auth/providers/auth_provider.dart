@@ -25,6 +25,7 @@ class AuthProvider with ChangeNotifier {
 
   void clearLocationWarning() {
     _locationWarning = null;
+    notifyListeners();
   }
 
   Future<bool> login(String email, String password) async {
@@ -312,6 +313,47 @@ class AuthProvider with ChangeNotifier {
       }
     } on DioException catch (e) {
       _error = ApiErrorHandler.getMessage(e);
+      return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan tidak terduga';
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    _setLoading(true);
+    try {
+      final response = await _apiService.post(ApiConstants.changePassword, data: {
+        'current_password': currentPassword,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      });
+
+      if (response.data['status'] == true) {
+        return true;
+      } else {
+        _error = response.data['message'];
+        return false;
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 422) {
+        final errors = e.response?.data['errors'] as Map<String, dynamic>?;
+        if (errors != null && errors.isNotEmpty) {
+          _error = errors.values.first[0].toString();
+        } else {
+          _error = ApiErrorHandler.getMessage(e);
+        }
+      } else if (e.response?.statusCode == 400) {
+        _error = e.response?.data['message'] ?? 'Password lama salah';
+      } else {
+        _error = ApiErrorHandler.getMessage(e);
+      }
       return false;
     } catch (e) {
       _error = 'Terjadi kesalahan tidak terduga';
