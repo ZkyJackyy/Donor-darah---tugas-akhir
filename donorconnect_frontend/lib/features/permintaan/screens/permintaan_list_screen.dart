@@ -57,7 +57,7 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
     
     if (user?.tanggalDonorTerakhir != null) {
       final lastDate = DateTime.parse(user!.tanggalDonorTerakhir!);
-      final eligibleDate = lastDate.add(const Duration(days: 56));
+      final eligibleDate = lastDate.add(const Duration(days: 60));
       nextDate = "${eligibleDate.day}/${eligibleDate.month}/${eligibleDate.year}";
       
       final now = DateTime.now();
@@ -66,7 +66,7 @@ class _PermintaanListScreenState extends State<PermintaanListScreen> {
       
       // Progress from 0 (just donated) to 1 (can donate again)
       int daysPassed = now.difference(lastDate).inDays;
-      progress = (daysPassed / 56).clamp(0.0, 1.0);
+      progress = (daysPassed / 60).clamp(0.0, 1.0);
     }
 
     int getPriority(BloodRequestModel item) {

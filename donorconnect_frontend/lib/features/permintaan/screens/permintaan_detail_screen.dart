@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../shared/widgets/app_snackbar.dart';
@@ -477,10 +478,10 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
                                   : '${item.jumlahKantong} Kantong',
                             ),
                             const _InfoDivider(),
-                            _InfoRow(label: 'Lokasi', value: item.hospitalName ?? '-'),
+                            _InfoRow(label: 'Rumah Sakit Pasien', value: item.hospitalName ?? '-'),
                             if (item.hospitalAddress != null && item.hospitalAddress!.isNotEmpty) ...[
                               const _InfoDivider(),
-                              _InfoRow(label: 'Alamat', value: item.hospitalAddress!),
+                              _InfoRow(label: 'Alamat Rumah Sakit', value: item.hospitalAddress!),
                             ],
                             if (item.type == 'event' && item.eventStartsAt != null) ...[
                               const _InfoDivider(),
@@ -525,51 +526,49 @@ class _PermintaanDetailScreenState extends State<PermintaanDetailScreen> {
                         ),
                       ],
 
-                      if (item.latitude != 0.0) ...[
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Lokasi Donor',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Lokasi Donor (PMI)',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade300),
                         ),
-                        const SizedBox(height: 12),
-                        Container(
-                          height: 200,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: GoogleMap(
-                              initialCameraPosition: CameraPosition(
-                                target: LatLng(item.latitude, item.longitude),
-                                zoom: 15,
-                              ),
-                              markers: {
-                                Marker(
-                                  markerId: const MarkerId('pmi'),
-                                  position: LatLng(item.latitude, item.longitude),
-                                  infoWindow: InfoWindow(title: item.hospitalName),
-                                ),
-                              },
-                              onMapCreated: (controller) => _mapController = controller,
-                              myLocationButtonEnabled: false,
-                              zoomControlsEnabled: false,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: GoogleMap(
+                            initialCameraPosition: const CameraPosition(
+                              target: LatLng(ApiConstants.pmiLatitude, ApiConstants.pmiLongitude),
+                              zoom: 15,
                             ),
+                            markers: {
+                              const Marker(
+                                markerId: MarkerId('pmi'),
+                                position: LatLng(ApiConstants.pmiLatitude, ApiConstants.pmiLongitude),
+                                infoWindow: InfoWindow(title: 'UDD PMI Kota Padang'),
+                              ),
+                            },
+                            onMapCreated: (controller) => _mapController = controller,
+                            myLocationButtonEnabled: false,
+                            zoomControlsEnabled: false,
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        OutlinedButton(
-                          onPressed: () => _openMaps(item.latitude, item.longitude),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primary,
-                            side: const BorderSide(color: AppColors.primary),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: const Text('Petunjuk Arah', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        onPressed: () => _openMaps(ApiConstants.pmiLatitude, ApiConstants.pmiLongitude),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                      ],
+                        child: const Text('Petunjuk Arah', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
 
                       const SizedBox(height: 40),
                       _buildActionSection(userInfo, isLoading, item),

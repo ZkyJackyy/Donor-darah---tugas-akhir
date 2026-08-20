@@ -7,13 +7,26 @@ use App\Models\AdminAlert;
 
 class AdminAlertController extends Controller
 {
+    use \App\Traits\ApiResponse;
+
+    // Polled by the alerts page to detect newly created alerts worth a refresh.
+    public function pollStats()
+    {
+        return $this->success([
+            'latest_id' => AdminAlert::max('id'),
+            'unread_count' => AdminAlert::unread()->count(),
+        ], 'Alert stats retrieved successfully');
+    }
+
     public function index()
     {
         $alerts = AdminAlert::with('bloodRequest')
             ->orderByDesc('created_at')
             ->paginate(15);
 
-        return view('admin.alerts.index', compact('alerts'));
+        $latestAlertId = AdminAlert::max('id');
+
+        return view('admin.alerts.index', compact('alerts', 'latestAlertId'));
     }
 
     public function markRead(AdminAlert $alert)

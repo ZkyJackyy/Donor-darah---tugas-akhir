@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminAlert;
 use App\Models\BloodRequest;
 use App\Models\User;
 use App\Models\DonorHistory;
@@ -58,7 +59,7 @@ class AdminDashboardController extends Controller
 
         // Additional stats for cards
         $totalDonationsCount = DonorHistory::count();
-        $totalHospitals = BloodRequest::distinct('hospital_name')->count('hospital_name');
+        $totalHospitals = $this->countDistinctHospitals();
 
         return view('admin.dashboard', compact(
             'totalDonors',
@@ -79,8 +80,38 @@ class AdminDashboardController extends Controller
             'active_requests' => BloodRequest::whereIn('status', ['approved', 'open'])->count(),
             'total_donors' => User::where('role', 'user')->count(),
             'total_donations' => DonorHistory::count(),
-            'total_hospitals' => BloodRequest::distinct('hospital_name')->count('hospital_name'),
+            'total_hospitals' => $this->countDistinctHospitals(),
             'latest_request_id' => BloodRequest::max('id'),
         ], 'Stats retrieved successfully');
+    }
+
+    // Sidebar badge counts, polled on every admin page via layouts.admin.
+    public function pollSidebarCounts()
+    {
+        return $this->success([
+            'open_requests' => BloodRequest::where('status', 'open')->count(),
+            'pending_review' => BloodRequest::where('status', 'pending_review')->count(),
+            'unread_alerts' => AdminAlert::unread()->count(),
+        ], 'Sidebar counts retrieved successfully');
+    }
+
+    // hospital_name is free text typed by admins per request, so the same
+    // hospital ends up spelled slightly differently across requests (case,
+    // punctuation, extra spaces). Counting raw DISTINCT values overstates
+    // how many partner hospitals actually exist; normalizing first collapses
+    // those cosmetic variants together before counting.
+    private function countDistinctHospitals(): int
+    {
+        return BloodRequest::whereNotNull('hospital_name')
+            ->where('hospital_name', '!=', '')
+            ->pluck('hospital_name')
+            ->map(function (string $name) {
+                $normalized = preg_replace('/[^\p{L}\p{N}\s]/u', '', $name);
+                $normalized = preg_replace('/\s+/', ' ', $normalized ?? '');
+                return trim(mb_strtolower($normalized ?? ''));
+            })
+            ->unique()
+            ->filter()
+            ->count();
     }
 }

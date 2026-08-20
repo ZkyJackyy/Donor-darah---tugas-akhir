@@ -78,29 +78,14 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
     );
     if (pickedDate == null || !context.mounted) return;
 
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: _deadline != null
-          ? TimeOfDay.fromDateTime(_deadline!)
-          : const TimeOfDay(hour: 17, minute: 0),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: AppColors.primary),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (pickedTime == null) return;
-
     setState(() {
       _deadline = DateTime(
         pickedDate.year,
         pickedDate.month,
         pickedDate.day,
-        pickedTime.hour,
-        pickedTime.minute,
+        23,
+        59,
+        59,
       );
     });
   }
@@ -361,8 +346,8 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
                   ),
                   child: Text(
                     _deadline == null
-                        ? 'Pilih tanggal & jam'
-                        : DateFormat('dd MMMM yyyy, HH:mm').format(_deadline!),
+                        ? 'Pilih tanggal'
+                        : DateFormat('dd MMMM yyyy', 'id_ID').format(_deadline!),
                   ),
                 ),
               ),

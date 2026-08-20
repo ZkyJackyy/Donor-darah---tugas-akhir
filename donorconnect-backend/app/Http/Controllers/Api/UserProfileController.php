@@ -49,7 +49,7 @@ class UserProfileController extends Controller
             // same call, and only if they're not still in post-donation
             // cooldown (that lock is managed separately by UnlockDonorsJob).
             $isInCooldown = $user->last_donor_date
-                && \Carbon\Carbon::parse($user->last_donor_date)->diffInDays(now()) < config('donorconnect.donation_cooldown_days', 56);
+                && \Carbon\Carbon::parse($user->last_donor_date)->diffInDays(now()) < config('donorconnect.donation_cooldown_days', 60);
 
             if (!$isInCooldown) {
                 $user->is_available = true;

@@ -23,7 +23,7 @@ class UnlockDonorsJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $cooldownDays = config('donorconnect.donation_cooldown_days', 56);
+        $cooldownDays = config('donorconnect.donation_cooldown_days', 60);
 
         // Cari donor yang:
         // - last_donor_date tidak null

@@ -150,7 +150,7 @@
 
                 <!-- Deadline -->
                 <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
-                    <input type="datetime-local" name="deadline" value="{{ old('deadline') }}" required placeholder=" "
+                    <input type="date" name="deadline" value="{{ old('deadline') }}" required placeholder=" "
                         class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none placeholder-transparent peer">
                     <label id="deadline_label" class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left" style="transform: translateY(-130%) scale(0.85); color: #ef4444; font-weight: 700;">
                         Batas Waktu Terpenuhi

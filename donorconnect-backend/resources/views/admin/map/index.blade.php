@@ -95,6 +95,12 @@ document.addEventListener('alpine:init', () => {
                 }).addTo(this.map);
 
                 this.fetchDonors();
+
+                // Refresh markers periodically so availability/position changes
+                // (verifikasi donor, UnlockDonorsJob) show up without a manual
+                // reload — a full reload here would reset pan/zoom, so this
+                // only re-fetches the JSON and re-renders markers in place.
+                setInterval(() => this.fetchDonors(), 15000);
             });
         },
 

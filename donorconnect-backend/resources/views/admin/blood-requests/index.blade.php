@@ -161,7 +161,7 @@ document.addEventListener('alpine:init', () => {
                     if (ids.length > 0) {
                         const statusRes = await fetch(`/api/admin-poll/blood-requests/statuses?ids=${ids.join(',')}`);
                         if (statusRes.ok) {
-                            const current = await statusRes.json();
+                            const { data: current } = await statusRes.json();
                             if (ids.some(id => current[id] !== initialStatuses[id])) {
                                 window.location.reload();
                                 return;
@@ -171,7 +171,7 @@ document.addEventListener('alpine:init', () => {
 
                     const countRes = await fetch(`/api/admin-poll/blood-requests/index-count?${filterQuery}`);
                     if (!countRes.ok) return;
-                    const { count } = await countRes.json();
+                    const { data: { count } } = await countRes.json();
                     if (count !== initialTotal) window.location.reload();
                 } catch (e) {}
             }, 15000);

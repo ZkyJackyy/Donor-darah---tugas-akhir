@@ -141,9 +141,7 @@
                     <svg class="w-5 h-5 {{ request()->routeIs('admin.blood-requests.*') && !request()->routeIs('admin.blood-requests.pending') ? 'text-brand-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
                     Permintaan Donor
                 </div>
-                @if($openRequestsCount > 0)
-                <span class="bg-gray-100 text-gray-600 py-0.5 px-2 rounded text-[10px] font-mono font-semibold">{{ $openRequestsCount }}</span>
-                @endif
+                <span id="sidebar-badge-open" class="bg-gray-100 text-gray-600 py-0.5 px-2 rounded text-[10px] font-mono font-semibold" style="{{ $openRequestsCount > 0 ? '' : 'display:none' }}">{{ $openRequestsCount }}</span>
             </a>
 
             <a href="{{ route('admin.blood-requests.pending') }}" class="sidebar-item flex items-center justify-between px-4 py-2.5 rounded-md text-sm font-medium text-gray-600 {{ request()->routeIs('admin.blood-requests.pending') ? 'active' : '' }}">
@@ -151,9 +149,7 @@
                     <svg class="w-5 h-5 {{ request()->routeIs('admin.blood-requests.pending') ? 'text-brand-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Pengajuan Keluarga
                 </div>
-                @if($pendingReviewCount > 0)
-                <span class="bg-amber-50 text-amber-700 py-0.5 px-2 rounded text-[10px] font-mono font-semibold">{{ $pendingReviewCount }}</span>
-                @endif
+                <span id="sidebar-badge-pending" class="bg-amber-50 text-amber-700 py-0.5 px-2 rounded text-[10px] font-mono font-semibold" style="{{ $pendingReviewCount > 0 ? '' : 'display:none' }}">{{ $pendingReviewCount }}</span>
             </a>
 
             <a href="{{ route('admin.verify.index') }}" class="sidebar-item flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium text-gray-600 {{ request()->routeIs('admin.verify.*') ? 'active' : '' }}">
@@ -166,9 +162,7 @@
                     <svg class="w-5 h-5 {{ request()->routeIs('admin.alerts.*') ? 'text-brand-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                     Peringatan Sistem
                 </div>
-                @if($unreadAlertCount > 0)
-                <span class="bg-red-50 text-red-700 py-0.5 px-2 rounded text-[10px] font-mono font-semibold">{{ $unreadAlertCount }}</span>
-                @endif
+                <span id="sidebar-badge-alerts" class="bg-red-50 text-red-700 py-0.5 px-2 rounded text-[10px] font-mono font-semibold" style="{{ $unreadAlertCount > 0 ? '' : 'display:none' }}">{{ $unreadAlertCount }}</span>
             </a>
 
             <a href="{{ route('admin.map.index') }}" class="sidebar-item flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium text-gray-600 {{ request()->routeIs('admin.map.*') ? 'active' : '' }}">
@@ -292,5 +286,30 @@
 
     @stack('scripts')
     @yield('scripts')
+
+    <script>
+        // Global sidebar badge polling — keeps counts live on every admin page
+        // without needing each page to know about the other pages' badges.
+        setInterval(async () => {
+            try {
+                const res = await fetch('/api/admin-poll/sidebar-counts');
+                if (!res.ok) return;
+                const { data } = await res.json();
+
+                const badges = {
+                    'sidebar-badge-open': data.open_requests,
+                    'sidebar-badge-pending': data.pending_review,
+                    'sidebar-badge-alerts': data.unread_alerts,
+                };
+
+                for (const [id, count] of Object.entries(badges)) {
+                    const el = document.getElementById(id);
+                    if (!el) continue;
+                    el.textContent = count;
+                    el.style.display = count > 0 ? '' : 'none';
+                }
+            } catch (e) {}
+        }, 15000);
+    </script>
 </body>
 </html>

@@ -9,6 +9,7 @@ use App\Models\DonorHistory;
 use App\Jobs\WaveChainJob;
 use App\Services\DonorFilterService;
 use App\Services\WhatsAppService;
+use App\Traits\ApiResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -16,9 +17,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class AdminBloodRequestWebController extends Controller
 {
+    use ApiResponse;
+
     public function index(Request $request)
     {
         $query = BloodRequest::query();
@@ -113,10 +117,29 @@ class AdminBloodRequestWebController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'required_bags' => 'required_if:type,emergency|nullable|integer|min:1',
-            'event_starts_at' => 'required_if:type,event|nullable|date|after:now|before:deadline',
-            'deadline' => 'required|date|after:now',
+            'event_starts_at' => 'required_if:type,event|nullable|date|after:now',
+            'deadline' => 'required|date',
             'notes' => 'nullable|string',
         ]);
+
+        // Deadline input is date-only (<input type="date">) — normalize to
+        // end of day now that the basic format passed validation, then
+        // check after:now / before:deadline manually. Doing this against
+        // $validated (not $request) keeps the raw request input untouched,
+        // so a validation failure elsewhere still flashes old('deadline')
+        // as the plain 'Y-m-d' the date input expects.
+        $deadlineEndOfDay = Carbon::parse($validated['deadline'])->endOfDay();
+        $normalizationErrors = [];
+        if ($deadlineEndOfDay->lessThanOrEqualTo(now())) {
+            $normalizationErrors['deadline'] = 'Batas waktu harus setelah waktu saat ini.';
+        }
+        if (!empty($validated['event_starts_at']) && Carbon::parse($validated['event_starts_at'])->greaterThanOrEqualTo($deadlineEndOfDay)) {
+            $normalizationErrors['event_starts_at'] = 'Jadwal mulai harus sebelum batas waktu.';
+        }
+        if (!empty($normalizationErrors)) {
+            throw ValidationException::withMessages($normalizationErrors);
+        }
+        $validated['deadline'] = $deadlineEndOfDay->format('Y-m-d H:i:s');
 
         // Default to UDD PMI Kota Padang as per AGENTS.md if no location provided
         if (empty($validated['hospital_name'])) {
@@ -136,11 +159,12 @@ class AdminBloodRequestWebController extends Controller
         // two genuinely different requests (e.g. different deadline/notes)
         // never share a lock key and are never collapsed together.
         //
-        // deadline/event_starts_at come from <input type="datetime-local">
-        // as "2026-08-14T15:30", but BloodRequest casts them to `datetime`
-        // and stores "2026-08-14 15:30:00". Normalize to that same DB
-        // format here so the WHERE comparison below (and the lock key) can
-        // actually match the row Eloquent is about to write.
+        // deadline (normalized to end-of-day above) and event_starts_at
+        // (from <input type="datetime-local"> as "2026-08-14T15:30") get
+        // cast by BloodRequest to `datetime` and stored as
+        // "2026-08-14 15:30:00". Normalize to that same DB format here so
+        // the WHERE comparison below (and the lock key) can actually match
+        // the row Eloquent is about to write.
         $duplicateWindowSeconds = config('donorconnect.blood_request_duplicate_window_seconds');
 
         $deadlineForMatch = Carbon::parse($validated['deadline'])->format('Y-m-d H:i:s');
@@ -207,8 +231,8 @@ class AdminBloodRequestWebController extends Controller
     {
         $bloodRequest = BloodRequest::findOrFail($id);
         $eligibleDonors = $filterService->filterEligibleDonors($bloodRequest);
-        
-        return response()->json($eligibleDonors);
+
+        return $this->success($eligibleDonors);
     }
 
     // Refreshing active candidates table for the 30s Polling Loop
@@ -218,14 +242,14 @@ class AdminBloodRequestWebController extends Controller
             ->where('blood_request_id', $id)
             ->orderBy('id', 'desc')
             ->get();
-            
-        return response()->json($candidates);
+
+        return $this->success($candidates);
     }
 
     // Polling status of a single request for the 30s Polling Loop
     public function pollStatus($id)
     {
-        return response()->json(['status' => BloodRequest::findOrFail($id)->status]);
+        return $this->success(['status' => BloodRequest::findOrFail($id)->status]);
     }
 
     // Polling statuses of the requests currently listed on the index page
@@ -233,7 +257,7 @@ class AdminBloodRequestWebController extends Controller
     {
         $ids = array_filter(explode(',', $request->query('ids', '')));
 
-        return response()->json(BloodRequest::whereIn('id', $ids)->pluck('status', 'id'));
+        return $this->success(BloodRequest::whereIn('id', $ids)->pluck('status', 'id'));
     }
 
     // Total count for the current index filters — used to detect newly
@@ -256,13 +280,13 @@ class AdminBloodRequestWebController extends Controller
             $query->whereNotIn('status', ['pending_review', 'rejected']);
         }
 
-        return response()->json(['count' => $query->count()]);
+        return $this->success(['count' => $query->count()]);
     }
 
     // Count of pending_review submissions — polled by the "Pengajuan Keluarga" page.
     public function pollPendingCount()
     {
-        return response()->json(['count' => BloodRequest::where('status', 'pending_review')->count()]);
+        return $this->success(['count' => BloodRequest::where('status', 'pending_review')->count()]);
     }
 
     public function notifyWeb($id, DonorFilterService $filterService, WhatsAppService $waService)
@@ -286,6 +310,7 @@ class AdminBloodRequestWebController extends Controller
 
         $eligibleDonors = $filterService->filterEligibleDonors($bloodRequest);
         $candidates = collect();
+        $users = \App\Models\User::whereIn('id', $eligibleDonors->pluck('id'))->get()->keyBy('id');
 
         foreach ($eligibleDonors as $donor) {
             $candidate = DonorCandidate::firstOrCreate([
@@ -296,7 +321,7 @@ class AdminBloodRequestWebController extends Controller
                 'status' => 'notified',
                 'notified_at' => now(),
             ]);
-            $candidate->setRelation('user', \App\Models\User::find($donor->id));
+            $candidate->setRelation('user', $users->get($donor->id));
             $candidates->push($candidate);
         }
 

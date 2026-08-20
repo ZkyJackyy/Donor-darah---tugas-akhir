@@ -38,7 +38,7 @@ class _PermintaanAllScreenState extends State<PermintaanAllScreen> {
       bool isDueToDonate() {
         if (user == null || user.tanggalDonorTerakhir == null) return true;
         final lastDate = DateTime.parse(user.tanggalDonorTerakhir!);
-        final eligibleDate = lastDate.add(const Duration(days: 56));
+        final eligibleDate = lastDate.add(const Duration(days: 60));
         return eligibleDate.difference(DateTime.now()).inDays <= 0;
       }
 

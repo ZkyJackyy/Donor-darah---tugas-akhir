@@ -70,6 +70,7 @@ class WaveChainJob implements ShouldQueue
             Log::info("WaveChain: Tidak ada donor eligible di gelombang {$this->currentWave} untuk request #{$this->bloodRequestId}");
         } else {
             $candidates = collect();
+            $users = User::whereIn('id', $eligibleDonors->pluck('id'))->get()->keyBy('id');
 
             foreach ($eligibleDonors as $donor) {
                 $candidate = DonorCandidate::firstOrCreate([
@@ -87,7 +88,7 @@ class WaveChainJob implements ShouldQueue
                     continue;
                 }
 
-                $candidate->setRelation('user', User::find($donor->id));
+                $candidate->setRelation('user', $users->get($donor->id));
                 $candidates->push($candidate);
             }
 

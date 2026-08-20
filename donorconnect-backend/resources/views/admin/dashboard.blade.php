@@ -27,9 +27,16 @@
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Stat 1 -->
-        <div class="bg-white rounded-lg border border-gray-200 border-l-2 border-l-brand-600 p-5">
-            <h3 class="text-3xl font-semibold text-gray-900 font-mono">{{ $activeRequestsCount ?? '0' }}</h3>
+        <div class="bg-white rounded-lg border border-gray-200 border-l-2 {{ ($activeRequestsCount ?? 0) > 0 ? 'border-l-brand-600' : 'border-l-gray-200' }} p-5">
+            @if(($activeRequestsCount ?? 0) > 0)
+                <h3 class="text-3xl font-semibold text-gray-900 font-mono">{{ $activeRequestsCount }}</h3>
+            @else
+                <h3 class="text-3xl font-semibold text-gray-300 font-mono">&mdash;</h3>
+            @endif
             <p class="text-sm font-medium text-gray-500 mt-1">Permintaan Aktif</p>
+            @if(($activeRequestsCount ?? 0) === 0)
+                <p class="text-xs text-gray-400 mt-0.5">Tidak ada permintaan aktif saat ini</p>
+            @endif
         </div>
 
         <!-- Stat 2 -->

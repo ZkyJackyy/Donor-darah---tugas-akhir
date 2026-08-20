@@ -273,14 +273,14 @@ document.addEventListener('alpine:init', () => {
         async fetchActiveCandidates() {
             try {
                 const res = await fetch(`/api/admin-poll/blood-requests/${requestId}/candidates`);
-                if(res.ok) this.activeCandidates = await res.json();
+                if(res.ok) this.activeCandidates = (await res.json()).data;
             } catch(e) {}
         },
 
         async fetchStatus() {
             try {
                 const res = await fetch(`/api/admin-poll/blood-requests/${requestId}/status`);
-                if(res.ok) this.status = (await res.json()).status;
+                if(res.ok) this.status = (await res.json()).data.status;
             } catch(e) {}
         },
 
@@ -288,7 +288,7 @@ document.addEventListener('alpine:init', () => {
             this.isLoadingPreview = true;
             try {
                 const res = await fetch(`/api/admin-poll/blood-requests/${requestId}/preview`);
-                if(res.ok) this.previewDonors = await res.json();
+                if(res.ok) this.previewDonors = (await res.json()).data;
             } catch(e) {}
             this.isLoadingPreview = false;
         }

@@ -18,5 +18,5 @@ Schedule::job(new CheckRequestStatusJob)->everyFiveMinutes();
 // supaya tidak mengunci kuota permintaan selamanya
 Schedule::job(new ExpireStaleConfirmationsJob)->everyFiveMinutes();
 
-// Unlock donor setiap hari (56 hari cooldown)
+// Unlock donor setiap hari (60 hari cooldown)
 Schedule::job(new UnlockDonorsJob)->daily();

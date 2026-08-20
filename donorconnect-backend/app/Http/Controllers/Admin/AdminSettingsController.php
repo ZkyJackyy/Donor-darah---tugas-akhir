@@ -20,7 +20,7 @@ class AdminSettingsController extends Controller
                 'lat' => config('donorconnect.default_lat'),
                 'lng' => config('donorconnect.default_lng'),
             ],
-            'cooldownDays' => config('donorconnect.donation_cooldown_days', 56),
+            'cooldownDays' => config('donorconnect.donation_cooldown_days', 60),
         ]);
     }
 

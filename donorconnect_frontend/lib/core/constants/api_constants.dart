@@ -48,4 +48,10 @@ class ApiConstants {
   // Places (hospital autocomplete / reverse-geocode proxy)
   static const String placesAutocomplete = '/places/autocomplete';
   static const String placesReverseGeocode = '/places/reverse-geocode';
+
+  // PMI location — donors always donate at PMI, never at the hospital, so
+  // distance shown to the donor must be measured from here. Mirrors backend
+  // default_lat/default_lng in donorconnect-backend/config/donorconnect.php.
+  static const double pmiLatitude = -0.944554954176654;
+  static const double pmiLongitude = 100.3679109288369;
 }

@@ -132,4 +132,20 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+    (function () {
+        const initialAvailable = {{ (int) $initialAvailableCount }};
+        setInterval(async () => {
+            try {
+                const res = await fetch('/api/admin-poll/donors');
+                if (!res.ok) return;
+                const { data } = await res.json();
+                if (data.available !== initialAvailable) window.location.reload();
+            } catch (e) {}
+        }, 15000);
+    })();
+</script>
+@endpush
 @endsection

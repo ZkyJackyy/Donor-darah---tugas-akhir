@@ -53,6 +53,12 @@ class DonorFilterService
             ? ($waveRanges[$wave] ?? $waveRanges[1])
             : ['min' => $waveRanges[1]['min'], 'max' => $waveRanges[3]['max']];
 
+        // Wave ranges share a boundary (wave 1 ends at 5km, wave 2 starts at
+        // 5km, etc). Making the lower bound exclusive for every wave except
+        // the first prevents a donor sitting exactly on a boundary from
+        // matching two waves at once.
+        $minOperator = $distanceRange['min'] <= $waveRanges[1]['min'] ? '>=' : '>';
+
         // Using parameterized PDO raw query for protection against SQL Injection
         // Calculating age via TIMESTAMPDIFF
         // Calculating distance via Haversine Formula (R = 6371)
@@ -68,8 +74,10 @@ class DonorFilterService
                 last_donor_date,
                 (
                     6371 * ACOS(
-                        COS(RADIANS(:lat1)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(:lon)) +
-                        SIN(RADIANS(:lat2)) * SIN(RADIANS(latitude))
+                        LEAST(1, GREATEST(-1,
+                            COS(RADIANS(:lat1)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(:lon)) +
+                            SIN(RADIANS(:lat2)) * SIN(RADIANS(latitude))
+                        ))
                     )
                 ) AS distance_km
             FROM users
@@ -87,7 +95,7 @@ class DonorFilterService
                   SELECT user_id FROM donor_candidates WHERE blood_request_id = :existing_request_id
               )
               AND (:requester_id_check IS NULL OR id != :requester_id)
-            HAVING distance_km >= :min_distance AND distance_km <= :max_distance
+            HAVING distance_km {$minOperator} :min_distance AND distance_km <= :max_distance
             ORDER BY distance_km ASC
         ";
 
@@ -102,7 +110,7 @@ class DonorFilterService
             // untuk permintaannya sendiri.
             'requester_id_check' => $request->requested_by_user_id,
             'requester_id' => $request->requested_by_user_id,
-            'cooldown_days' => config('donorconnect.donation_cooldown_days', 56),
+            'cooldown_days' => config('donorconnect.donation_cooldown_days', 60),
             'min_distance' => $distanceRange['min'],
             'max_distance' => $distanceRange['max'],
         ]);

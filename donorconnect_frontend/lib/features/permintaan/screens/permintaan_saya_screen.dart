@@ -33,6 +33,8 @@ class _PermintaanSayaScreenState extends State<PermintaanSayaScreen> {
         return ('Ditolak', AppColors.error);
       case 'cancelled':
         return ('Dibatalkan', AppColors.textSecondary);
+      case 'approved':
+        return ('Disetujui, Menunggu Pendonor', AppColors.primary);
       default:
         return ('-', AppColors.textSecondary);
     }

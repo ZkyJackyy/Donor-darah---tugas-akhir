@@ -8,6 +8,18 @@ use Illuminate\Http\Request;
 
 class AdminDonorController extends Controller
 {
+    use \App\Traits\ApiResponse;
+
+    // Polled by the donor directory page to detect availability/roster changes
+    // (e.g. UnlockDonorsJob flipping is_available, a new donor registering).
+    public function pollStats()
+    {
+        return $this->success([
+            'total' => User::where('role', 'user')->count(),
+            'available' => User::where('role', 'user')->where('is_available', true)->count(),
+        ], 'Donor stats retrieved successfully');
+    }
+
     public function index(Request $request)
     {
         $query = User::where('role', 'user')->withCount('donorHistories');
@@ -27,6 +39,9 @@ class AdminDonorController extends Controller
 
         $donors = $query->paginate(20);
         $donors->appends($request->all());
-        return view('admin.donors.index', compact('donors'));
+
+        $initialAvailableCount = User::where('role', 'user')->where('is_available', true)->count();
+
+        return view('admin.donors.index', compact('donors', 'initialAvailableCount'));
     }
 }

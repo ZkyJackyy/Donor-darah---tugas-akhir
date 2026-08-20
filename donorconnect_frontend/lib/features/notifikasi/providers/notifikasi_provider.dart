@@ -28,7 +28,7 @@ class NotifikasiModel {
       message: json['message'] ?? '',
       status: json['status'] ?? 'pending',
       errorMessage: json['error_message'],
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
     );
   }
 }

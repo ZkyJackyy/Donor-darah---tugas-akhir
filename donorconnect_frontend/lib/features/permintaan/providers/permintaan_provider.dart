@@ -62,21 +62,21 @@ class PermintaanProvider with ChangeNotifier {
         final List data = response.data['data'];
         List<BloodRequestModel> list = data.map((json) => BloodRequestModel.fromJson(json)).toList();
 
-        // Calculate distances and sort
+        // Distance shown to the donor is always from PMI, not the hospital —
+        // donors donate at PMI, they never travel to the requesting hospital.
+        // This is the same value for every request (PMI is a fixed point), so
+        // it's computed once rather than per item.
         if (currentPosition != null) {
+          double distanceInMeters = Geolocator.distanceBetween(
+            currentPosition.latitude,
+            currentPosition.longitude,
+            ApiConstants.pmiLatitude,
+            ApiConstants.pmiLongitude,
+          );
+          double distanceInKm = distanceInMeters / 1000;
           for (var item in list) {
-            if (item.latitude != 0.0) {
-              double distanceInMeters = Geolocator.distanceBetween(
-                currentPosition.latitude,
-                currentPosition.longitude,
-                item.latitude,
-                item.longitude,
-              );
-              item.distance = distanceInMeters / 1000; // Convert to km
-            }
+            item.distance = distanceInKm;
           }
-          // Sort by distance (nearest first)
-          list.sort((a, b) => (a.distance ?? 9999).compareTo(b.distance ?? 9999));
         }
 
         _permintaanList = list;

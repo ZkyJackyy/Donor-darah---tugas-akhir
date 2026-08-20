@@ -123,7 +123,7 @@ document.addEventListener('alpine:init', () => {
                 try {
                     const res = await fetch('/api/admin-poll/blood-requests/pending-count');
                     if (!res.ok) return;
-                    const { count } = await res.json();
+                    const { data: { count } } = await res.json();
                     if (count !== initialTotal) window.location.reload();
                 } catch (e) {}
             }, 15000);

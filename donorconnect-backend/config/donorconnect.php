@@ -45,7 +45,7 @@ return [
     |
     */
 
-    'donation_cooldown_days' => (int) env('DONORCONNECT_DONATION_COOLDOWN_DAYS', 56),
+    'donation_cooldown_days' => (int) env('DONORCONNECT_DONATION_COOLDOWN_DAYS', 60),
 
     /*
     |--------------------------------------------------------------------------

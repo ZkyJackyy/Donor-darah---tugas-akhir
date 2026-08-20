@@ -108,4 +108,20 @@
         @endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+    (function () {
+        const latestId = {{ (int) $latestLogId }};
+        setInterval(async () => {
+            try {
+                const res = await fetch('/api/admin-poll/broadcast');
+                if (!res.ok) return;
+                const { data } = await res.json();
+                if (data.latest_id !== latestId) window.location.reload();
+            } catch (e) {}
+        }, 15000);
+    })();
+</script>
+@endpush
 @endsection
