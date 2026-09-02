@@ -31,6 +31,13 @@ class AdminBloodRequestController extends Controller
     {
         $data = $request->validated();
 
+        // Permintaan darurat tidak butuh input tanggal deadline — otomatis
+        // akhir hari ini (23:59). Event donor terbuka tetap pakai deadline
+        // yang diinput manual (dipakai sebagai jadwal selesai).
+        if ($data['type'] === 'emergency') {
+            $data['deadline'] = now()->endOfDay()->format('Y-m-d H:i:s');
+        }
+
         // Default to UDD PMI Kota Padang as per AGENTS.md if no location provided
         if (empty($data['hospital_name'])) {
             $data['hospital_name'] = config('donorconnect.default_hospital_name');

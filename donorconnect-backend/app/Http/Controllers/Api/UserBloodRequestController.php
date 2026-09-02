@@ -140,7 +140,6 @@ class UserBloodRequestController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'urgency_level' => 'required|in:normal,urgent,critical',
-            'deadline' => 'required|date|after:now',
             'notes' => 'nullable|string',
             'referral_letter' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
@@ -149,6 +148,10 @@ class UserBloodRequestController extends Controller
             $validated['latitude'] = config('donorconnect.default_lat');
             $validated['longitude'] = config('donorconnect.default_lng');
         }
+
+        // User tidak input deadline — otomatis akhir hari ini (23:59) karena
+        // pengajuan darurat memang perlu direspons hari yang sama.
+        $validated['deadline'] = now()->endOfDay()->format('Y-m-d H:i:s');
 
         $userId = $request->user()->id;
 

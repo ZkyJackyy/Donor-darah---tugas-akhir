@@ -34,8 +34,9 @@
         background-color: #fef2f2;
     }
     #blood-type-fields.is-hidden,
-    #required_bags_input[data-hidden="true"],
-    #event-schedule-fields[data-hidden="true"] { display: none; }
+    #bags-urgency-fields[data-hidden="true"],
+    #event-schedule-fields[data-hidden="true"],
+    #deadline-field[data-hidden="true"] { display: none; }
 </style>
 
 @if($errors->any())
@@ -113,8 +114,8 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-6 mb-6">
-                    <!-- Jumlah Kantong -->
+                <div id="bags-urgency-fields" class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Jumlah Kantong (khusus Darurat — event tidak punya kuota keras) -->
                     <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
                         <input type="number" id="required_bags_input" name="required_bags" min="1" value="{{ old('required_bags', 1) }}" required placeholder=" "
                             class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none placeholder-transparent peer">
@@ -123,9 +124,9 @@
                         </label>
                     </div>
 
-                    <!-- Tingkat Urgensi -->
+                    <!-- Tingkat Urgensi (khusus Darurat — menentukan jeda wave broadcast WA) -->
                     <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
-                        <select name="urgency_level" class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none appearance-none cursor-pointer peer" required>
+                        <select id="urgency_level_select" name="urgency_level" class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none appearance-none cursor-pointer peer" required>
                             <option value="normal">Normal (Biasa)</option>
                             <option value="urgent">Penting (Mendesak)</option>
                             <option value="critical">Darurat (Kritis)</option>
@@ -148,14 +149,17 @@
                     </div>
                 </div>
 
-                <!-- Deadline -->
-                <div class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2">
-                    <input type="date" name="deadline" value="{{ old('deadline') }}" required placeholder=" "
+                <!-- Deadline (khusus Event — jadwal selesai. Permintaan darurat otomatis deadline hari ini 23:59) -->
+                <div id="deadline-field" class="relative float-input bg-gray-50 rounded-md border border-gray-200 px-4 pt-6 pb-2" data-hidden="true">
+                    <input type="date" id="deadline_input" name="deadline" value="{{ old('deadline') }}" placeholder=" "
                         class="w-full bg-transparent text-sm font-semibold text-gray-900 focus:outline-none placeholder-transparent peer">
-                    <label id="deadline_label" class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left" style="transform: translateY(-130%) scale(0.85); color: #ef4444; font-weight: 700;">
-                        Batas Waktu Terpenuhi
+                    <label class="float-label absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium origin-left" style="transform: translateY(-130%) scale(0.85); color: #ef4444; font-weight: 700;">
+                        Jadwal Selesai
                     </label>
                 </div>
+                <p id="deadline-auto-note" class="text-xs text-gray-400 font-medium">
+                    Batas waktu permintaan otomatis hari ini pukul 23:59.
+                </p>
             </div>
         </div>
 
@@ -238,14 +242,26 @@ document.addEventListener("DOMContentLoaded", function () {
     const bloodTypeFields = document.getElementById('blood-type-fields');
     const bloodTypeSelect = document.querySelector('select[name="blood_type"]');
     const rhesusSelect = document.querySelector('select[name="rhesus"]');
+    const bagsUrgencyFields = document.getElementById('bags-urgency-fields');
     const requiredBagsInput = document.getElementById('required_bags_input');
-    const requiredBagsLabel = document.getElementById('required_bags_label');
+    const urgencyLevelSelect = document.getElementById('urgency_level_select');
     const specTitle = document.getElementById('blood-spec-title');
     const specSubtitle = document.getElementById('blood-spec-subtitle');
     const submitBtnText = document.getElementById('submit-btn-text');
     const eventScheduleFields = document.getElementById('event-schedule-fields');
     const eventStartsAtInput = document.getElementById('event_starts_at_input');
-    const deadlineLabel = document.getElementById('deadline_label');
+    const deadlineField = document.getElementById('deadline-field');
+    const deadlineInput = document.getElementById('deadline_input');
+    const deadlineAutoNote = document.getElementById('deadline-auto-note');
+
+    // Cegah admin memilih tanggal/jam yang sudah lewat — sinkron dengan
+    // validasi backend (event_starts_at: after:now, deadline: after:now).
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const todayDateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const nowDateTimeStr = `${todayDateStr}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    eventStartsAtInput.min = nowDateTimeStr;
+    deadlineInput.min = todayDateStr;
 
     function applyTypeUI(type) {
         const isEvent = type === 'event';
@@ -266,15 +282,24 @@ document.addEventListener("DOMContentLoaded", function () {
             rhesusSelect.value = '';
         }
 
+        bagsUrgencyFields.dataset.hidden = isEvent ? 'true' : 'false';
         requiredBagsInput.required = !isEvent;
-        requiredBagsLabel.textContent = isEvent ? 'Target Kantong (opsional)' : 'Jumlah Kantong';
+        urgencyLevelSelect.required = !isEvent;
+        if (isEvent) {
+            requiredBagsInput.value = '';
+            urgencyLevelSelect.value = 'normal';
+        }
 
         eventScheduleFields.dataset.hidden = isEvent ? 'false' : 'true';
         eventStartsAtInput.required = isEvent;
         if (!isEvent) eventStartsAtInput.value = '';
-        deadlineLabel.textContent = isEvent ? 'Jadwal Selesai' : 'Batas Waktu Terpenuhi';
 
-        specTitle.textContent = isEvent ? 'Target Donor (Opsional)' : 'Spesifikasi Darah';
+        deadlineField.dataset.hidden = isEvent ? 'false' : 'true';
+        deadlineInput.required = isEvent;
+        if (!isEvent) deadlineInput.value = '';
+        deadlineAutoNote.style.display = isEvent ? 'none' : 'block';
+
+        specTitle.textContent = isEvent ? 'Jadwal Event' : 'Spesifikasi Darah';
         specSubtitle.textContent = isEvent
             ? 'Event ini terbuka untuk semua golongan darah — tidak ada kuota keras.'
             : 'Tentukan kebutuhan spesifik golongan darah pasien.';

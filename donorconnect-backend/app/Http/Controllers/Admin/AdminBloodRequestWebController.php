@@ -56,14 +56,21 @@ class AdminBloodRequestWebController extends Controller
         return view('admin.blood-requests.create');
     }
 
-    public function pendingIndex()
+    public function pendingIndex(Request $request)
     {
-        $bloodRequests = BloodRequest::where('status', 'pending_review')
-            ->with('requestedBy')
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+        $tab = $request->query('tab') === 'history' ? 'history' : 'pending';
 
-        return view('admin.blood-requests.pending', compact('bloodRequests'));
+        $query = BloodRequest::whereNotNull('requested_by_user_id')->with('requestedBy');
+
+        if ($tab === 'history') {
+            $query->where('status', '!=', 'pending_review');
+        } else {
+            $query->where('status', 'pending_review');
+        }
+
+        $bloodRequests = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
+
+        return view('admin.blood-requests.pending', compact('bloodRequests', 'tab'));
     }
 
     public function approve($id)
@@ -118,28 +125,44 @@ class AdminBloodRequestWebController extends Controller
             'longitude' => 'nullable|numeric',
             'required_bags' => 'required_if:type,emergency|nullable|integer|min:1',
             'event_starts_at' => 'required_if:type,event|nullable|date|after:now',
-            'deadline' => 'required|date',
+            'deadline' => 'required_if:type,event|nullable|date',
             'notes' => 'nullable|string',
         ]);
 
-        // Deadline input is date-only (<input type="date">) — normalize to
-        // end of day now that the basic format passed validation, then
-        // check after:now / before:deadline manually. Doing this against
-        // $validated (not $request) keeps the raw request input untouched,
-        // so a validation failure elsewhere still flashes old('deadline')
-        // as the plain 'Y-m-d' the date input expects.
-        $deadlineEndOfDay = Carbon::parse($validated['deadline'])->endOfDay();
-        $normalizationErrors = [];
-        if ($deadlineEndOfDay->lessThanOrEqualTo(now())) {
-            $normalizationErrors['deadline'] = 'Batas waktu harus setelah waktu saat ini.';
+        // Event terbuka tidak punya wave broadcast (satu kali pengumuman ke
+        // semua pendonor), jadi urgency_level tidak berpengaruh apa-apa selain
+        // untuk permintaan darurat (menentukan jeda wave). Paksa 'normal' di
+        // sini agar tetap konsisten walau form event menyembunyikan field ini.
+        if ($validated['type'] === 'event') {
+            $validated['urgency_level'] = 'normal';
         }
-        if (!empty($validated['event_starts_at']) && Carbon::parse($validated['event_starts_at'])->greaterThanOrEqualTo($deadlineEndOfDay)) {
-            $normalizationErrors['event_starts_at'] = 'Jadwal mulai harus sebelum batas waktu.';
+
+        // Permintaan darurat tidak butuh input tanggal deadline dari admin —
+        // batas waktunya otomatis akhir hari ini (23:59), karena stok/kondisi
+        // darurat memang perlu direspons hari yang sama. Event donor terbuka
+        // tetap butuh input manual karena jadwalnya bisa di hari lain.
+        if ($validated['type'] === 'emergency') {
+            $validated['deadline'] = now()->endOfDay()->format('Y-m-d H:i:s');
+        } else {
+            // Deadline input is date-only (<input type="date">) — normalize to
+            // end of day now that the basic format passed validation, then
+            // check after:now / before:deadline manually. Doing this against
+            // $validated (not $request) keeps the raw request input untouched,
+            // so a validation failure elsewhere still flashes old('deadline')
+            // as the plain 'Y-m-d' the date input expects.
+            $deadlineEndOfDay = Carbon::parse($validated['deadline'])->endOfDay();
+            $normalizationErrors = [];
+            if ($deadlineEndOfDay->lessThanOrEqualTo(now())) {
+                $normalizationErrors['deadline'] = 'Batas waktu harus setelah waktu saat ini.';
+            }
+            if (!empty($validated['event_starts_at']) && Carbon::parse($validated['event_starts_at'])->greaterThanOrEqualTo($deadlineEndOfDay)) {
+                $normalizationErrors['event_starts_at'] = 'Jadwal mulai harus sebelum batas waktu.';
+            }
+            if (!empty($normalizationErrors)) {
+                throw ValidationException::withMessages($normalizationErrors);
+            }
+            $validated['deadline'] = $deadlineEndOfDay->format('Y-m-d H:i:s');
         }
-        if (!empty($normalizationErrors)) {
-            throw ValidationException::withMessages($normalizationErrors);
-        }
-        $validated['deadline'] = $deadlineEndOfDay->format('Y-m-d H:i:s');
 
         // Default to UDD PMI Kota Padang as per AGENTS.md if no location provided
         if (empty($validated['hospital_name'])) {

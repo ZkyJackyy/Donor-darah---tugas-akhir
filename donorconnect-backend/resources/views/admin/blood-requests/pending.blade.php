@@ -3,9 +3,19 @@
 @section('page_title', 'Pengajuan Keluarga')
 
 @section('content')
-<div class="space-y-6" x-data="pendingWatcher({{ $bloodRequests->total() }})">
-    <div>
+<div class="space-y-6" x-data="pendingWatcher({{ $tab === 'pending' ? $bloodRequests->total() : 'null' }})">
+    <div class="flex items-center justify-between">
         <p class="text-sm text-gray-500 font-medium">Pengajuan permintaan donor pengganti dari user untuk keluarga — validasi sebelum masuk alur pencarian pendonor.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex items-center gap-1 border-b border-gray-200">
+        <a href="{{ route('admin.blood-requests.pending') }}" class="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide border-b-2 transition-colors {{ $tab === 'pending' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+            Menunggu
+        </a>
+        <a href="{{ route('admin.blood-requests.pending', ['tab' => 'history']) }}" class="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide border-b-2 transition-colors {{ $tab === 'history' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+            Riwayat
+        </a>
     </div>
 
     <!-- Data Table -->
@@ -20,7 +30,11 @@
                         <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">RS Tujuan</th>
                         <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">Surat Rujukan</th>
                         <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">Diajukan</th>
+                        @if($tab === 'history')
+                        <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">Status</th>
+                        @else
                         <th class="px-6 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200 text-right">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -57,6 +71,29 @@
                             <div class="text-xs font-medium text-gray-700 font-mono">{{ $req->created_at->format('d/m/Y') }}</div>
                             <div class="text-[10px] text-gray-400 mt-0.5 font-mono">{{ $req->created_at->format('H:i') }} WIB</div>
                         </td>
+                        @if($tab === 'history')
+                        <td class="px-6 py-4">
+                            @php
+                                $statusBadge = match($req->status) {
+                                    'approved' => ['bg-amber-500', 'text-gray-700', 'Disetujui'],
+                                    'open' => ['bg-emerald-500', 'text-gray-700', 'Terbuka'],
+                                    'fulfilled' => ['bg-sky-500', 'text-gray-700', 'Selesai'],
+                                    'cancelled' => ['bg-gray-400', 'text-gray-500', 'Dibatalkan'],
+                                    'rejected' => ['bg-red-500', 'text-red-600', 'Ditolak'],
+                                    default => ['bg-gray-400', 'text-gray-500', strtoupper($req->status)],
+                                };
+                            @endphp
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full {{ $statusBadge[0] }}"></span>
+                                <span class="text-xs font-semibold {{ $statusBadge[1] }} uppercase tracking-wide">{{ $statusBadge[2] }}</span>
+                            </div>
+                            @if($req->status === 'rejected' && $req->rejection_reason)
+                            <div class="text-[11px] text-gray-400 mt-1 max-w-[220px] line-clamp-2" title="{{ $req->rejection_reason }}">{{ $req->rejection_reason }}</div>
+                            @else
+                            <a href="{{ route('admin.blood-requests.show', $req->id) }}" class="text-[11px] text-brand-600 hover:underline mt-1 inline-block">Lihat detail</a>
+                            @endif
+                        </td>
+                        @else
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <form action="{{ route('admin.blood-requests.approve', $req->id) }}" method="POST">
@@ -70,6 +107,7 @@
                                 </button>
                             </div>
                         </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>
@@ -78,8 +116,13 @@
                                 <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                                     <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </div>
+                                @if($tab === 'history')
+                                <p class="text-base font-semibold text-gray-700">Belum ada riwayat pengajuan</p>
+                                <p class="text-sm text-gray-400 mt-1">Pengajuan yang sudah disetujui/ditolak akan muncul di sini.</p>
+                                @else
                                 <p class="text-base font-semibold text-gray-700">Tidak ada pengajuan menunggu</p>
                                 <p class="text-sm text-gray-400 mt-1">Pengajuan baru dari user akan muncul di sini.</p>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -119,6 +162,7 @@ document.addEventListener('alpine:init', () => {
         rejectModal: false,
         rejectId: null,
         init() {
+            if (initialTotal === null) return;
             setInterval(async () => {
                 try {
                     const res = await fetch('/api/admin-poll/blood-requests/pending-count');

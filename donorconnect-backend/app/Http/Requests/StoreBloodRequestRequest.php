@@ -24,7 +24,7 @@ class StoreBloodRequestRequest extends FormRequest
             'longitude' => 'nullable|numeric',
             'required_bags' => 'required_if:type,emergency|nullable|integer|min:1',
             'event_starts_at' => 'required_if:type,event|nullable|date|after:now|before:deadline',
-            'deadline' => 'required|date|after:now',
+            'deadline' => 'required_if:type,event|nullable|date|after:now',
             'notes' => 'nullable|string',
         ];
     }

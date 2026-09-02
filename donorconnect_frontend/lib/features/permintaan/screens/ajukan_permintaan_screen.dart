@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/custom_button.dart';
@@ -30,7 +29,6 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
   String? _rhesus;
   String? _patientRelationship;
   String _urgencyLevel = 'normal';
-  DateTime? _deadline;
   double? _latitude;
   double? _longitude;
   File? _referralLetter;
@@ -58,36 +56,6 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
     _hospitalAddressController.dispose();
     _notesController.dispose();
     super.dispose();
-  }
-
-  Future<void> _selectDeadline(BuildContext context) async {
-    final now = DateTime.now();
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _deadline ?? now.add(const Duration(days: 1)),
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: AppColors.primary),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (pickedDate == null || !context.mounted) return;
-
-    setState(() {
-      _deadline = DateTime(
-        pickedDate.year,
-        pickedDate.month,
-        pickedDate.day,
-        23,
-        59,
-        59,
-      );
-    });
   }
 
   Future<void> _pickReferralLetter() async {
@@ -159,14 +127,6 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
       AppSnackbar.showError(context, 'Hubungan dengan pasien wajib dipilih');
       return;
     }
-    if (_deadline == null) {
-      AppSnackbar.showError(context, 'Batas waktu wajib diisi');
-      return;
-    }
-    if (_deadline!.isBefore(DateTime.now())) {
-      AppSnackbar.showError(context, 'Batas waktu harus di waktu yang akan datang');
-      return;
-    }
     if (_referralLetter == null) {
       AppSnackbar.showError(context, 'Surat rujukan dari rumah sakit wajib dilampirkan');
       return;
@@ -183,7 +143,6 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
           hospitalName: _hospitalNameController.text.trim(),
           hospitalAddress: _hospitalAddressController.text.trim(),
           urgencyLevel: _urgencyLevel,
-          deadline: DateFormat('yyyy-MM-dd HH:mm:ss').format(_deadline!),
           referralLetter: _referralLetter!,
           notes: notes.isNotEmpty ? notes : null,
           latitude: _latitude,
@@ -334,22 +293,6 @@ class _AjukanPermintaanScreenState extends State<AjukanPermintaanScreen> {
                     .map((u) => DropdownMenuItem(value: u.$1, child: Text(u.$2)))
                     .toList(),
                 onChanged: (val) => setState(() => _urgencyLevel = val ?? 'normal'),
-              ),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: () => _selectDeadline(context),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Batas Waktu Dibutuhkan',
-                    prefixIcon: Icon(Icons.event_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                  child: Text(
-                    _deadline == null
-                        ? 'Pilih tanggal'
-                        : DateFormat('dd MMMM yyyy', 'id_ID').format(_deadline!),
-                  ),
-                ),
               ),
               const SizedBox(height: 24),
               const Text('Rumah Sakit Tujuan',
