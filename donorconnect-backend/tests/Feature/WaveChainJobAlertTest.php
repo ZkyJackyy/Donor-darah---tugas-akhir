@@ -28,6 +28,13 @@ class WaveChainJobAlertTest extends TestCase
         $filterService->shouldReceive('filterEligibleDonors')
             ->once()
             ->andReturn(collect([(object) ['id' => $donor->id, 'distance_km' => 7.5]]));
+        // urgency_level di factory diacak (normal/urgent/critical) — untuk
+        // urgent/critical, WaveChainJob juga memanggil ini untuk notifikasi
+        // awareness ke gol. darah lain, jadi harus di-stub meski tidak
+        // selalu terpanggil.
+        $filterService->shouldReceive('filterAwarenessDonors')
+            ->zeroOrMoreTimes()
+            ->andReturn(collect());
 
         (new WaveChainJob($bloodRequest->id, 2))->handle($filterService, app(WhatsAppService::class));
 
@@ -49,6 +56,7 @@ class WaveChainJobAlertTest extends TestCase
 
         $filterService = \Mockery::mock(DonorFilterService::class);
         $filterService->shouldReceive('filterEligibleDonors')->once()->andReturn(collect());
+        $filterService->shouldReceive('filterAwarenessDonors')->zeroOrMoreTimes()->andReturn(collect());
 
         (new WaveChainJob($bloodRequest->id, 2))->handle($filterService, app(WhatsAppService::class));
 
@@ -67,6 +75,7 @@ class WaveChainJobAlertTest extends TestCase
         $filterService->shouldReceive('filterEligibleDonors')
             ->once()
             ->andReturn(collect([(object) ['id' => $donor->id, 'distance_km' => 2.0]]));
+        $filterService->shouldReceive('filterAwarenessDonors')->zeroOrMoreTimes()->andReturn(collect());
 
         (new WaveChainJob($bloodRequest->id, 1))->handle($filterService, app(WhatsAppService::class));
 
@@ -81,6 +90,7 @@ class WaveChainJobAlertTest extends TestCase
 
         $filterService = \Mockery::mock(DonorFilterService::class);
         $filterService->shouldReceive('filterEligibleDonors')->twice()->andReturn(collect());
+        $filterService->shouldReceive('filterAwarenessDonors')->zeroOrMoreTimes()->andReturn(collect());
 
         (new WaveChainJob($bloodRequest->id, 3))->handle($filterService, app(WhatsAppService::class));
         (new WaveChainJob($bloodRequest->id, 3))->handle($filterService, app(WhatsAppService::class));

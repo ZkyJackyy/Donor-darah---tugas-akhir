@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
@@ -11,7 +12,20 @@ import '../../../core/utils/api_error_handler.dart';
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
   final LocationService _locationService = LocationService();
-  
+
+  // Selagi app hidup (foreground/background baru dibekukan OS), lokasi
+  // donor dikirim ulang tiap interval ini supaya peta admin & pencarian
+  // pendonor terdekat tetap merefleksikan posisi terkini — bukan hanya
+  // posisi saat login/registrasi.
+  static const _locationUpdateInterval = Duration(minutes: 5);
+  Timer? _locationTimer;
+
+  // Kalau updateLocation gagal (mis. tidak ada internet), jangan tunggu
+  // sampai siklus 5 menit berikutnya — coba lagi tiap interval pendek ini
+  // sampai berhasil, supaya lokasi cepat tersinkron begitu koneksi pulih.
+  static const _locationRetryInterval = Duration(seconds: 30);
+  Timer? _locationRetryTimer;
+
   UserModel? _user;
   bool _isLoading = false;
   String? _error;
@@ -43,8 +57,10 @@ class AuthProvider with ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token);
 
-        // Update location after successful login
+        // Update location after successful login, then keep it fresh
+        // periodically while the session stays active.
         updateLocation();
+        _startLocationUpdates();
 
         return true;
       } else {
@@ -137,6 +153,7 @@ class AuthProvider with ChangeNotifier {
         // Location update is gated by 'verified.email' middleware on the
         // backend, so it can only succeed now that the email is verified.
         updateLocation();
+        _startLocationUpdates();
 
         return true;
       } else {
@@ -178,10 +195,45 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // Dipanggil dari root widget saat app kembali ke foreground (resumed) —
+  // memberi update lokasi yang lebih fresh persis saat donor membuka lagi
+  // app-nya, di luar siklus periodic timer 5 menit.
+  void refreshLocationOnResume() {
+    if (_user == null) return;
+    updateLocation();
+  }
+
+  void _startLocationUpdates() {
+    _locationTimer?.cancel();
+    _locationTimer = Timer.periodic(_locationUpdateInterval, (_) => updateLocation());
+  }
+
+  void _stopLocationUpdates() {
+    _locationTimer?.cancel();
+    _locationTimer = null;
+    _cancelLocationRetry();
+  }
+
+  void _scheduleLocationRetry() {
+    if (_locationRetryTimer != null) return; // sudah ada retry berjalan
+    _locationRetryTimer = Timer.periodic(_locationRetryInterval, (_) => updateLocation());
+  }
+
+  void _cancelLocationRetry() {
+    _locationRetryTimer?.cancel();
+    _locationRetryTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _stopLocationUpdates();
+    super.dispose();
+  }
+
   Future<String?> updateLocation() async {
     try {
       final position = await _locationService.getCurrentPosition();
-      
+
       final response = await _apiService.put(ApiConstants.updateLocation, data: {
         'latitude': position.latitude,
         'longitude': position.longitude,
@@ -190,16 +242,19 @@ class AuthProvider with ChangeNotifier {
       if (response.data['status'] == true) {
         _user = UserModel.fromJson(response.data['data']);
         _locationWarning = null;
+        _cancelLocationRetry();
         notifyListeners();
         return null; // Success
       } else {
         _locationWarning = response.data['message'] ?? 'Gagal memperbarui lokasi';
+        _scheduleLocationRetry();
         notifyListeners();
         return _locationWarning;
       }
     } catch (e) {
       debugPrint("Update location error: $e");
       _locationWarning = 'Gagal memperbarui lokasi. Anda mungkin tidak muncul di pencarian pendonor.';
+      _scheduleLocationRetry();
       notifyListeners();
       return _locationWarning;
     }
@@ -211,6 +266,7 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       debugPrint("Logout error: $e");
     } finally {
+      _stopLocationUpdates();
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
       _user = null;
@@ -229,8 +285,10 @@ class AuthProvider with ChangeNotifier {
     // Jika token ada, panggil getProfile() untuk memverifikasi apakah token masih valid
     final success = await getProfile();
     if (success) {
-      // Jika valid, update lokasi di background
+      // Jika valid, update lokasi di background lalu jaga tetap fresh
+      // secara periodik selama sesi aktif.
       updateLocation();
+      _startLocationUpdates();
       return true;
     } else {
       // Jika tidak valid/kadaluarsa, hapus token

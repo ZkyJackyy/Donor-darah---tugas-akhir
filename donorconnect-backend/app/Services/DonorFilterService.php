@@ -119,6 +119,77 @@ class DonorFilterService
     }
 
     /**
+     * Untuk permintaan urgency critical/urgent: donor di luar golongan
+     * darah/rhesus yang dibutuhkan tetap diberi tahu ada permintaan darurat
+     * (awareness saja, bukan ajakan konfirmasi) pada wave & radius yang sama.
+     * Tidak menghasilkan DonorCandidate — donor gol. darah lain tidak bisa
+     * dihitung ke kuota maupun konfirmasi via app.
+     *
+     * @param BloodRequest $request
+     * @param int $wave Wave number (1, 2, or 3)
+     * @return Collection
+     */
+    public function filterAwarenessDonors(BloodRequest $request, int $wave = 1): Collection
+    {
+        $lat = config('donorconnect.default_lat');
+        $lon = config('donorconnect.default_lng');
+
+        $waveRanges = self::waveRanges();
+        $distanceRange = $waveRanges[$wave] ?? $waveRanges[1];
+        $minOperator = $distanceRange['min'] <= $waveRanges[1]['min'] ? '>=' : '>';
+
+        $sql = "
+            SELECT
+                id,
+                name,
+                phone,
+                blood_type,
+                rhesus,
+                last_donor_date,
+                (
+                    6371 * ACOS(
+                        LEAST(1, GREATEST(-1,
+                            COS(RADIANS(:lat1)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(:lon)) +
+                            SIN(RADIANS(:lat2)) * SIN(RADIANS(latitude))
+                        ))
+                    )
+                ) AS distance_km
+            FROM users
+            WHERE is_available = 1
+              AND latitude IS NOT NULL
+              AND longitude IS NOT NULL
+              AND weight >= 45
+              AND birth_date IS NOT NULL
+              AND TIMESTAMPDIFF(YEAR, birth_date, CURRENT_DATE) >= 17
+              AND TIMESTAMPDIFF(YEAR, birth_date, CURRENT_DATE) <= 60
+              AND (last_donor_date IS NULL OR DATEDIFF(CURRENT_DATE, last_donor_date) >= :cooldown_days)
+              AND NOT (blood_type = :blood_type AND rhesus = :rhesus)
+              AND id NOT IN (
+                  SELECT user_id FROM donor_candidates WHERE blood_request_id = :existing_request_id
+              )
+              AND (:requester_id_check IS NULL OR id != :requester_id)
+            HAVING distance_km {$minOperator} :min_distance AND distance_km <= :max_distance
+            ORDER BY distance_km ASC
+        ";
+
+        $results = DB::select($sql, [
+            'lat1' => $lat,
+            'lon' => $lon,
+            'lat2' => $lat,
+            'blood_type' => $request->blood_type,
+            'rhesus' => $request->rhesus,
+            'existing_request_id' => $request->id,
+            'requester_id_check' => $request->requested_by_user_id,
+            'requester_id' => $request->requested_by_user_id,
+            'cooldown_days' => config('donorconnect.donation_cooldown_days', 60),
+            'min_distance' => $distanceRange['min'],
+            'max_distance' => $distanceRange['max'],
+        ]);
+
+        return collect($results);
+    }
+
+    /**
      * Get all waves sequentially.
      * Returns array of collections keyed by wave number.
      *

@@ -69,6 +69,55 @@ class WhatsAppService
     }
 
     /**
+     * Kirim notifikasi awareness (bukan ajakan konfirmasi) ke donor golongan
+     * darah/rhesus lain untuk permintaan urgency critical/urgent. Pesan
+     * membuat jelas bahwa penerima BUKAN kandidat gol. darah yang cocok,
+     * hanya diberi tahu ada permintaan darurat di sekitar mereka.
+     */
+    public function sendAwarenessNotification(User $user, BloodRequest $request, float $distanceKm, int $wave = 1): void
+    {
+        $urgencyLabel = match ($request->urgency_level) {
+            'critical' => 'Darurat',
+            'urgent' => 'Mendesak',
+            default => 'Normal',
+        };
+        $distance = round($distanceKm, 2);
+        $waveInfo = $wave > 1 ? " (Gelombang {$wave})" : "";
+
+        $message = "*Info Permintaan Donor Darah - {$urgencyLabel}{$waveInfo}*\n\n"
+                 . "Halo {$user->name}, ada permintaan darah darurat golongan {$request->blood_type}{$request->rhesus} "
+                 . "di sekitar Anda ({$distance} km dari lokasi).\n\n"
+                 . "Golongan darah Anda ({$user->blood_type}{$user->rhesus}) tidak sesuai dengan yang dibutuhkan saat ini, "
+                 . "namun mohon bantu sebarkan info ini ke kerabat/teman dengan golongan darah yang sesuai.\n\n"
+                 . "Batas waktu: {$request->deadline->format('d M Y, H:i')} WIB\n\n"
+                 . "Terima kasih atas kepeduliannya.";
+
+        SendDonorNotificationJob::dispatch($user, $message, $request->id);
+    }
+
+    /**
+     * Dispatch notifikasi awareness ke sekumpulan donor gol. darah lain.
+     * Tidak membuat DonorCandidate — hanya untuk pemberitahuan.
+     *
+     * @param Collection $donors
+     * @param BloodRequest $request
+     * @param int $wave
+     */
+    public function notifyAwarenessDonors(Collection $donors, BloodRequest $request, int $wave = 1): void
+    {
+        foreach ($donors as $donor) {
+            $cacheKey = "notify_{$donor->id}_{$request->id}";
+            if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                continue;
+            }
+            \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(24));
+
+            $distanceFloat = (float) ($donor->distance_km ?? 0);
+            $this->sendAwarenessNotification($donor, $request, $distanceFloat, $wave);
+        }
+    }
+
+    /**
      * Broadcast a single open-invitation announcement (event donor darah
      * terbuka) to every available donor — no blood type/distance targeting,
      * no wave. Reuses the same 24h duplicate-notification guard.

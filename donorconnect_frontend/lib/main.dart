@@ -103,11 +103,14 @@ class DonorConnectApp extends StatefulWidget {
   State<DonorConnectApp> createState() => _DonorConnectAppState();
 }
 
-class _DonorConnectAppState extends State<DonorConnectApp> {
+class _DonorConnectAppState extends State<DonorConnectApp> with WidgetsBindingObserver {
+  final _authProvider = AuthProvider();
 
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
 
     ApiService.onUnauthorized = () {
       _router.go('/login');
@@ -116,7 +119,17 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // App baru dibuka lagi dari background — minta lokasi terbaru agar
+    // tidak menunggu siklus periodic timer 5 menit di AuthProvider.
+    if (state == AppLifecycleState.resumed) {
+      _authProvider.refreshLocationOnResume();
+    }
   }
 
   // GoRouter configuration
@@ -240,7 +253,7 @@ class _DonorConnectAppState extends State<DonorConnectApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider(create: (_) => PermintaanProvider()),
         ChangeNotifierProvider(create: (_) => SkriningProvider()),
         ChangeNotifierProvider(create: (_) => KonfirmasiProvider()),

@@ -101,6 +101,33 @@ class WaveChainJob implements ShouldQueue
             }
         }
 
+        // Untuk urgency critical/urgent: donor gol. darah/rhesus lain di
+        // wave & radius yang sama tetap diberi tahu (awareness saja, tidak
+        // bisa konfirmasi) — supaya info permintaan darurat menyebar lebih
+        // luas tanpa mengubah siapa yang berhak jadi kandidat.
+        if (in_array($request->urgency_level, ['critical', 'urgent'], true)) {
+            $awarenessDonors = $filterService->filterAwarenessDonors($request, $this->currentWave);
+            if ($awarenessDonors->isNotEmpty()) {
+                // filterAwarenessDonors() adalah hasil raw query (stdClass), bukan
+                // model User — perlu dimuat ulang jadi Eloquent model asli karena
+                // WhatsAppService/SendDonorNotificationJob type-hint User (juga
+                // dibutuhkan SerializesModels agar job bisa di-serialize ke queue).
+                $awarenessUsers = User::whereIn('id', $awarenessDonors->pluck('id'))->get()->keyBy('id');
+                $awarenessRecipients = $awarenessDonors
+                    ->map(function ($donor) use ($awarenessUsers) {
+                        $user = $awarenessUsers->get($donor->id);
+                        if ($user) {
+                            $user->distance_km = $donor->distance_km;
+                        }
+                        return $user;
+                    })
+                    ->filter();
+
+                $waService->notifyAwarenessDonors($awarenessRecipients, $request, $this->currentWave);
+                Log::info("WaveChain: Gelombang {$this->currentWave} → {$awarenessRecipients->count()} notifikasi awareness (gol. darah lain) untuk request #{$this->bloodRequestId}");
+            }
+        }
+
         // Wave 1 dipicu manual oleh admin (tombol "Kirim Notifikasi WA") dan
         // langsung dapat flash message di halaman yang sama — hanya wave 2/3
         // yang jalan sendiri di background lewat scheduler/delay tanpa ada
